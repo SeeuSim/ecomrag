@@ -122,10 +122,7 @@ const ShopPage = () => {
         <Layout.Section>
           <FooterHelp>
             <p>
-              Powered by{" "}
-              <Link url="https://gadget.dev" external>
-                gadget.dev
-              </Link>
+              Build by James Liu.
             </p>
           </FooterHelp>
         </Layout.Section>
