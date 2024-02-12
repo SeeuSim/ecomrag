@@ -1,0 +1,31 @@
+{
+  "dependencies": {
+    "@fastify/request-context": "^5.0.0",
+    "@gadget-client/ecomrag": "link:../client",
+    "@gadgetinc/api-client-core": "0.15.14",
+    "@types/node": "^20.8.4",
+    "fastify": "^4.24.2"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./ai": "./dist/ai/index.js"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "gadget": {
+    "applicationName": "ecomrag",
+    "environmentName": "Development",
+    "environmentVersion": "6"
+  },
+  "main": "dist/index.js",
+  "name": "gadget-server",
+  "peerDependencies": {
+    "openai": "*",
+    "shopify-api-node": "*"
+  },
+  "private": true,
+  "scripts": {},
+  "types": "dist/index.d.ts",
+  "version": "1.1.0-development.6"
+}

@@ -1,0 +1,416 @@
+/**
+A map of roles with the role key as the map key.
+
+Example:
+```
+{
+  "signed-in": {
+    name: "signed-in",
+    default: {
+      read: true,
+      action: true,
+    },
+    models: {
+      user: {
+        read: {
+          filter: "user/filters/tenant.gelly",
+        },
+        actions: {
+          changePassword: {
+            filter: "user/filters/tenant.gelly",
+          },
+          signOut: {
+            filter: "user/filters/tenant.gelly",
+          },
+        },
+      },
+    },
+  }
+}
+```
+ */
+type GadgetAccessControl = {
+    type: "gadget/access-control/v1";
+    roles: {
+        [x: string]: {
+            storageKey: string;
+            default?: {
+                read?: boolean | undefined;
+                action?: boolean | undefined;
+            } | undefined;
+            models?: {
+                [x: string]: {
+                    read?: (boolean | {
+                        filter: string | null;
+                    }) | undefined;
+                    actions?: {
+                        [x: string]: boolean | {
+                            filter: string | null;
+                        };
+                    } | undefined;
+                };
+            } | undefined;
+            actions?: {
+                [x: string]: boolean;
+            } | undefined;
+        };
+    };
+};
+type GadgetSettings = {
+    type: "gadget/settings/v1";
+    plugins: {
+        connections?: {
+            shopify?: ({
+                apiVersion: "2022-01" | "2022-04" | "2022-07" | "2022-10" | "2023-01" | "2023-04" | "2023-07" | "2023-10" | "2024-01";
+                enabledModels: string[];
+                type: "partner";
+                scopes: string[];
+            } | {
+                apiVersion: "2022-01" | "2022-04" | "2022-07" | "2022-10" | "2023-01" | "2023-04" | "2023-07" | "2023-10" | "2024-01";
+                enabledModels: string[];
+                type: "admin";
+            }) | undefined;
+            openai?: boolean | undefined;
+            sentry?: boolean | undefined;
+        } | undefined;
+        authentications?: {
+            settings: {
+                redirectOnSignIn: string;
+                signInPath: string;
+                unauthorizedUserRedirect: "redirect" | "show-403-error";
+                accessControlForSignedInUsers: string[];
+            };
+            methods: {
+                googleOAuth?: {
+                    offlineAccess: boolean;
+                    scopes: string[];
+                } | undefined;
+                emailPassword?: boolean | undefined;
+            };
+        } | undefined;
+    };
+};
+type GadgetModel = {
+    type: "gadget/model-schema/v1";
+    storageKey: string;
+    fields: {
+        [x: string]: {
+            type: "number";
+            shopifyMetafield?: {
+                privateMetafield: boolean;
+                namespace: string;
+                key: string;
+                metafieldType: string;
+                allowMultipleEntries: boolean;
+            } | undefined;
+            default?: number | undefined;
+            decimals?: number | undefined;
+            validations?: {
+                required?: boolean | undefined;
+                numberRange?: {
+                    min: number | null;
+                    max: number | null;
+                } | undefined;
+                unique?: ({
+                    scopeByField?: string | undefined;
+                } | boolean) | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "string";
+            shopifyMetafield?: {
+                privateMetafield: boolean;
+                namespace: string;
+                key: string;
+                metafieldType: string;
+                allowMultipleEntries: boolean;
+            } | undefined;
+            default?: string | undefined;
+            validations?: {
+                required?: boolean | undefined;
+                stringLength?: {
+                    min: number | null;
+                    max: number | null;
+                } | undefined;
+                regex?: (string | null)[] | undefined;
+                unique?: ({
+                    scopeByField?: string | undefined;
+                    caseSensitive?: boolean | undefined;
+                } | boolean) | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "richText";
+            default?: {
+                markdown: string;
+            } | undefined;
+            validations?: {
+                required?: boolean | undefined;
+                stringLength?: {
+                    min: number | null;
+                    max: number | null;
+                } | undefined;
+                regex?: (string | null)[] | undefined;
+                unique?: ({
+                    scopeByField?: string | undefined;
+                    caseSensitive?: boolean | undefined;
+                } | boolean) | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "email";
+            shopifyMetafield?: {
+                privateMetafield: boolean;
+                namespace: string;
+                key: string;
+                metafieldType: string;
+                allowMultipleEntries: boolean;
+            } | undefined;
+            default?: string | undefined;
+            validations?: {
+                required?: boolean | undefined;
+                email?: boolean | undefined;
+                stringLength?: {
+                    min: number | null;
+                    max: number | null;
+                } | undefined;
+                regex?: (string | null)[] | undefined;
+                unique?: ({
+                    scopeByField?: string | undefined;
+                    caseSensitive?: boolean | undefined;
+                } | boolean) | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "url";
+            shopifyMetafield?: {
+                privateMetafield: boolean;
+                namespace: string;
+                key: string;
+                metafieldType: string;
+                allowMultipleEntries: boolean;
+            } | undefined;
+            default?: string | undefined;
+            validations?: {
+                required?: boolean | undefined;
+                url?: boolean | undefined;
+                stringLength?: {
+                    min: number | null;
+                    max: number | null;
+                } | undefined;
+                regex?: (string | null)[] | undefined;
+                unique?: ({
+                    scopeByField?: string | undefined;
+                    caseSensitive?: boolean | undefined;
+                } | boolean) | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "color";
+            shopifyMetafield?: {
+                privateMetafield: boolean;
+                namespace: string;
+                key: string;
+                metafieldType: string;
+                allowMultipleEntries: boolean;
+            } | undefined;
+            default?: string | undefined;
+            validations?: {
+                required?: boolean | undefined;
+                stringLength?: {
+                    min: number | null;
+                    max: number | null;
+                } | undefined;
+                regex?: (string | null)[] | undefined;
+                color?: boolean | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "json";
+            shopifyMetafield?: {
+                privateMetafield: boolean;
+                namespace: string;
+                key: string;
+                metafieldType: string;
+                allowMultipleEntries: boolean;
+            } | undefined;
+            default?: any | undefined;
+            validations?: {
+                required?: boolean | undefined;
+                unique?: ({
+                    scopeByField?: string | undefined;
+                } | boolean) | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "enum";
+            shopifyMetafield?: {
+                privateMetafield: boolean;
+                namespace: string;
+                key: string;
+                metafieldType: string;
+                allowMultipleEntries: boolean;
+            } | undefined;
+            default?: (string | string[]) | undefined;
+            acceptMultipleSelections?: boolean | undefined;
+            acceptUnlistedOptions?: boolean | undefined;
+            options: string[];
+            validations?: {
+                required?: boolean | undefined;
+                unique?: ({
+                    scopeByField?: string | undefined;
+                } | boolean) | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "boolean";
+            shopifyMetafield?: {
+                privateMetafield: boolean;
+                namespace: string;
+                key: string;
+                metafieldType: string;
+                allowMultipleEntries: boolean;
+            } | undefined;
+            default?: boolean | undefined;
+            validations?: {
+                required?: boolean | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "dateTime";
+            shopifyMetafield?: {
+                privateMetafield: boolean;
+                namespace: string;
+                key: string;
+                metafieldType: string;
+                allowMultipleEntries: boolean;
+            } | undefined;
+            includeTime?: boolean | undefined;
+            default?: string | undefined;
+            validations?: {
+                required?: boolean | undefined;
+                unique?: ({
+                    scopeByField?: string | undefined;
+                } | boolean) | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "vector";
+            validations?: {
+                required?: boolean | undefined;
+                dimensionCount?: (number | null) | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "file";
+            allowPublicAccess?: boolean | undefined;
+            validations?: {
+                required?: boolean | undefined;
+                fileSizeRange?: {
+                    min: number | null;
+                    max: number | null;
+                } | undefined;
+                run?: (string | null)[] | undefined;
+                imagesOnly?: (boolean | {
+                    allowAnimatedImages: boolean;
+                }) | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "encryptedString";
+            validations?: {
+                required?: boolean | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "computed";
+            sourceFile?: (string | null) | undefined;
+            storageKey: string;
+        } | {
+            type: "belongsTo";
+            validations?: {
+                required?: boolean | undefined;
+                unique?: ({
+                    scopeByField?: string | undefined;
+                } | boolean) | undefined;
+                run?: (string | null)[] | undefined;
+            } | undefined;
+            parent?: {
+                model: string | null;
+            } | undefined;
+            shopifyMetafield?: {
+                privateMetafield: boolean;
+                namespace: string;
+                key: string;
+                metafieldType: string;
+                allowMultipleEntries: boolean;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "hasOne";
+            child?: {
+                model: string | null;
+                belongsToField: string | null;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "hasMany";
+            children?: {
+                model: string | null;
+                belongsToField: string | null;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "hasManyThrough";
+            sibling?: {
+                model: string | null;
+                relatedField: string | null;
+            } | undefined;
+            join?: {
+                model: string | null;
+                belongsToSelfField: string | null;
+                belongsToSiblingField: string | null;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "password";
+            validations?: {
+                required?: boolean | undefined;
+                strongPassword?: boolean | undefined;
+            } | undefined;
+            storageKey: string;
+        } | {
+            type: "roleList";
+            default?: string[] | undefined;
+            storageKey: string;
+        } | {
+            storageKey: string;
+            /** @deprecated This field type is deprecated. */
+            type: "money";
+            default?: {
+                amount: number;
+            } | undefined;
+            currency?: string | undefined;
+        } | {
+            storageKey: string;
+            /** @deprecated This field type is deprecated. */
+            type: "recordState";
+        };
+    };
+    shopify?: {
+        fields?: string[] | undefined;
+    } | undefined;
+};
+export type { GadgetAccessControl, GadgetSettings, GadgetModel };
