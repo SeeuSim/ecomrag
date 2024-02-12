@@ -1,5 +1,30 @@
+import AWS from 'aws-sdk';
 import { RouteContext } from "gadget-server";
 import { openAIResponseStream } from "gadget-server/ai";
+
+
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME } = process.env; 
+
+AWS.config.update({
+  accessKeyId: ACCESS_KEY_ID,
+  secretAccessKey: SECRET_ACCESS_KEY
+});
+
+const s3 = new AWS.S3();
+
+async function uploadImage(image) {
+  // Set up the payload of what we are sending to the S3 api
+  const params = {
+    Bucket: BUCKET_NAME,
+    Key: `${Date.now().toString()}.jpg`, // Could be any format of image
+    Body: image
+  };
+
+  // Upload the file to s3
+  const response = await s3.upload(params).promise();
+
+  return response.Location;
+}
 
 /**
  * Route handler for POST chat
@@ -9,7 +34,30 @@ import { openAIResponseStream } from "gadget-server/ai";
  */
 export default async function route({ request, reply, api, logger, connections }) {
   // get input from shopper
-  const { message } = request.body;
+  const { message, image } = request.body;
+
+  if (image) {
+    // Upload the image to a server or a cloud storage service
+    const imageUrl = await uploadImage(image); // This function should handle the image upload and return the image URL
+  
+    // If an image was uploaded, send its URL to OpenAI for analysis
+    const chatResponse = await connections.openai.chat.completions.create({
+      model: "gpt-4-vision-preview",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "What’s in this image?" },
+            { type: "image_url", image_url: imageUrl }, // Send the image URL to the OpenAI API
+          ],
+        },
+      ],
+      max_tokens: 1200,
+    });
+  
+    // Send the analysis result back to the user
+    await reply.send({ analysis: chatResponse.choices[0].message.content });
+  } else {
 
   // embed the incoming message from the user
   const embeddingResponse = await connections.openai.embeddings.create({ input: message, model: "text-embedding-ada-002" });
@@ -53,7 +101,6 @@ export default async function route({ request, reply, api, logger, connections }
   )}`;
 
   // send prompt and similar products to OpenAI to generate a response
-  // using GPT-4 Turbo model
   const chatResponse = await connections.openai.chat.completions.create({
     model: "gpt-4-turbo-preview",
     messages: [
@@ -83,4 +130,5 @@ export default async function route({ request, reply, api, logger, connections }
   };
 
   await reply.send(openAIResponseStream(chatResponse, { onComplete }));
+}
 }
