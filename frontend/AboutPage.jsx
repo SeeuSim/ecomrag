@@ -1,18 +1,18 @@
-import { Page, Text } from "@shopify/polaris";
-import { useNavigate } from "react-router-dom";
+import { Page, Text } from '@shopify/polaris';
+import { useNavigate } from 'react-router-dom';
 
 const AboutPage = () => {
   const navigate = useNavigate();
 
   return (
     <Page
-      title="About"
+      title='About'
       backAction={{
-        content: "Shop Information",
-        onAction: () => navigate("/"),
+        content: 'Shop Information',
+        onAction: () => navigate('/'),
       }}
     >
-      <Text variant="bodyMd" as="p">
+      <Text variant='bodyMd' as='p'>
         This is a simple Shopify Embedded App.
       </Text>
     </Page>

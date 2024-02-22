@@ -1,7 +1,19 @@
-import { useFindFirst, useQuery } from "@gadgetinc/react";
-import { Card, Banner, FooterHelp, InlineStack, Icon, Layout, Link, Page, Spinner, Text, BlockStack } from "@shopify/polaris";
-import { StoreMajor } from "@shopify/polaris-icons";
-import { api } from "./api";
+import { useFindFirst, useQuery } from '@gadgetinc/react';
+import {
+  Card,
+  Banner,
+  FooterHelp,
+  InlineStack,
+  Icon,
+  Layout,
+  Link,
+  Page,
+  Spinner,
+  Text,
+  BlockStack,
+} from '@shopify/polaris';
+import { StoreMajor } from '@shopify/polaris-icons';
+import { api } from './api';
 
 const gadgetMetaQuery = `
   query {
@@ -20,8 +32,8 @@ const ShopPage = () => {
 
   if (error) {
     return (
-      <Page title="Error">
-        <Text variant="bodyMd" as="p">
+      <Page title='Error'>
+        <Text variant='bodyMd' as='p'>
           Error: {error.toString()}
         </Text>
       </Page>
@@ -32,50 +44,54 @@ const ShopPage = () => {
     return (
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100%",
-          width: "100%",
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+          width: '100%',
         }}
       >
-        <Spinner accessibilityLabel="Spinner example" size="large" />
+        <Spinner accessibilityLabel='Spinner example' size='large' />
       </div>
     );
   }
 
   return (
-    <Page title="App">
+    <Page title='App'>
       <Layout>
         <Layout.Section>
-          <Banner title={`${metaData.gadgetMeta.slug} is successfully connected to Shopify`} tone="success" />
+          <Banner
+            title={`${metaData.gadgetMeta.slug} is successfully connected to Shopify`}
+            tone='success'
+          />
         </Layout.Section>
         <Layout.Section>
           <Card>
-            <div style={{ width: "100%" }}>
+            <div style={{ width: '100%' }}>
               <img
-                src="https://assets.gadget.dev/assets/icon.svg"
+                src='https://assets.gadget.dev/assets/icon.svg'
                 style={{
-                  margin: "14px auto",
-                  height: "56px",
+                  margin: '14px auto',
+                  height: '56px',
                 }}
               />
             </div>
-            <BlockStack gap="200">
-              <Text variant="headingLg" as="h1" alignment="center">
-                This page is powered by{" "}
+            <BlockStack gap='200'>
+              <Text variant='headingLg' as='h1' alignment='center'>
+                This page is powered by{' '}
                 <Link url={`${metaData.gadgetMeta.editURL}/files/frontend/ShopPage.jsx`} external>
                   <code
                     style={{
-                      fontFamily: "SFMono-Regular, Consolas, Liberation Mono, Menlo, Courier, monospace",
-                      fontSize: "0.95em",
+                      fontFamily:
+                        'SFMono-Regular, Consolas, Liberation Mono, Menlo, Courier, monospace',
+                      fontSize: '0.95em',
                     }}
                   >
                     ShopPage.jsx
                   </code>
                 </Link>
               </Text>
-              <Text variant="bodyMd" as="p" alignment="center">
+              <Text variant='bodyMd' as='p' alignment='center'>
                 Start building your UI by editing file hosted on Gadget.
               </Text>
             </BlockStack>
@@ -83,35 +99,35 @@ const ShopPage = () => {
         </Layout.Section>
         <Layout.Section>
           <Card>
-            <BlockStack gap="400">
-              <Text variant="headingMd" as="h6">
+            <BlockStack gap='400'>
+              <Text variant='headingMd' as='h6'>
                 Example Shop Query from your Gadget Database
               </Text>
               <div
                 style={{
-                  border: "1px solid #e1e3e5",
-                  padding: "12px",
-                  borderRadius: "0.25rem",
+                  border: '1px solid #e1e3e5',
+                  padding: '12px',
+                  borderRadius: '0.25rem',
                 }}
               >
-                <InlineStack align="space-between" blockAlign="center">
-                  <InlineStack gap="400" blockAlign="center">
-                    <Icon source={StoreMajor} tone="emphasis" />
+                <InlineStack align='space-between' blockAlign='center'>
+                  <InlineStack gap='400' blockAlign='center'>
+                    <Icon source={StoreMajor} tone='emphasis' />
                     <div>
-                      <Text variant="headingMd" as="h6">
+                      <Text variant='headingMd' as='h6'>
                         {data.name}
                       </Text>
-                      <Text variant="bodyMd" as="p">
+                      <Text variant='bodyMd' as='p'>
                         {data.city}, {data.countryName}
                       </Text>
                     </div>
                   </InlineStack>
-                  <Text variant="bodyMd" as="p">
-                    Created at:{" "}
-                    {data.shopifyCreatedAt.toLocaleDateString("en-GB", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
+                  <Text variant='bodyMd' as='p'>
+                    Created at:{' '}
+                    {data.shopifyCreatedAt.toLocaleDateString('en-GB', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
                     })}
                   </Text>
                 </InlineStack>
@@ -121,9 +137,7 @@ const ShopPage = () => {
         </Layout.Section>
         <Layout.Section>
           <FooterHelp>
-            <p>
-              Build by James Liu.
-            </p>
+            <p>Build by James Liu.</p>
           </FooterHelp>
         </Layout.Section>
       </Layout>
