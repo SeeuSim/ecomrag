@@ -65,7 +65,6 @@ function AuthenticatedApp() {
         }}
       >
         <Spinner accessibilityLabel='Spinner example' size='large' />
-        <span style={{ display: 'none' }}>Test linter</span>
       </div>
     );
   }
