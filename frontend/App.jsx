@@ -1,18 +1,23 @@
-import { AppType, Provider as GadgetProvider, useGadget } from "@gadgetinc/react-shopify-app-bridge";
-import { NavigationMenu } from "@shopify/app-bridge-react";
-import { Page, Spinner, Text } from "@shopify/polaris";
-import { useEffect, useMemo } from "react";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import AboutPage from "./AboutPage";
-import ShopPage from "./ShopPage";
-import { api } from "./api";
+import {
+  AppType,
+  Provider as GadgetProvider,
+  useGadget,
+} from '@gadgetinc/react-shopify-app-bridge';
+import { NavigationMenu } from '@shopify/app-bridge-react';
+import { Page, Spinner, Text } from '@shopify/polaris';
+import { useEffect, useMemo } from 'react';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import AboutPage from './AboutPage';
+import ShopPage from './ShopPage';
+import { api } from './api';
 
 const Error404 = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname === new URL(process.env.GADGET_PUBLIC_SHOPIFY_APP_URL).pathname) return navigate("/", { replace: true });
+    if (location.pathname === new URL(process.env.GADGET_PUBLIC_SHOPIFY_APP_URL).pathname)
+      return navigate('/', { replace: true });
   }, [location.pathname]);
   return <div>404 not found</div>;
 };
@@ -20,7 +25,10 @@ const Error404 = () => {
 const App = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const history = useMemo(() => ({ replace: (path) => navigate(path, { replace: true }) }), [navigate]);
+  const history = useMemo(
+    () => ({ replace: (path) => navigate(path, { replace: true }) }),
+    [navigate]
+  );
 
   const appBridgeRouter = useMemo(
     () => ({
@@ -31,7 +39,12 @@ const App = () => {
   );
 
   return (
-    <GadgetProvider type={AppType.Embedded} shopifyApiKey={window.gadgetConfig.apiKeys.shopify} api={api} router={appBridgeRouter}>
+    <GadgetProvider
+      type={AppType.Embedded}
+      shopifyApiKey={window.gadgetConfig.apiKeys.shopify}
+      api={api}
+      router={appBridgeRouter}
+    >
       <AuthenticatedApp />
     </GadgetProvider>
   );
@@ -44,14 +57,14 @@ function AuthenticatedApp() {
     return (
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100%",
-          width: "100%",
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+          width: '100%',
         }}
       >
-        <Spinner accessibilityLabel="Spinner example" size="large" />
+        <Spinner accessibilityLabel='Spinner example' size='large' />
       </div>
     );
   }
@@ -62,19 +75,19 @@ function EmbeddedApp() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<ShopPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="*" element={<Error404 />} />
+        <Route path='/' element={<ShopPage />} />
+        <Route path='/about' element={<AboutPage />} />
+        <Route path='*' element={<Error404 />} />
       </Routes>
       <NavigationMenu
         navigationLinks={[
           {
-            label: "Shop Information",
-            destination: "/",
+            label: 'Shop Information',
+            destination: '/',
           },
           {
-            label: "About",
-            destination: "/about",
+            label: 'About',
+            destination: '/about',
           },
         ]}
       />
@@ -84,8 +97,8 @@ function EmbeddedApp() {
 
 function UnauthenticatedApp() {
   return (
-    <Page title="App">
-      <Text variant="bodyMd" as="p">
+    <Page title='App'>
+      <Text variant='bodyMd' as='p'>
         App can only be viewed in the Shopify Admin.
       </Text>
     </Page>
