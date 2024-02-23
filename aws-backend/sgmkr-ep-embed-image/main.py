@@ -12,8 +12,10 @@ logger = logging.getLogger()
 # model_name = "google/vit-base-patch16-224-in21k"
 # model_name = "google/vit-large-patch16-384"  # Finetuned on 384x384 images
 model_path = "./model"
-feature_extractor = AutoImageProcessor.from_pretrained(model_path)
-model = AutoModel.from_pretrained(model_path)
+cache_dir = "./model-cache"
+
+feature_extractor = AutoImageProcessor.from_pretrained(model_path, cache_dir=cache_dir)
+model = AutoModel.from_pretrained(model_path, cache_dir=cache_dir)
 
 
 def extract_embeddings(image):
