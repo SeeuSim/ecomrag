@@ -6,4 +6,4 @@ node_modules
 **/*venv
 **/*model
 **/.editorconfig
-
+**/vit-*
