@@ -1,3 +1,4 @@
+import base64
 from io import BytesIO
 import logging
 import torch
@@ -42,6 +43,7 @@ def _input_fn(
         _content_type: str
 ):
     try:
+        input_data = base64.b64decode(input_data)
         image = _load_image(input_data)
     except Exception:
         logging.exception("Error occurred when loading/decoding")
