@@ -6,4 +6,7 @@ node_modules
 **/*venv
 **/*model
 **/.editorconfig
-**/vit-*
+**/*.safetensors
+**/vit*/*.json
+**/vit*/*.bin
+**/vit*/*.tar.gz

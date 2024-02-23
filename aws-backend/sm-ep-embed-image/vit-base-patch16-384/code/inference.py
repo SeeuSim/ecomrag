@@ -1,6 +1,4 @@
-import base64
 from io import BytesIO
-import json
 import logging
 import torch
 
@@ -27,6 +25,10 @@ class ImageEmbedder:
         return features.squeeze()
 
 
+def _load_image(image_bytes: bytes):
+    return PILImage.open(BytesIO(image_bytes)).convert("RGB")
+
+
 def model_fn(model_dir: str) -> ImageEmbedder:
     try:
         return ImageEmbedder(model_dir)
@@ -35,22 +37,42 @@ def model_fn(model_dir: str) -> ImageEmbedder:
         raise
 
 
-def _load_image(image_bytes: bytes):
-    return PILImage.open(BytesIO(image_bytes)).convert("RGB")
-
-
-def transform_fn(
-    image_embedder: ImageEmbedder, input_data: bytes, content_type: str, accept: str
-) -> bytes:
+def _input_fn(
+        input_data: bytes,
+        _content_type: str
+):
     try:
         image = _load_image(input_data)
-    except KeyError:
-        logging.exception("Invalid params: {params}".format(params=input_data))
-        raise
     except Exception:
         logging.exception("Error occurred when loading/decoding")
         raise
+    return image
+
+
+def _predict_fn(
+    image: PILImage,
+    image_embedder: ImageEmbedder
+) -> bytes:
     
     model_output = image_embedder(image)
     output = {"Embeddings": model_output}
-    return encoder.encode(output, accept)
+    return output
+
+
+def _output_fn(
+        prediction,
+        accept
+):
+    return encoder.encode(prediction, accept)
+
+
+def transform_fn(
+        model: ImageEmbedder,
+        data: bytes,
+        content_type: bytes,
+        accept_type: bytes
+):
+    inp = _input_fn(data, content_type)
+    pred = _predict_fn(inp, model)
+    out = _output_fn(pred, accept_type)
+    return out
