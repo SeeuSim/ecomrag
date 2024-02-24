@@ -1,5 +1,13 @@
 node_modules
 .env
+.DS_Store
 
 **/node_modules*
 **/dist*
+**/*venv
+**/*model
+**/.editorconfig
+**/*.safetensors
+**/vit*/*.json
+**/vit*/*.bin
+**/vit*/*.tar.gz
