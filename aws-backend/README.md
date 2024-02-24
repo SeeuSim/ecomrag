@@ -1,88 +1,86 @@
-# AWS ML Inference on Lambda
+# AWS ML Inference on SageMaker with Lambda Trigger
 
 ## Setup
 
-1. Start a virtual environment using at least Python3.11:
+### Sagemaker Endpoint
+
+To start developing an endpoint, we will clone our model weights from Huggingface, insert our inference code,
+and tar the file as a tar archive to be uploaded to S3.
+
+1. Initialise Git-LFS, if you haven't already:
 
    ```sh
-   cd sgmkr-ep-embed-image && \
-     python3.11 -m venv .venv
+   brew install git-lfs
+   sudo git-lfs install --system
    ```
 
-2. Activate it and run the command to cache the model binaries:
+2. Clone the model. In this case, we use vit-base-patch16-384.
 
    ```sh
-   source .venv/bin/activate && \
-     python download_model.py
+   git clone https://huggingface.co/google/vit-base-patch16-384 && \
+      cd vit-base-patch16-384 && \
+      rm -rf *.git
    ```
 
-3. Run the command to build with Docker:
+3. Depending on your inference framework of choice, keep only the model file that is of use to shrink the size.
+  As we use PyTorch, you will only need the following files:
 
-   ```sh
-   docker build --platform linux/amd64 -t docker-image:test .
-   ```
+      ```txt
+      ├── config.json
+      ├── preprocessor_config.json
+      └── pytorch_model.bin
+      ```
 
-4. Run the script to test the endpoint:
+4. Setup the `code` directory within this folder. This is where the inference code lives.
 
-   ```sh
-   bash test.sh
-   ```
+5. For setup, copy these files into the `vit-base-patch16-384` folder that exists.
 
-5. Kill the process:
+6. Using the requirements.txt, setup a virtual environment and edit the `inference.py` script.
 
-   ```sh
-   docker ps
-   # CONTAINER ID   IMAGE
-   # a2d2c782aa3d   docker-image:test
-   docker kill a2d2c782aa3d # replace with the actual ID
-   ```
+7. Once done, the folder to upload should look like this:
 
-## Push to ECR
+      ```txt
+      ├── code
+      │   ├── inference.py
+      │   └── requirements.txt
+      ├── config.json
+      ├── preprocessor_config.json
+      └── pytorch_model.bin
+      ```
 
-1. Run the command:
+8. In that folder, run the command:
 
-   ```sh
-   aws ecr get-login-password --region $REGION | \
-     docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
-   ```
+      ```sh
+      tar -cvzf vite-base-patch16-384.tar.gz * && \
+        aws s3 cp vite-base-patch16-384.tar.gz s3://ecomragdev/models/ # you may need AWS CLI authentication for this
+      ```
 
-2. Create the repository:
+9. Now, go to the `deploy` folder, initialise the environment with the `requirements.txt` file and open the notebook.
 
-   ```sh
-   aws ecr create-repository \
-     --repository-name $REPO \
-     --region $REGION \
-     --image-scanning-configuration scanOnPush=true \
-     --image-tag-mutability MUTABLE
-   ```
+10. Insert the Account ID and run the cells. DO NOT commit the account ID.
 
-3. Get the repository URI.
+11. The model is deployed. Run the `test.sh` script to test the output. If it does not work, copy the contents and replace the argument with the
+  `@/path/to/file` convention.
 
-4. Run the command to tag the image:
+### Lambda Function
 
-   ```sh
-   docker tag docker-image:test <ECRrepositoryUri>:latest
-   ```
+This function does 3 things:
 
-5. Push the image:
+1. Serialises HTTP request payloads to base64. To circumvent this and pass the data to the model which expects image binary, we need to decode the base64 body.
 
-   ```sh
-   docker push <ECRrepositoryUri>:latest
-   ```
+2. Passes the file payload to the endpoint. To invoke the endpoint, we need to configure the IAM role to allow the Lambda to invoke the endpoint.
 
-6. Create or Update the Lambda Execution Role:
+3. Serialises the response. As the AWS SDK serialises the response (JSON string) as a byte stream, we need to convert it for JSON serialisation.
 
-   ```sh
-   aws iam create-role --role-name ecomrag-img-embed-exec-role \
-     --assume-role-policy-document file://lambda_trust_policy.json
-   ```
+To setup, you simply need to:
 
-7. Create or Update the Lambda Function
+1. Copy the `lambda_handler.py` code into the Lambda Function.
 
-    ```sh
-    aws lambda create-function \
-      --function-name ecomrag-lmbd-img-embed \
-      --package-type Image \
-      --code ImageUri=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/$REPO:latest \
-      --role arn:aws:iam::$ACCOUNT_ID:role/ecomrag-img-embed-exec-role
-    ```
+2. Edit the environment variable under "Configuration" to include the endpoint name of the Sagemaker Endpoint. This can be found in Console > Sagemaker > Inference > Endpoints.
+
+3. Edit the trust policy in IAM to include the trust permissions to invoke the endpoint.
+
+4. Deploy the function. You may invoke it either with the test.sh script, or manually via copying the `curl` command.
+  This endpoint will accept image files as its payload body, and return JSON.
+
+

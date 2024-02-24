@@ -24,11 +24,7 @@ class ImageEmbedder:
         image_pp = self.tokenizer(image, return_tensors="pt")
         features = self.model(**image_pp).last_hidden_state[:, 0].detach().numpy()
         return features.squeeze()
-
-
-def _load_image(image_bytes: bytes):
-    return PILImage.open(BytesIO(image_bytes)).convert("RGB")
-
+    
 
 def model_fn(model_dir: str) -> ImageEmbedder:
     try:
@@ -43,8 +39,8 @@ def _input_fn(
         _content_type: str
 ):
     try:
-        input_data = base64.b64decode(input_data)
-        image = _load_image(input_data)
+        data = BytesIO(input_data)
+        image = PILImage.open(data)
     except Exception:
         logging.exception("Error occurred when loading/decoding")
         raise
@@ -78,3 +74,4 @@ def transform_fn(
     pred = _predict_fn(inp, model)
     out = _output_fn(pred, accept_type)
     return out
+
