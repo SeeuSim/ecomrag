@@ -1,5 +1,11 @@
 # AWS ML Inference on SageMaker with Lambda Trigger
 
+## Desired Infrastructure
+
+![Infra](./sm-ep-embed-image/diagram.png)
+
+For simplicity and cost, we only setup the two rightmost ones.
+
 ## Setup
 
 ### Sagemaker Endpoint
