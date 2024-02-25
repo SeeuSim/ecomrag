@@ -7,7 +7,7 @@ if [[ -z "$1" ]]; then
 fi
 
 aws sagemaker-runtime invoke-endpoint \
-  --endpoint-name ecomrag-img-embed-2024-02-25-04-53-22-157 \
+  --endpoint-name ecomrag-img-embed-2024-02-25-05-11-07-175 \
   --content-type "image/jpeg" \
   --accept "application/json" \
   --body fileb://$1 \
