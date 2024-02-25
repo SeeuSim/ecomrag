@@ -8,6 +8,12 @@ node_modules
 **/*model
 **/.editorconfig
 **/*.safetensors
+
 **/vit*/*.json
 **/vit*/*.bin
 **/vit*/*.tar.gz
+
+**/clip*/*.json
+**/clip*/*.txt
+**/clip*/*.bin
+**/clip*/*.tar.gz

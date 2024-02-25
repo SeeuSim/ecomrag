@@ -2,7 +2,7 @@
 
 if [[ -z "$1" ]]; then
   echo "Usage: test.sh @/path/to/file"
-  exit(1)
+  exit 1
 fi
 
 curl --request POST \
