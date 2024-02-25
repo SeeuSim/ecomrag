@@ -1,11 +1,11 @@
 import AWS from 'aws-sdk';
 import fetch from 'node-fetch';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME, EMBEDDING_ENDPOINT } = process.env;
 
 AWS.config.update({
   accessKeyId: ACCESS_KEY_ID,
-  secretAccessKey: SECRET_ACCESS_KEY
+  secretAccessKey: SECRET_ACCESS_KEY,
 });
 
 const s3 = new AWS.S3();
@@ -20,7 +20,7 @@ async function uploadImage(image) {
   const params = {
     Bucket: BUCKET_NAME,
     Key: `${Date.now().toString()}.jpg`,
-    Body: image
+    Body: image,
   };
   const response = await s3.upload(params).promise();
   return response.Location;
@@ -60,39 +60,63 @@ async function resizeImage(imageBuffer) {
 }
 
 export const createImageEmbedding = async ({ record, api, logger, connections }) => {
-  if (!record.imageEmbedding || record.changed("image")) {
+  if (!record.imageEmbedding || record.changed('image')) {
     try {
       const imageUrl = record.image;
       const imageBuffer = await downloadImage(imageUrl);
       const resizedImageBuffer = await resizeImage(imageBuffer);
-      const resizedImageUrl = await uploadImage(resizedImageBuffer);
 
-      const imageResponse = await connections.openai.chat.completions.create({
-        model: "gpt-4-vision-preview",
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "What’s in this image?" },
-              { type: "image_url", image_url: { url: resizedImageUrl } },
-            ],
-          },
-        ],
-        max_tokens: 300,
+      const response = await fetch(EMBEDDING_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
+        body: resizedImageBuffer,
       });
-      const imageDescription = imageResponse.choices[0].message.content;
 
-      const textResponse = await connections.openai.embeddings.create({
-        input: imageDescription,
-        model: "text-embedding-ada-002",
+      if (!response.ok) {
+        const error = await response.text();
+        logger.error({ error }, 'An error occurred fetching the embedding.');
+        return;
+      }
+
+      const payload = await response.json();
+
+      if (!payload.Embedding || !Array.isArray(payload.Embedding)) {
+        logger.error({ error: `Expected a response with one key 'Embedding', received object with keys: ${Object.keys(payload)}` });
+        return;
+      }
+
+      const embedding = payload.Embedding;
+
+      // const resizedImageUrl = await uploadImage(resizedImageBuffer);
+
+      // const imageResponse = await connections.openai.chat.completions.create({
+      //   model: "gpt-4-vision-preview",
+      //   messages: [
+      //     {
+      //       role: "user",
+      //       content: [
+      //         { type: "text", text: "What’s in this image?" },
+      //         { type: "image_url", image_url: { url: resizedImageUrl } },
+      //       ],
+      //     },
+      //   ],
+      //   max_tokens: 300,
+      // });
+      // const imageDescription = imageResponse.choices[0].message.content;
+
+      // const textResponse = await connections.openai.embeddings.create({
+      //   input: imageDescription,
+      //   model: "text-embedding-ada-002",
+      // });
+      // const embedding = textResponse.data[0].embedding;
+
+      logger.info({ id: record.id }, 'got image embedding');
+
+      await api.internal.shopifyProduct.update(record.id, {
+        shopifyProduct: { imageEmbedding: embedding },
       });
-      const embedding = textResponse.data[0].embedding;
-
-      logger.info({ id: record.id }, "got image embedding");
-
-      await api.internal.shopifyProduct.update(record.id, { shopifyProduct: { imageEmbedding: embedding } });
     } catch (error) {
-      logger.error({ error }, "error creating image embedding");
+      logger.error({ error }, 'error creating image embedding');
     }
   }
 };
