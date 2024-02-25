@@ -66,7 +66,7 @@ export const createImageEmbedding = async ({ record, api, logger, connections })
       const imageBuffer = await downloadImage(imageUrl);
       const resizedImageBuffer = await resizeImage(imageBuffer);
 
-      const response = await fetch(EMBEDDING_URL, {
+      const response = await fetch(EMBEDDING_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
         body: resizedImageBuffer,
