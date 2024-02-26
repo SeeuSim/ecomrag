@@ -87,33 +87,10 @@ export const createImageEmbedding = async ({ record, api, logger, connections })
 
       const embedding = payload.Embedding;
 
-      // const resizedImageUrl = await uploadImage(resizedImageBuffer);
-
-      // const imageResponse = await connections.openai.chat.completions.create({
-      //   model: "gpt-4-vision-preview",
-      //   messages: [
-      //     {
-      //       role: "user",
-      //       content: [
-      //         { type: "text", text: "What’s in this image?" },
-      //         { type: "image_url", image_url: { url: resizedImageUrl } },
-      //       ],
-      //     },
-      //   ],
-      //   max_tokens: 300,
-      // });
-      // const imageDescription = imageResponse.choices[0].message.content;
-
-      // const textResponse = await connections.openai.embeddings.create({
-      //   input: imageDescription,
-      //   model: "text-embedding-ada-002",
-      // });
-      // const embedding = textResponse.data[0].embedding;
-
       logger.info({ id: record.id }, 'got image embedding');
 
-      await api.internal.shopifyProduct.update(record.id, {
-        shopifyProduct: { imageEmbedding: embedding },
+      await api.internal.shopifyProductImage.update(record.id, {
+        shopifyProductImage: { imageDescriptionEmbedding: embedding },
       });
     } catch (error) {
       logger.error({ error }, 'error creating image embedding');
