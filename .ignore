@@ -1,0 +1,6 @@
+.eslintrc
+.vscode
+.gitignore
+aws-backend
+/.gadget
+/.husky
