@@ -11,7 +11,13 @@ AWS.config.update({
 const s3 = new AWS.S3();
 
 async function downloadImage(url) {
+  console.log(url);
   const response = await fetch(url);
+  if (!response.ok) {
+    const error = await response.text();
+    console.log(error);
+    throw new Error(error);
+  }
   const arrayBuffer = await response.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
