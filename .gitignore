@@ -1,7 +1,7 @@
 node_modules
 .env
 .DS_Store
-/aws-backend/*sm-ep-embed-image
+aws-backend/*sm-ep-embed-image
 
 **/node_modules*
 **/dist*
