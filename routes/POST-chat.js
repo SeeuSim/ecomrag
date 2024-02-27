@@ -1,7 +1,7 @@
 import AWS from 'aws-sdk';
 import { RouteContext } from "gadget-server";
 import { openAIResponseStream } from "gadget-server/ai";
-import createImageEmbedding from './createImageEmbedding.js'; 
+import createProductImageEmbedding from '../shopifyProductImage/createImageEmbedding';
 
 const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME } = process.env; 
 
@@ -36,11 +36,11 @@ export default async function route({ request, reply, api, logger, connections }
 
   if (image) {
     const imageUrl = await uploadImage(image);
-    const imageEmbedding = await createImageEmbedding({ record: { image: imageUrl }, api, logger, connections }); // Create an image embedding
+    const imageEmbedding = await createProductImageEmbedding({ record: { source: imageUrl }, api, logger, connections }); // Create an image embedding
 
-    const products = await api.shopifyProduct.findMany({
+    const products = await api.shopifyProductImage.findMany({
       sort: {
-        imageEmbedding: { // Sort by the cosine similarity to the image embedding
+        imageDescriptionEmbedding: { // Sort by the cosine similarity to the image embedding
           cosineSimilarityTo: imageEmbedding,
         },
       },
@@ -52,19 +52,17 @@ export default async function route({ request, reply, api, logger, connections }
       },
       select: {
         id: true,
-        title: true,
-        body: true,
-        handle: true,
-        shop: {
-          domain: true,
-        },
-        images: {
-          edges: {
-            node: {
-              source: true,
+        product: {
+          select: {
+            title: true,
+            body: true,
+            handle: true,
+            shop: {
+              domain: true,
             },
           },
         },
+        source: true,
       },
     });
 
