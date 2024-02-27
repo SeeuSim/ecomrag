@@ -1,4 +1,5 @@
 import AWS from 'aws-sdk';
+import { log } from 'console';
 import fetch from 'node-fetch';
 
 const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME, EMBEDDING_ENDPOINT } = process.env;
@@ -12,6 +13,10 @@ const s3 = new AWS.S3();
 
 async function downloadImage(url) {
   const response = await fetch(url);
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error);
+  }
   const arrayBuffer = await response.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
@@ -62,7 +67,8 @@ async function resizeImage(imageBuffer) {
 export const createImageEmbedding = async ({ record, api, logger, connections }) => {
   if (!record.imageEmbedding || record.changed('image')) {
     try {
-      const imageUrl = record.image;
+      logger.info({ record: record }, 'this is the record object');
+      const imageUrl = record.source;
       const imageBuffer = await downloadImage(imageUrl);
       const resizedImageBuffer = await resizeImage(imageBuffer);
 
@@ -96,4 +102,8 @@ export const createImageEmbedding = async ({ record, api, logger, connections })
       logger.error({ error }, 'error creating image embedding');
     }
   }
+};
+
+module.exports = {
+  run: createImageEmbedding,
 };
