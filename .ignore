@@ -2,4 +2,6 @@
 .vscode
 .gitignore
 aws-backend
-.gadget
+/.gadget
+/.husky
+

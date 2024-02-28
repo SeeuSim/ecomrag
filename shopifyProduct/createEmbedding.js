@@ -8,7 +8,7 @@ export const createProductEmbedding = async ({ record, api, logger, connections 
         model: "text-embedding-ada-002",
       });
       const embedding = response.data[0].embedding;
-
+      console.log(embedding.lenth);
       // write to the Gadget Logs
       logger.info({ id: record.id }, "got product embedding");
 

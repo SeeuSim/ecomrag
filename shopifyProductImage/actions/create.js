@@ -1,5 +1,5 @@
 import { applyParams, preventCrossShopDataAccess, save, ActionOptions, CreateShopifyProductImageActionContext } from "gadget-server";
-import { createImageEmbedding } from "../createImageEmbedding";
+import { createProductImageEmbedding } from "../createImageEmbedding";
 
 /**
  * @param { CreateShopifyProductImageActionContext } context
@@ -14,7 +14,7 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { CreateShopifyProductImageActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
-  await createImageEmbedding({ record, api, logger, connections });
+  await createProductImageEmbedding({ record, api, logger, connections });
 }
 
 /** @type { ActionOptions } */
