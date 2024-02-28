@@ -3,7 +3,7 @@ import { RouteContext } from "gadget-server";
 import { openAIResponseStream } from "gadget-server/ai";
 import createProductImageEmbedding from '../shopifyProductImage/createImageEmbedding';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME } = process.env; 
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME, BUCKET_NAME_CHAT } = process.env; 
 
 AWS.config.update({
   accessKeyId: ACCESS_KEY_ID,
@@ -15,7 +15,7 @@ const s3 = new AWS.S3();
 async function uploadImage(image) {
   // Set up the payload of what we are sending to the S3 api
   const params = {
-    Bucket: BUCKET_NAME,
+    Bucket: 'BUCKET_NAME_CHAT',
     Key: `${Date.now().toString()}.jpg`,
     Body: image
   };
