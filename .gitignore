@@ -15,7 +15,14 @@ node_modules
 **/vit*/*.bin
 **/vit*/*.tar.gz
 
-**/clip*/*.json
-**/clip*/*.txt
-**/clip*/*.bin
-**/clip*/*.tar.gz
+**/*lip*/*.json
+**/*lip*/*.txt
+**/*lip*/*.bin
+**/*lip*/*.tar.gz
+**/*lip*/*.md
+
+**/git-base/*.json
+**/git-base/*.txt
+**/git-base/*.bin
+**/git-base/*.tar.gz
+**/git-base/*.md
