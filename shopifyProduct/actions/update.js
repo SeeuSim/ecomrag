@@ -1,5 +1,11 @@
-import { applyParams, preventCrossShopDataAccess, save, ActionOptions, UpdateShopifyProductActionContext } from "gadget-server";
-import { createProductEmbedding } from "../createEmbedding";
+import {
+  applyParams,
+  preventCrossShopDataAccess,
+  save,
+  ActionOptions,
+  UpdateShopifyProductActionContext,
+} from 'gadget-server';
+import { createProductEmbedding } from '../createEmbedding';
 
 /**
  * @param { UpdateShopifyProductActionContext } context
@@ -19,5 +25,5 @@ export async function onSuccess({ params, record, logger, api, connections }) {
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: "update",
+  actionType: 'update',
 };

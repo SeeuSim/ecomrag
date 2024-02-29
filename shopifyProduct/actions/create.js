@@ -1,5 +1,11 @@
-import { applyParams, preventCrossShopDataAccess, save, ActionOptions, CreateShopifyProductActionContext } from "gadget-server";
-import { createProductEmbedding } from "../createEmbedding";
+import {
+  applyParams,
+  preventCrossShopDataAccess,
+  save,
+  ActionOptions,
+  CreateShopifyProductActionContext,
+} from 'gadget-server';
+import { createProductEmbedding } from '../createEmbedding';
 
 /**
  * @param { CreateShopifyProductActionContext } context
@@ -19,5 +25,5 @@ export async function onSuccess({ params, record, logger, api, connections }) {
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: "create",
+  actionType: 'create',
 };

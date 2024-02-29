@@ -6,13 +6,17 @@
   "private": true,
   "scripts": {
     "vite:build": "NODE_ENV=production vite build",
-    "fmt": "prettier --config ./.prettierrc \"frontend/**/*.{js,jsx}\" --write",
-    "prepare": "husky install"
+    "fmt": "prettier --config ./.prettierrc \"**/*.{js,jsx}\" --write",
+    "prepare": "husky install",
+    "sync": "pnpm dlx ggt@latest sync . --app=ecomrag"
   },
   "lint-staged": {
     "frontend/**/*.{js,jsx}": [
       "prettier --write",
       "eslint --fix"
+    ],
+    "shopify*/**/*.js": [
+      "prettier --write"
     ]
   },
   "dependencies": {
