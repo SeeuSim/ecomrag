@@ -4,4 +4,4 @@
 aws-backend
 /.gadget
 /.husky
-
+/.dist

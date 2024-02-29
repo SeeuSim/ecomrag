@@ -12,6 +12,7 @@ const BUCKET_PATH = 'images/';
 AWS.config.update({
   accessKeyId: ACCESS_KEY_ID,
   secretAccessKey: SECRET_ACCESS_KEY,
+  region: 'us-east-1',
 });
 
 const s3 = new AWS.S3();
@@ -35,7 +36,6 @@ function stringify(obj) {
 
 async function uploadImage(image, logger) {
   const content = await image.toBuffer();
-  logger.info(`Image: ${content}`);
   const params = {
     Bucket: BUCKET_NAME,
     Key: `${BUCKET_PATH}${Date.now()}_${image.filename}`,
@@ -73,6 +73,7 @@ export default async function route({ request, reply, api, logger, connections }
       connections,
     });
 
+
     const products = await api.shopifyProductImage.findMany({
       sort: {
         imageDescriptionEmbedding: {
@@ -81,21 +82,15 @@ export default async function route({ request, reply, api, logger, connections }
         },
       },
       first: 2,
-      filter: {
-        status: {
-          equals: 'active',
-        },
-      },
       select: {
         id: true,
         product: {
-          select: {
-            title: true,
-            body: true,
-            handle: true,
-            shop: {
-              domain: true,
-            },
+          title: true,
+          //status: 'active',
+          body: true,
+          handle: true,
+          shop: {
+            domain: true,
           },
         },
         source: true,
@@ -104,7 +99,7 @@ export default async function route({ request, reply, api, logger, connections }
 
     // capture products in Gadget's Logs
     logger.info(
-      { products, message: request.body.message },
+      { products, message: message },
       'found products most similar to user input'
     );
 
@@ -128,7 +123,7 @@ export default async function route({ request, reply, api, logger, connections }
     // function fired after the stream is finished
     const onComplete = (content) => {
       // store the response from OpenAI, and the products that were recommended
-      const recommendedProducts = products.map((product) => ({
+      const imageRecommendedProducts = products.map((product) => ({
         create: {
           product: {
             _link: product.id,
@@ -137,7 +132,7 @@ export default async function route({ request, reply, api, logger, connections }
       }));
       void api.chatLog.create({
         response: content,
-        recommendedProducts,
+        imageRecommendedProducts,
       });
     };
 
