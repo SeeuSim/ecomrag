@@ -1,19 +1,9 @@
-import AWS from 'aws-sdk';
-import { log } from 'console';
 import fetch from 'node-fetch';
-import { Image } from 'canvas';
+import { logger } from 'gadget-server';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME, EMBEDDING_ENDPOINT } = process.env;
+const { EMBEDDING_ENDPOINT } = process.env;
 
-AWS.config.update({
-  accessKeyId: ACCESS_KEY_ID,
-  secretAccessKey: SECRET_ACCESS_KEY,
-});
-
-const s3 = new AWS.S3();
-
-async function downloadImage(url) {
-  console.log(url);
+export async function downloadImage(url) {
   const response = await fetch(url);
   if (!response.ok) {
     const error = await response.text();
@@ -23,61 +13,16 @@ async function downloadImage(url) {
   return Buffer.from(arrayBuffer);
 }
 
-async function uploadImage(image) {
-  const params = {
-    Bucket: BUCKET_NAME,
-    Key: `${Date.now().toString()}.jpg`,
-    Body: image,
-  };
-  const response = await s3.upload(params).promise();
-  return response.Location;
-}
-
-// async function resizeImage(imageBuffer) {
-//   return new Promise((resolve, reject) => {
-//     const img = new Image();
-//     img.src = URL.createObjectURL(new Blob([imageBuffer]));
-//     img.onload = () => {
-//       const canvas = document.createElement('canvas');
-//       const ctx = canvas.getContext('2d');
-//       const MAX_WIDTH = 384;
-//       const MAX_HEIGHT = 384;
-//       let width = img.width;
-//       let height = img.height;
-
-//       if (width > height) {
-//         if (width > MAX_WIDTH) {
-//           height *= MAX_WIDTH / width;
-//           width = MAX_WIDTH;
-//         }
-//       } else {
-//         if (height > MAX_HEIGHT) {
-//           width *= MAX_HEIGHT / height;
-//           height = MAX_HEIGHT;
-//         }
-//       }
-
-//       canvas.width = width;
-//       canvas.height = height;
-//       ctx.drawImage(img, 0, 0, width, height);
-//       canvas.toBlob(resolve, 'image/jpeg');
-//     };
-//     img.onerror = reject;
-//   });
-// }
-
-const createProductImageEmbedding = async ({ record, api, logger, connections }) => {
+export const createProductImageEmbedding = async ({ record, api, logger, connections }) => {
   if (!record.imageEmbedding || record.changed('image')) {
     try {
       logger.info({ record: record }, 'this is the record object');
       const imageUrl = record.source;
       const imageBuffer = await downloadImage(imageUrl);
-      //const resizedImageBuffer = await resizeImage(imageBuffer);
 
       const response = await fetch(EMBEDDING_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
-        //body: resizedImageBuffer,
         body: imageBuffer,
       });
 
@@ -109,12 +54,12 @@ const createProductImageEmbedding = async ({ record, api, logger, connections })
   }
 };
 
-export default createProductImageEmbedding;
+// export default createProductImageEmbedding;
 
-module.exports = {
-  run: createProductImageEmbedding,
-  timeoutMS: 900000,
-};
+// module.exports = {
+//   run: createProductImageEmbedding,
+//   timeoutMS: 900000,
+// };
 
-//Required export in Gadget syntax
-module.exports.createProductImageEmbedding = createProductImageEmbedding;
+// //Required export in Gadget syntax
+// module.exports = createProductImageEmbedding;

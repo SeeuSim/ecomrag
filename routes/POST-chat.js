@@ -1,11 +1,13 @@
 import AWS from 'aws-sdk';
 import fs from 'fs';
-import { RouteContext } from 'gadget-server'; // Ensure Gadget supports this usage pattern
+import { logger } from 'gadget-server';
 import { openAIResponseStream } from 'gadget-server/ai';
 
-import createProductImageEmbedding from '../shopifyProductImage/createImageEmbedding';
+import { createProductImageEmbedding } from '../shopifyProductImage/createImageEmbedding';
 
 const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME } = process.env;
+
+const BUCKET_PATH = 'images/';
 
 AWS.config.update({
   accessKeyId: ACCESS_KEY_ID,
@@ -31,29 +33,35 @@ function stringify(obj) {
   return str;
 }
 
-async function uploadImage(file) {
-  const fileContent = fs.readFileSync(file.filepath);
+async function uploadImage(image, logger) {
+  const content = await image.toBuffer();
+  logger.info(`Image: ${content}`);
   const params = {
     Bucket: BUCKET_NAME,
-    Key: `${Date.now()}_${file.filename}`,
-    Body: fileContent,
-    ContentType: file.mimetype,
+    Key: `${BUCKET_PATH}${Date.now()}_${image.filename}`,
+    Body: content,
+    ContentType: image.mimetype,
   };
   const response = await s3.upload(params).promise();
   return response.Location;
 }
 
 export default async function route({ request, reply, api, logger, connections }) {
-  const data = await request.saveRequestFiles();
-  logger.info(request.body);
-  const message = '<PLACEHOLDER>';
+  const data = request.parts();
+
+  let message;
   let imageUrl = null;
 
   // Check if there is an image and upload it
-  if (data && data.length > 0 && data[0].fieldname === 'image') {
-    const image = data[0];
-    logger.info(image);
-    imageUrl = await uploadImage(image);
+  if (data) {
+    for await (const part of data) {
+      if (part.fieldname === 'image') {
+        imageUrl = await uploadImage(part, logger);
+      }
+      if (part.fieldname === 'message') {
+        message = part.value;
+      }
+    }
   }
 
   // Assuming further processing is done only if an image is uploaded
