@@ -1,4 +1,4 @@
-import { applyParams, save, ActionOptions, CreateChatLogActionContext } from "gadget-server";
+import { applyParams, save, ActionOptions, CreateChatLogActionContext } from 'gadget-server';
 
 /**
  * @param { CreateChatLogActionContext } context
@@ -6,16 +6,16 @@ import { applyParams, save, ActionOptions, CreateChatLogActionContext } from "ga
 export async function run({ params, record, logger, api, connections }) {
   applyParams(params, record);
   await save(record);
-};
+}
 
 /**
  * @param { CreateChatLogActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
-};
+}
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: "create"
+  actionType: 'create',
 };

@@ -90,7 +90,9 @@ export const createProductImageEmbedding = async ({ record, api, logger, connect
       const payload = await response.json();
 
       if (!payload.Embedding || !Array.isArray(payload.Embedding)) {
-        logger.error({ error: `Expected a response with one key 'Embedding', received object with keys: ${Object.keys(payload)}` });
+        logger.error({
+          error: `Expected a response with one key 'Embedding', received object with keys: ${Object.keys(payload)}`,
+        });
         return;
       }
 
