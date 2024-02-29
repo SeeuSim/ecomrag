@@ -7,6 +7,7 @@ import { openAIResponseStream } from 'gadget-server/ai';
 import createProductImageEmbedding from '../shopifyProductImage/createImageEmbedding';
 
 const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME } = process.env;
+const fastifyMultipart = require('@fastify/multipart');
 
 AWS.config.update({
   accessKeyId: ACCESS_KEY_ID,
@@ -15,13 +16,13 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
-async function uploadImage(imagePath, imageName) {
-  const fileContent = fs.readFileSync(imagePath);
+async function uploadImage(file) {
+  const fileContent = fs.readFileSync(file.path);
   const params = {
     Bucket: BUCKET_NAME,
-    Key: `${imageName}`,
+    Key: `${Date.now()}_${file.filename}`,
     Body: fileContent,
-    ContentType: 'image/jpeg', 
+    ContentType: file.mimetype,
   };
 
   const response = await s3.upload(params).promise();
@@ -29,23 +30,15 @@ async function uploadImage(imagePath, imageName) {
 }
 
 export default async function route({ request, reply, api, logger, connections }) {
-  const form = new Form();
+  const data = await request.saveRequestFiles();
+  const message = request.body.message;
+  let imageUrl = null;
 
-  form.parse(request.raw, async (error, fields, files) => {
-    if (error) {
-      console.error('Error parsing form data', error);
-      return reply.send({ error: 'Error processing your request' });
+  // Check if there is an image and upload it
+  if (data && data.length > 0 && data[0].fieldname === 'image') {
+    const imageFile = data[0];
+    imageUrl = await uploadImage(imageFile);
   }
-
-    // Extract the message text
-    const message = fields.message ? fields.message[0] : ''; // Safer access to the fields
-
-    let imageUrl = null;
-    if (files.image && files.image.length > 0) {
-      const imageFile = files.image[0];
-      const imageName = `${Date.now()}_${imageFile.originalFilename}`;
-      imageUrl = await uploadImage(imageFile.path, imageName);
-    }
   
     // Assuming further processing is done only if an image is uploaded
     if (imageUrl) {
@@ -205,3 +198,7 @@ export default async function route({ request, reply, api, logger, connections }
     await reply.send(openAIResponseStream(chatResponse, { onComplete }));
   }
 }
+
+module.exports = async function (fastify, opts) {
+  fastify.register(fastifyMultipart);
+};

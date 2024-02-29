@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@fastify/cors": "^8.5.0",
+    "@fastify/multipart": "^8.1.0",
     "@gadget-client/ecomrag": "link:.gadget/client",
     "@gadgetinc/react": "^0.15.0",
     "@gadgetinc/react-shopify-app-bridge": "^0.13.4",
