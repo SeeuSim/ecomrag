@@ -1,12 +1,12 @@
 import AWS from 'aws-sdk';
-import { RouteContext } from 'gadget-server';
+import { Form } from 'multiparty';
+import fs from 'fs';
+import { RouteContext } from 'gadget-server'; // Ensure Gadget supports this usage pattern
 import { openAIResponseStream } from 'gadget-server/ai';
 
 import createProductImageEmbedding from '../shopifyProductImage/createImageEmbedding';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME, BUCKET_NAME_CHAT } = process.env;
-
-const BUCKET_IMAGE_PATH = 'images';
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME } = process.env;
 
 AWS.config.update({
   accessKeyId: ACCESS_KEY_ID,
@@ -15,37 +15,47 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
-async function uploadImage(image) {
-  // Set up the payload of what we are sending to the S3 api
+async function uploadImage(imagePath, imageName) {
+  const fileContent = fs.readFileSync(imagePath);
   const params = {
     Bucket: BUCKET_NAME,
-    Key: `${BUCKET_IMAGE_PATH}/${Date.now().toString()}.jpg`,
-    Body: image,
+    Key: `${imageName}`,
+    Body: fileContent,
+    ContentType: 'image/jpeg', 
   };
-  const response = await s3.upload(params).promise();
 
+  const response = await s3.upload(params).promise();
   return response.Location;
 }
 
-/**
- * Route handler for POST chat
- *
- * @param { RouteContext } route context - see: https://docs.gadget.dev/guides/http-routes/route-configuration#route-context
- *
- */
 export default async function route({ request, reply, api, logger, connections }) {
-  // get input from shopper
-  const { message, image } = request.body;
+  const form = new Form();
 
-  if (image) {
-    const imageUrl = await uploadImage(image);
-    const imageEmbedding = await createProductImageEmbedding({
-      record: { source: imageUrl },
-      api,
-      logger,
-      connections,
-    }); // Create an image embedding
+  form.parse(request.raw, async (error, fields, files) => {
+    if (error) {
+      console.error('Error parsing form data', error);
+      return reply.send({ error: 'Error processing your request' });
+  }
 
+    // Extract the message text
+    const message = fields.message ? fields.message[0] : ''; // Safer access to the fields
+
+    let imageUrl = null;
+    if (files.image && files.image.length > 0) {
+      const imageFile = files.image[0];
+      const imageName = `${Date.now()}_${imageFile.originalFilename}`;
+      imageUrl = await uploadImage(imageFile.path, imageName);
+    }
+  
+    // Assuming further processing is done only if an image is uploaded
+    if (imageUrl) {
+      const imageEmbedding = await createProductImageEmbedding({
+        record: { source: imageUrl },
+        api,
+        logger,
+        connections,
+      });
+  
     const products = await api.shopifyProductImage.findMany({
       sort: {
         imageDescriptionEmbedding: {
