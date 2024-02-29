@@ -1,6 +1,8 @@
 import { Server } from 'gadget-server';
 import cors from '@fastify/cors';
 
+const multipart = require('@fastify/multipart');
+
 /**
  * Route plugin for *
  *
@@ -12,4 +14,5 @@ export default async function (server) {
   await server.register(cors, {
     origin: true, // allow requests from any domain
   });
+  await server.register(multipart);
 }

@@ -66,7 +66,7 @@ async function uploadImage(image) {
 //   });
 // }
 
-export const createProductImageEmbedding = async ({ record, api, logger, connections }) => {
+const createProductImageEmbedding = async ({ record, api, logger, connections }) => {
   if (!record.imageEmbedding || record.changed('image')) {
     try {
       logger.info({ record: record }, 'this is the record object');
@@ -108,6 +108,8 @@ export const createProductImageEmbedding = async ({ record, api, logger, connect
     }
   }
 };
+
+export default createProductImageEmbedding;
 
 module.exports = {
   run: createProductImageEmbedding,
