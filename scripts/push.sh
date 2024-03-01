@@ -13,7 +13,7 @@ upstream=$(git remote -v | grep upstream | awk '{print $1}')
 
 git push origin $branch
 
-if [[ -z "$upstream" ]]; then
+if [[ -n "$upstream" ]]; then
   git push upstream $branch
 fi
 
