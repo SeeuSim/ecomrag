@@ -1,5 +1,5 @@
-import { Server } from 'gadget-server';
 import cors from '@fastify/cors';
+import { Server } from 'gadget-server';
 
 const multipart = require('@fastify/multipart');
 

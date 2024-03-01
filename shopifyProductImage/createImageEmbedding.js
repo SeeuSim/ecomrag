@@ -20,7 +20,7 @@ export async function downloadImage(s3Url) {
   try {
     const data = await s3.getObject(params).promise();
     //console.log("got the image from s3")
-    return data.Body;
+    return { content: data.Body, fileType: data.ContentType };
   } catch (error) {
     //console.log(`Failed to download image from S3: ${error.message}`);
     throw new Error(error);
@@ -32,20 +32,20 @@ export const createProductImageEmbedding = async ({ record, api, logger, connect
     try {
       logger.info({ record: record }, 'this is the record object');
       const imageUrl = record.source;
-      const imageBuffer = await downloadImage(imageUrl);
+      const { content: image, fileType } = await downloadImage(imageUrl);
 
       //Fetching the vector embedding under ShopifyProductImage.imageDescriptionEmbedding
       const response = await fetch(EMBEDDING_ENDPOINT, {
         method: 'POST',
-        headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
-        body: imageBuffer,
+        headers: { 'Content-Type': fileType, Accept: 'application/json' },
+        body: image,
       });
 
       //Fetching the text caption under ShopifyProductImage.imageDescription
       const textResponse = await fetch(CAPTIONING_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
-        body: imageBuffer,
+        body: image,
       });
 
       if (!response.ok) {
