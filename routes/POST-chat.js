@@ -42,14 +42,14 @@ async function uploadImage(image, logger) {
     Body: content,
     ContentType: image.mimetype,
   };
-  const response = await s3.upload(params).promise();
+  const response = await s3.putObject(params).promise();
   return response.Location;
 }
 
 export default async function route({ request, reply, api, logger, connections }) {
   const data = request.parts();
 
-  let message;
+  let userMessage;
   let imageUrl = null;
 
   // Check if there is an image and upload it
@@ -59,7 +59,7 @@ export default async function route({ request, reply, api, logger, connections }
         imageUrl = await uploadImage(part, logger);
       }
       if (part.fieldname === 'message') {
-        message = part.value;
+        userMessage = part.value;
       }
     }
   }
@@ -99,7 +99,7 @@ export default async function route({ request, reply, api, logger, connections }
 
     // capture products in Gadget's Logs
     logger.info(
-      { products, message: message },
+      { products, message: userMessage },
       'found products most similar to user input'
     );
 
@@ -115,7 +115,7 @@ export default async function route({ request, reply, api, logger, connections }
           role: 'system',
           content: prompt,
         },
-        { role: 'user', content: message },
+        { role: 'user', content: userMessage },
       ],
       stream: true,
     });
@@ -140,7 +140,7 @@ export default async function route({ request, reply, api, logger, connections }
   } else {
     // embed the incoming message from the user
     const embeddingResponse = await connections.openai.embeddings.create({
-      input: message,
+      input: userMessage,
       model: 'text-embedding-ada-002',
     });
 
@@ -177,7 +177,7 @@ export default async function route({ request, reply, api, logger, connections }
 
     // capture products in Gadget's Logs
     logger.info(
-      { products, message: request.body.message },
+      { products, message: userMessage },
       'found products most similar to user input'
     );
 
@@ -193,7 +193,7 @@ export default async function route({ request, reply, api, logger, connections }
           role: 'system',
           content: prompt,
         },
-        { role: 'user', content: message },
+        { role: 'user', content: userMessage },
       ],
       stream: true,
     });
