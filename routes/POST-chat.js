@@ -34,34 +34,44 @@ function stringify(obj) {
   return str;
 }
 
-async function uploadImage(image, logger) {
-  const content = await image.toBuffer();
+function getCurrentDateString() {
+  return new Date(Date.now()).toISOString();
+}
+
+async function uploadImage(imageBase64, fileName, fileType, _logger) {
   const params = {
     Bucket: BUCKET_NAME,
-    Key: `${BUCKET_PATH}${Date.now()}_${image.filename}`,
-    Body: content,
-    ContentType: image.mimetype,
+    Key: `${BUCKET_PATH}${getCurrentDateString()}_${fileName}`,
+    Body: Buffer.from(imageBase64.replace(/^data:image\/\w+;base64,/, ""), 'base64'),
+    ContentEncoding: 'base64',
+    ContentType: fileType,
   };
   const response = await s3.putObject(params).promise();
   return response.Location;
 }
 
 export default async function route({ request, reply, api, logger, connections }) {
-  const data = request.parts();
+  let payload = request.body;
 
   let userMessage;
   let imageUrl = null;
 
+  logger.info(payload);
+  if (payload.Message) {
+    userMessage = payload.Message;
+  }
+
   // Check if there is an image and upload it
-  if (data) {
-    for await (const part of data) {
-      if (part.fieldname === 'image') {
-        imageUrl = await uploadImage(part, logger);
-      }
-      if (part.fieldname === 'message') {
-        userMessage = part.value;
-      }
-    }
+  if (
+    payload.Image &&
+    payload.Image.FileContent &&
+    payload.Image.FileName &&
+    payload.Image.FileType
+  ) {
+    const imageBase64 = payload.Image.FileContent;
+    const imageName = payload.Image.FileName;
+    const imageType = payload.Image.FileType;
+    imageUrl = await uploadImage(imageBase64, imageName, imageType, logger);
   }
 
   // Assuming further processing is done only if an image is uploaded
@@ -72,7 +82,6 @@ export default async function route({ request, reply, api, logger, connections }
       logger,
       connections,
     });
-
 
     const products = await api.shopifyProductImage.findMany({
       sort: {
@@ -98,10 +107,7 @@ export default async function route({ request, reply, api, logger, connections }
     });
 
     // capture products in Gadget's Logs
-    logger.info(
-      { products, message: userMessage },
-      'found products most similar to user input'
-    );
+    logger.info({ products, message: userMessage }, 'found products most similar to user input');
 
     const prompt = `You are a helpful shopping assistant trying to match customers with the right product. You will be given a question from a customer and some JSON objects with the id, title, handle, and description (body) of products available for sale that roughly match the customer's question, as well as the store domain. Respond in HTML markup, with an anchor tag at the end with images that link to the product pages and <br /> tags between your text response and product recommendations. The anchor should be of the format: <a href={"https://" + {domain} + "/products/" + {handle}} target="_blank">{title}<img style={border: "1px black solid"} width="200px" src={product.images.edges[0].node.source} /></a> but with the domain, handle, and title replaced with passed-in variables. If you have recommended products, end your response with "Click on a product to learn more!" If you are unsure or if the question seems unrelated to shopping, say "Sorry, I don't know how to help with that", and include some suggestions for better questions to ask. Please do respond to normal greeting questions like "Hi", and if the user inputs their needs, please suggest products to match their needs always. Here are the json products you can use to generate a response: ${stringify(
       products
@@ -176,10 +182,7 @@ export default async function route({ request, reply, api, logger, connections }
     });
 
     // capture products in Gadget's Logs
-    logger.info(
-      { products, message: userMessage },
-      'found products most similar to user input'
-    );
+    logger.info({ products, message: userMessage }, 'found products most similar to user input');
 
     const prompt = `You are a helpful shopping assistant trying to match customers with the right product. You will be given a question from a customer and some JSON objects with the id, title, handle, and description (body) of products available for sale that roughly match the customer's question, as well as the store domain. Respond in HTML markup, with an anchor tag at the end with images that link to the product pages and <br /> tags between your text response and product recommendations. The anchor should be of the format: <a href={"https://" + {domain} + "/products/" + {handle}} target="_blank">{title}<img style={border: "1px black solid"} width="200px" src={product.images.edges[0].node.source} /></a> but with the domain, handle, and title replaced with passed-in variables. If you have recommended products, end your response with "Click on a product to learn more!" If you are unsure or if the question seems unrelated to shopping, say "Sorry, I don't know how to help with that", and include some suggestions for better questions to ask. Please do respond to normal greeting questions like "Hi", and if the user inputs their needs, please suggest products to match their needs always. Here are the json products you can use to generate a response: ${stringify(
       products
