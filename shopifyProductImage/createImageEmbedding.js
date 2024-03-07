@@ -2,7 +2,13 @@ import AWS from 'aws-sdk';
 import fetch from 'node-fetch';
 import { logger } from 'gadget-server';
 
-const { EMBEDDING_ENDPOINT, CAPTIONING_ENDPOINT } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME, EMBEDDING_ENDPOINT, CAPTIONING_ENDPOINT } = process.env;
+
+AWS.config.update({
+  accessKeyId: ACCESS_KEY_ID,
+  secretAccessKey: SECRET_ACCESS_KEY,
+  region: 'us-east-1',
+});
 
 export async function downloadImage(s3Url) {
   const url = new URL(s3Url);
@@ -62,6 +68,7 @@ export const createProductImageEmbedding = async ({ record, api, logger, connect
 
       const payload = await response.json();
       const textPayload = await textResponse.json();
+      logger('This is the text payload +' + textPayload);
       logger('This is the image payload +' + payload);
       logger('This is the text payload +' + textPayload);
 
@@ -73,7 +80,7 @@ export const createProductImageEmbedding = async ({ record, api, logger, connect
       }
 
       const embedding = payload.Embedding;
-      const caption = textPayload.Caption;
+      const caption = textPayload.Embedding;
       logger('This is the image embedding +' + embedding);
       logger('This is the text caption +' + caption);
 
