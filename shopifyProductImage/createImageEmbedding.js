@@ -1,8 +1,7 @@
 import AWS from 'aws-sdk';
 import fetch from 'node-fetch';
-import { logger } from 'gadget-server';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME, EMBEDDING_ENDPOINT, CAPTIONING_ENDPOINT } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBEDDING_ENDPOINT, CAPTIONING_ENDPOINT } = process.env;
 
 AWS.config.update({
   accessKeyId: ACCESS_KEY_ID,
@@ -33,7 +32,7 @@ export async function downloadImage(s3Url) {
   }
 }
 
-export const createProductImageEmbedding = async ({ record, api, logger, connections }) => {
+export const createProductImageEmbedding = async ({ record, api, logger }) => {
   if (!record.imageEmbedding || record.changed('image')) {
     try {
       logger.info({ record: record }, 'this is the record object');

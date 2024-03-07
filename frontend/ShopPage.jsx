@@ -1,4 +1,6 @@
 import { useFindFirst, useQuery } from '@gadgetinc/react';
+import { Link } from 'react-router-dom';
+
 import {
   Card,
   Banner,
@@ -6,7 +8,6 @@ import {
   InlineStack,
   Icon,
   Layout,
-  Link,
   Page,
   Spinner,
   Text,
@@ -26,6 +27,7 @@ const gadgetMetaQuery = `
 
 const ShopPage = () => {
   const [{ data, fetching, error }] = useFindFirst(api.shopifyShop);
+
   const [{ data: metaData, fetching: fetchingGadgetMeta }] = useQuery({
     query: gadgetMetaQuery,
   });
@@ -61,9 +63,12 @@ const ShopPage = () => {
       <Layout>
         <Layout.Section>
           <Banner
-            title={`${metaData.gadgetMeta.slug} is successfully connected to Shopify`}
+            title={`${metaData.gadgetMeta.slug} is successfully connected to Shopifysss`}
             tone='success'
           />
+        </Layout.Section>
+        <Layout.Section>
+          <Link to={'/settings'}>Go to settings page</Link>
         </Layout.Section>
         <Layout.Section>
           <Card>
