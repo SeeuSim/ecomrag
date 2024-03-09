@@ -65,6 +65,7 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
         return;
       }
 
+      /**@type { { Embedding: number[] } } */
       const payload = await response.json();
       const textPayload = await textResponse.json();
       logger('This is the text payload +' + textPayload);
@@ -91,6 +92,8 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
           imageDescription: caption,
         },
       });
+
+      return embedding;
     } catch (error) {
       logger.error({ error }, 'error creating embedding');
     }
