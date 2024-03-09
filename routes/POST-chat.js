@@ -1,6 +1,6 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
-import { HumanMessage, AiMessage } from '@langchain/core/messages';
+import { HumanMessage, AiMessage, SystemMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 
@@ -9,7 +9,7 @@ import AWS from 'aws-sdk';
 
 import { createProductImageEmbedding } from '../shopifyProductImage/createImageEmbedding';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME, OPENAI_API_KEY } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME } = process.env;
 
 const BUCKET_PATH = 'images/';
 
@@ -53,7 +53,7 @@ const getBaseSystemPrompt = (products) => {
     `question, as well as the store domain. Respond in HTML markup, with an ` +
     `anchor tag at the end with images that link to the product pages and ` +
     `<br /> tags between your text response and product recommendations. ` +
-    `The anchor should be of the format: <a href={"https://" + {domain} + "/products/" + {handle}} target="_blank">{title}<img src={product.images.edges[0].node.source} /></a> ` +
+    `The anchor should be of the format: <a href="https://[domain]/products/[handle]" target="_blank">[title]<img src=[product.images.edges[0].node.source] /></a> ` +
     `but with the domain, handle, and title replaced with passed-in ` +
     `variables. If you have recommended products, end your response with ` +
     `"Click on a product to learn more!" If you are unsure or if the ` +
@@ -101,7 +101,7 @@ export default async function route({ request, reply, api, logger, connections }
   let chatHistory = [];
 
   const model = new ChatOpenAI({
-    openAIApiKey: OPENAI_API_KEY,
+    openAIApiKey: connections.openai.configuration.apiKey,
     modelName: 'gpt-4-turbo-preview',
     streaming: true,
   });
@@ -154,8 +154,8 @@ export default async function route({ request, reply, api, logger, connections }
       [
         'user',
         'Given the above conversation, generate a search query to look up in ' +
-          'order to get information relevant to the conversation. Only respond ' +
-          'with the query, nothing else.',
+        'order to get information relevant to the conversation. Only respond ' +
+        'with the query, nothing else.',
       ],
     ])
       .pipe(model)
@@ -164,8 +164,8 @@ export default async function route({ request, reply, api, logger, connections }
     const embeddingQuery =
       chatHistory.length > 0
         ? await summarisationChain.invoke({
-            messages: [...chatHistory, new HumanMessage(userMessage)],
-          })
+          messages: [...chatHistory, new HumanMessage(userMessage)],
+        })
         : userMessage;
 
     // TODO: migrate to image embeddings endpoint since it uses OpenAI CLIP
@@ -213,8 +213,9 @@ export default async function route({ request, reply, api, logger, connections }
   // capture products in Gadget's Logs
   logger.info({ products, message: userMessage }, 'found products most similar to user input');
 
+  const systemPrompt = getBaseSystemPrompt(products);
+
   const prompt = ChatPromptTemplate.fromMessages([
-    ['system', getBaseSystemPrompt(products)],
     new MessagesPlaceholder('messages'),
   ]);
 
@@ -222,7 +223,10 @@ export default async function route({ request, reply, api, logger, connections }
 
   const stream = chain.stream(
     {
-      messages: [...chatHistory, new HumanMessage(userMessage)],
+      messages: [
+        new SystemMessage(systemPrompt), 
+        ...chatHistory, 
+        new HumanMessage(userMessage)],
     },
     {
       callbacks: [

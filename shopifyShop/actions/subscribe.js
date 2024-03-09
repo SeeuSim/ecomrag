@@ -1,26 +1,29 @@
+// shopifyShop/subscribe.js
 const PLANS = {
-  basic: {
-    price: 10.0,
+  free: {
+    price: 0.0,
   },
-  pro: {
-    price: 20.0,
+  growth: {
+    price: 9.0,
+  },
+  premium: {
+    price: 29.0,
   },
   enterprise: {
-    price: 100.0,
+    price: 199.0,
   },
 };
 
 /**
-- run function code for subscribe on Shopify Shop
-- @param { import("gadget-server").SubscribeShopifyShopActionContext } context
-  */
-export async function run({ api, record, params, connections, logger }) {
-  // get the plan object from the list of available plans
+ * This function creates a recurring charge with Shopify and returns the confirmation URL.
+ * @param {Object} context - The action context provided by Gadget.
+ */
+async function createRecurringCharge(context) {
+  const { api, record, params, connections, logger } = context;
   const name = params.plan;
   const plan = PLANS[name];
-  if (!plan) throw new Error(`unknown plan name ${name}`);
+  if (!plan) throw new Error(`Unknown plan name: ${name}`);
 
-  // get an instance of the shopify-api-node API client for this shop
   const shopify = connections.shopify.current;
 
   const CREATE_SUBSCRIPTION_QUERY = `
@@ -28,7 +31,7 @@ export async function run({ api, record, params, connections, logger }) {
       appSubscriptionCreate(
         name: $name,
         test: true,
-        returnUrl: "http://ecomrag.gadget.app/finish-payment?shop_id=${connections.shopify.currentShopId}",
+        returnUrl: "http://${api.config.appUrl}/finish-payment?shop_id=${record.id}",
         lineItems: [{
           plan: {
             appRecurringPricingDetails: {
@@ -49,21 +52,35 @@ export async function run({ api, record, params, connections, logger }) {
       }
     }
   `;
-  // make an API call to Shopify to create a charge object
+
   const result = await shopify.graphql(CREATE_SUBSCRIPTION_QUERY, {
     name,
     price: plan.price,
   });
 
   const { confirmationUrl, appSubscription } = result.appSubscriptionCreate;
-
-  // update this shop record to send the confirmation URL back to the frontend
-  await api.internal.shopifyShop.update(record.id, { confirmationUrl });
-
-  logger.info({ appSubscriptionId: appSubscription.id }, 'created subscription');
+  if (appSubscription) {
+    await api.internal.shopifyShop.update(record.id, { confirmationUrl });
+    logger.info({ appSubscriptionId: appSubscription.id }, 'Created subscription');
+    return confirmationUrl;
+  } else {
+    const errors = result.appSubscriptionCreate.userErrors
+      .map((error) => `${error.field}: ${error.message}`)
+      .join(', ');
+    throw new Error(`Failed to create app subscription: ${errors}`);
+  }
 }
 
-// add a paramter to this action to accept which plan name the merchant has selected
-export const params = {
-  plan: { type: 'string' },
+module.exports = {
+  actions: {
+    subscribe: {
+      run: createRecurringCharge,
+      params: {
+        plan: {
+          type: 'string',
+          required: true,
+        },
+      },
+    },
+  },
 };

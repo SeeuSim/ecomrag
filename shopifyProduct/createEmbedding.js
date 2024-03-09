@@ -1,6 +1,27 @@
 export const createProductEmbedding = async ({ record, api, logger, connections }) => {
+  const plan = await api.shopifyShop.findOne({ where: { plan: record.plan } });
+
+  const planLimits = {
+    free: 100,
+    growth: 500,
+    premium: 2000,
+  };
+
+  // Check the current plan and get the product limit
+  const productLimit = planLimits[plan] || 0;
+
+  // Fetch the current count of products with embeddings
+  const productCount = await api.internal.shopifyProduct.count({
+    where: { descriptionEmbedding: { _not_null: true } },
+  });
+
+  // Only proceed if the product count is within the limit
   // only run if the product does not have an embedding, or if the title or body have changed
-  if (!record.descriptionEmbedding || record.changed('title') || record.changed('body')) {
+  if (
+    (productCount < productLimit && !record.descriptionEmbedding) ||
+    record.changed('title') ||
+    record.changed('body')
+  ) {
     try {
       // get an embedding for the product title + description using the OpenAI connection
       const response = await connections.openai.embeddings.create({
@@ -18,5 +39,7 @@ export const createProductEmbedding = async ({ record, api, logger, connections 
     } catch (error) {
       logger.error({ error }, 'error creating embedding');
     }
+  } else {
+    logger.info('Product limit reached for the current plan. Skipping embedding creation.');
   }
 };
