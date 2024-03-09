@@ -216,11 +216,11 @@ export default async function route({ request, reply, api, logger, connections }
   const systemPrompt = getBaseSystemPrompt(products);
 
   const prompt = ChatPromptTemplate.fromMessages([
-    SystemMessagePromptTemplate.fromTemplate(getBaseSystemPrompt(products), {
-      
-    }),
+    ['system', systemPrompt],
     new MessagesPlaceholder('messages'),
   ]);
+
+  prompt.validateTemplate = false;
 
   const chain = prompt.pipe(model).pipe(new StringOutputParser());
 
