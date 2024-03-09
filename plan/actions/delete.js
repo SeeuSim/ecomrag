@@ -1,14 +1,14 @@
-import { deleteRecord, ActionOptions, DeleteModelAActionContext } from 'gadget-server';
+import { deleteRecord, ActionOptions, DeletePlanActionContext } from 'gadget-server';
 
 /**
- * @param { DeleteModelAActionContext } context
+ * @param { DeletePlanActionContext } context
  */
 export async function run({ params, record, logger, api, connections }) {
   await deleteRecord(record);
 }
 
 /**
- * @param { DeleteModelAActionContext } context
+ * @param { DeletePlanActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here

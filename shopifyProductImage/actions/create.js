@@ -1,10 +1,4 @@
-import {
-  applyParams,
-  preventCrossShopDataAccess,
-  save,
-  ActionOptions,
-  CreateShopifyProductImageActionContext,
-} from 'gadget-server';
+import { applyParams, preventCrossShopDataAccess, save } from 'gadget-server';
 import { createProductImageEmbedding } from '../createImageEmbedding';
 
 /**

@@ -1,12 +1,7 @@
-import {
-  applyParams,
-  save,
-  ActionOptions,
-  UpdateImageRecommendedProductActionContext,
-} from 'gadget-server';
+import { applyParams, save, ActionOptions, CreatePlanActionContext } from 'gadget-server';
 
 /**
- * @param { UpdateImageRecommendedProductActionContext } context
+ * @param { CreatePlanActionContext } context
  */
 export async function run({ params, record, logger, api, connections }) {
   applyParams(params, record);
@@ -14,7 +9,7 @@ export async function run({ params, record, logger, api, connections }) {
 }
 
 /**
- * @param { UpdateImageRecommendedProductActionContext } context
+ * @param { CreatePlanActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
@@ -22,5 +17,5 @@ export async function onSuccess({ params, record, logger, api, connections }) {
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: 'update',
+  actionType: 'create',
 };
