@@ -1,6 +1,4 @@
 import AWS from 'aws-sdk';
-import fs from 'fs';
-import { logger } from 'gadget-server';
 import { openAIResponseStream } from 'gadget-server/ai';
 
 import { createProductImageEmbedding } from '../shopifyProductImage/createImageEmbedding';
@@ -38,11 +36,11 @@ function getCurrentDateString() {
   return new Date(Date.now()).toISOString();
 }
 
-async function uploadImage(imageBase64, fileName, fileType, _logger) {
+async function uploadImage(imageBase64, fileName, fileType) {
   const params = {
     Bucket: BUCKET_NAME,
     Key: `${BUCKET_PATH}${getCurrentDateString()}_${fileName}`,
-    Body: Buffer.from(imageBase64.replace(/^data:image\/\w+;base64,/, ""), 'base64'),
+    Body: Buffer.from(imageBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64'),
     ContentEncoding: 'base64',
     ContentType: fileType,
   };

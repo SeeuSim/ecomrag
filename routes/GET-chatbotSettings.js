@@ -16,5 +16,7 @@ export default async function route({ request, reply, api, logger, connections }
     },
   });
   logger.info(chatBotSetting);
-  await reply.type('application/json').send({ hello: chatBotSetting.name });
+  await reply
+    .type('application/json')
+    .send({ name: chatBotSetting.name, introductionMessage: chatBotSetting.introductionMessage });
 }

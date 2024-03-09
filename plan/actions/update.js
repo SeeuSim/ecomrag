@@ -1,12 +1,7 @@
-import {
-  applyParams,
-  save,
-  ActionOptions,
-  UpdateImageRecommendedProductActionContext,
-} from 'gadget-server';
+import { applyParams, save, ActionOptions, UpdatePlanActionContext } from 'gadget-server';
 
 /**
- * @param { UpdateImageRecommendedProductActionContext } context
+ * @param { UpdatePlanActionContext } context
  */
 export async function run({ params, record, logger, api, connections }) {
   applyParams(params, record);
@@ -14,7 +9,7 @@ export async function run({ params, record, logger, api, connections }) {
 }
 
 /**
- * @param { UpdateImageRecommendedProductActionContext } context
+ * @param { UpdatePlanActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
