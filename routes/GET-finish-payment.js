@@ -1,5 +1,6 @@
 export default async function route({ request, reply }) {
   const { api, connections } = request;
+
   // get an instance of the shopify-api-node API client for this shop
   const shopify = await connections.shopify.forShopId(request.query.shop_id);
 
@@ -10,6 +11,7 @@ export default async function route({ request, reply }) {
         id
         ... on AppSubscription {
           status
+          name
         }
       }
     }
@@ -20,9 +22,13 @@ export default async function route({ request, reply }) {
     await reply.code(400).send('Invalid charge ID specified');
     return;
   }
+
   // the merchant has accepted the charge, so we can grant them access to our application
-  // example: mark the shop as paid by setting a `plan` attribute, this may vary for your billing model
-  await api.internal.shopifyShop.update(request.query.shop_id, { plan: 'basic' });
+  // retrieve the plan name from the AppSubscription query result
+  const planName = result.node.name;
+
+  // example: mark the shop as paid by setting a `plan` attribute with the retrieved plan name
+  await api.internal.shopifyShop.update(request.query.shop_id, { plan: planName });
 
   // send the user back to the embedded app
   await reply.redirect('/');
