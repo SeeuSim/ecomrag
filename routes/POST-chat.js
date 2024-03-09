@@ -221,6 +221,7 @@ export default async function route({ request, reply, api, logger, connections }
     
     const stream = chain.stream({
       messages: [
+        ...chatHistory,
         new HumanMessage(userMessage) // add history as needed here
       ]
     }, {
