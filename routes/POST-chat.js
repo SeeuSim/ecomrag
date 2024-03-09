@@ -2,7 +2,9 @@ import { ChatOpenAI } from '@langchain/openai';
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import { HumanMessage, AiMessage, SystemMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { ChatPromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate } from '@langchain/core/prompts';
+import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
+
+const fs = require('node:fs');
 
 import AWS from 'aws-sdk';
 // import { openAIResponseStream } from 'gadget-server/ai';
@@ -154,8 +156,8 @@ export default async function route({ request, reply, api, logger, connections }
       [
         'user',
         'Given the above conversation, generate a search query to look up in ' +
-        'order to get information relevant to the conversation. Only respond ' +
-        'with the query, nothing else.',
+          'order to get information relevant to the conversation. Only respond ' +
+          'with the query, nothing else.',
       ],
     ])
       .pipe(model)
@@ -164,8 +166,8 @@ export default async function route({ request, reply, api, logger, connections }
     const embeddingQuery =
       chatHistory.length > 0
         ? await summarisationChain.invoke({
-          messages: [...chatHistory, new HumanMessage(userMessage)],
-        })
+            messages: [...chatHistory, new HumanMessage(userMessage)],
+          })
         : userMessage;
 
     // TODO: migrate to image embeddings endpoint since it uses OpenAI CLIP
@@ -215,20 +217,15 @@ export default async function route({ request, reply, api, logger, connections }
 
   const systemPrompt = getBaseSystemPrompt(products);
 
-  const prompt = ChatPromptTemplate.fromMessages([
-    ['system', systemPrompt],
-    new MessagesPlaceholder('messages'),
-  ]);
+  const prompt = ChatPromptTemplate.fromMessages([new MessagesPlaceholder('messages')]);
 
   prompt.validateTemplate = false;
 
   const chain = prompt.pipe(model).pipe(new StringOutputParser());
 
-  const stream = chain.stream(
+  const stream = await chain.stream(
     {
-      messages: [
-        ...chatHistory, 
-        new HumanMessage(userMessage)],
+      messages: [new SystemMessage(systemPrompt), ...chatHistory, new HumanMessage(userMessage)],
     },
     {
       callbacks: [
@@ -241,5 +238,9 @@ export default async function route({ request, reply, api, logger, connections }
     }
   );
 
-  await reply.send(stream);
+  const response = new Response(stream, {
+    headers: { 'Content-Type': 'application/octet-stream' },
+  });
+
+  await reply.send(response);
 }
