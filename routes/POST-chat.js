@@ -9,7 +9,7 @@ import AWS from 'aws-sdk';
 
 import { createProductImageEmbedding } from '../shopifyProductImage/createImageEmbedding';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME, OPENAI_API_KEY } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME } = process.env;
 
 const BUCKET_PATH = 'images/';
 
@@ -101,7 +101,7 @@ export default async function route({ request, reply, api, logger, connections }
   let chatHistory = [];
 
   const model = new ChatOpenAI({
-    openAIApiKey: OPENAI_API_KEY,
+    openAIApiKey: connections.openai.configuration.apiKey,
     modelName: 'gpt-4-turbo-preview',
     streaming: true,
   });
