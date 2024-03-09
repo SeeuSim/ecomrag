@@ -1,8 +1,8 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
-import { HumanMessage, AiMessage } from '@langchain/core/messages';
+import { HumanMessage, AiMessage, SystemMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
-import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
+import { ChatPromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate } from '@langchain/core/prompts';
 
 import AWS from 'aws-sdk';
 // import { openAIResponseStream } from 'gadget-server/ai';
@@ -214,7 +214,9 @@ export default async function route({ request, reply, api, logger, connections }
   logger.info({ products, message: userMessage }, 'found products most similar to user input');
 
   const prompt = ChatPromptTemplate.fromMessages([
-    ['system', getBaseSystemPrompt(products)],
+    SystemMessagePromptTemplate.fromTemplate(getBaseSystemPrompt(products), {
+      
+    }),
     new MessagesPlaceholder('messages'),
   ]);
 
