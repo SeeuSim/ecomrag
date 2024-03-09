@@ -107,9 +107,24 @@ export default async function route({ request, reply, api, logger, connections }
     // capture products in Gadget's Logs
     logger.info({ products, message: userMessage }, 'found products most similar to user input');
 
-    const prompt = `You are a helpful shopping assistant trying to match customers with the right product. You will be given a question from a customer and some JSON objects with the id, title, handle, and description (body) of products available for sale that roughly match the customer's question, as well as the store domain. Respond in HTML markup, with an anchor tag at the end with images that link to the product pages and <br /> tags between your text response and product recommendations. The anchor should be of the format: <a href={"https://" + {domain} + "/products/" + {handle}} target="_blank">{title}<img style={border: "1px black solid"} width="200px" src={product.images.edges[0].node.source} /></a> but with the domain, handle, and title replaced with passed-in variables. If you have recommended products, end your response with "Click on a product to learn more!" If you are unsure or if the question seems unrelated to shopping, say "Sorry, I don't know how to help with that", and include some suggestions for better questions to ask. Please do respond to normal greeting questions like "Hi", and if the user inputs their needs, please suggest products to match their needs always. Here are the json products you can use to generate a response: ${stringify(
-      products
-    )}`;
+    const prompt =
+      `You are a helpful shopping assistant trying to match customers with the ` +
+      `right product. You will be given a question from a customer and some ` +
+      `JSON objects with the id, title, handle, and description (body) of ` +
+      `products available for sale that roughly match the customer's question, ` +
+      `as well as the store domain. Respond in HTML markup, with an anchor tag at ` +
+      `the end with images that link to the product pages and <br /> tags between ` +
+      `your text response and product recommendations. The anchor should be of the ` +
+      `format: <a href={"https://" + {domain} + "/products/" + {handle}} target="_blank">{title}<img src={product.images.edges[0].node.source} /></a> ` +
+      `but with the domain, handle, and title replaced with passed-in variables. ` +
+      `If you have recommended products, end your response with ` +
+      `"Click on a product to learn more!" If you are unsure or if the ` +
+      `question seems unrelated to shopping, say "Sorry, I don't know how to ` +
+      `help with that", and include some suggestions for better questions to ` +
+      `ask. Please do respond to normal greeting questions like "Hi", and if ` +
+      `the user inputs their needs, please suggest products to match their ` +
+      `needs always. Here are the json products you can use to generate a ` +
+      `response: ${stringify(products)}`;
 
     // send prompt and similar products to OpenAI to generate a response
     const chatResponse = await connections.openai.chat.completions.create({
@@ -182,9 +197,26 @@ export default async function route({ request, reply, api, logger, connections }
     // capture products in Gadget's Logs
     logger.info({ products, message: userMessage }, 'found products most similar to user input');
 
-    const prompt = `You are a helpful shopping assistant trying to match customers with the right product. Always try to give users product recommendations, even when they ask questions out of scope such as "I want to look like a celebrity from ...". You will be given a question from a customer and some JSON objects with the id, title, handle, and description (body) of products available for sale that roughly match the customer's question, as well as the store domain. Respond in HTML markup, with an anchor tag at the end with images that link to the product pages and <br /> tags between your text response and product recommendations. The anchor should be of the format: <a href={"https://" + {domain} + "/products/" + {handle}} target="_blank">{title}<img style={border: "1px black solid"} width="200px" src={product.images.edges[0].node.source} /></a> but with the domain, handle, and title replaced with passed-in variables. If you have recommended products, end your response with "Click on a product to learn more!" If you are unsure or if the question seems unrelated to shopping, say "Sorry, I don't know how to help with that", and include some suggestions for better questions to ask. Please do respond to normal greeting questions like "Hi", and if the user inputs their needs, please suggest products to match their needs always. Here are the json products you can use to generate a response: ${stringify(
-      products
-    )}`;
+    const prompt =
+      `You are a helpful shopping assistant trying to match customers with the ` +
+      `right product. Always try to give users product recommendations, even ` +
+      `when they ask questions out of scope such as "I want to look like a ` +
+      `celebrity from ...". You will be given a question from a customer and ` +
+      `some JSON objects with the id, title, handle, and description (body) ` +
+      `of products available for sale that roughly match the customer's ` +
+      `question, as well as the store domain. Respond in HTML markup, with an ` +
+      `anchor tag at the end with images that link to the product pages and ` +
+      `<br /> tags between your text response and product recommendations. ` +
+      `The anchor should be of the format: <a href={"https://" + {domain} + "/products/" + {handle}} target="_blank">{title}<img src={product.images.edges[0].node.source} /></a> ` +
+      `but with the domain, handle, and title replaced with passed-in ` +
+      `variables. If you have recommended products, end your response with ` +
+      `"Click on a product to learn more!" If you are unsure or if the ` +
+      `question seems unrelated to shopping, say "Sorry, I don't know how to ` +
+      `help with that", and include some suggestions for better questions to ` +
+      `ask. Please do respond to normal greeting questions like "Hi", and if ` +
+      `the user inputs their needs, please suggest products to match their ` +
+      `needs always. Here are the json products you can use to generate a ` +
+      `response: ${stringify(products)}`;
 
     // send prompt and similar products to OpenAI to generate a response
     const chatResponse = await connections.openai.chat.completions.create({
@@ -219,6 +251,3 @@ export default async function route({ request, reply, api, logger, connections }
   }
 }
 
-// module.exports = async function (fastify, opts) {
-
-// };
