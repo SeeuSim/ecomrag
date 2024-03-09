@@ -27,6 +27,7 @@
     "@gadget-client/ecomrag": "link:.gadget/client",
     "@gadgetinc/react": "^0.15.0",
     "@gadgetinc/react-shopify-app-bridge": "^0.13.4",
+    "@langchain/openai": "^0.0.18",
     "@mui/material": "^5.15.11",
     "@mui/styles": "^5.15.11",
     "@shopify/app-bridge": "3.5.0",
