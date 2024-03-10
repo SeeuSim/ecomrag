@@ -26,6 +26,7 @@ async function createRecurringCharge(context) {
 
   const shopify = connections.shopify.current;
 
+  //TODO Sert up returnURL
   const CREATE_SUBSCRIPTION_QUERY = `
     mutation CreateSubscription($name: String!, $price: Decimal!) {
       appSubscriptionCreate(
