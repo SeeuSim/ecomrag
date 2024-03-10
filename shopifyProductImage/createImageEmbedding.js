@@ -32,8 +32,14 @@ export async function downloadImage(s3Url) {
   }
 }
 
-export const createProductImageEmbedding = async ({ record, api, logger }) => {
-  if (!record.imageEmbedding || record.changed('image')) {
+export const createProductImageEmbedding = async ({ record, api, logger, plan }) => {
+  const planFeatures = {
+    free: { includeImages: false },
+    growth: { includeImages: true },
+    premium: { includeImages: true },
+  };
+
+  if ((planFeatures[plan].includeImages && !record.imageEmbedding) || record.changed('image')) {
     try {
       logger.info({ record: record }, 'this is the record object');
       const imageUrl = record.source;
@@ -97,6 +103,10 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
     } catch (error) {
       logger.error({ error }, 'error creating embedding');
     }
+  } else {
+    logger.info(
+      'Image syncing is not allowed for the current plan. Skipping image embedding creation.'
+    );
   }
 };
 
