@@ -214,7 +214,7 @@ export default async function route({ request, reply, api, logger, connections }
   const systemPrompt = getBaseSystemPrompt(products);
 
   const prompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(systemPrompt),
+    ['system', systemPrompt],
     new MessagesPlaceholder('messages'),
   ]);
 
@@ -226,7 +226,7 @@ export default async function route({ request, reply, api, logger, connections }
   });
 
   const stream = await chain.stream({
-    messages: [new SystemMessage(systemPrompt), ...chatHistory, new HumanMessage(userMessage)],
+    messages: [...chatHistory, new HumanMessage(userMessage)],
   });
 
   void reply.type('text/plain').send(responseStream);
