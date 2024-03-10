@@ -1,5 +1,10 @@
+import { ChatOpenAI } from '@langchain/openai';
+import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
+
 import AWS from 'aws-sdk';
-import { openAIResponseStream } from 'gadget-server/ai';
+import { Readable } from 'stream';
 
 import { createProductImageEmbedding } from '../shopifyProductImage/createImageEmbedding';
 
@@ -17,7 +22,7 @@ const s3 = new AWS.S3();
 
 function stringify(obj) {
   let cache = [];
-  let str = JSON.stringify(obj, function (key, value) {
+  let str = JSON.stringify(obj, function (_key, value) {
     if (typeof value === 'object' && value !== null) {
       if (cache.indexOf(value) !== -1) {
         // Circular reference found, discard key
@@ -36,6 +41,44 @@ function getCurrentDateString() {
   return new Date(Date.now()).toISOString();
 }
 
+const getBaseSystemPrompt = (products) => {
+  return (
+    `You are a helpful shopping assistant trying to match customers with the ` +
+    `right product. Always try to give users product recommendations, even ` +
+    `when they ask questions out of scope such as "I want to look like a ` +
+    `celebrity from ...". You will be given a question from a customer and ` +
+    `some JSON objects with the id, title, handle, and description (body) ` +
+    `of products available for sale that roughly match the customer's ` +
+    `question, as well as the store domain. Respond in HTML markup, with an ` +
+    `anchor tag at the end with images that link to the product pages and ` +
+    `<br /> tags between your text response and product recommendations. ` +
+    `The anchor should be of the format: <a href="https://[domain]/products/[handle]" target="_blank">[title]<img src=[product.images.edges[0].node.source] /></a> ` +
+    `but with the domain, handle, and title replaced with passed-in ` +
+    `variables. If you have recommended products, end your response with ` +
+    `"Click on a product to learn more!" If you are unsure or if the ` +
+    `question seems unrelated to shopping, say "Sorry, I don't know how to ` +
+    `help with that", and include some suggestions for better questions to ` +
+    `ask. Please do respond to normal greeting questions like "Hi", and if ` +
+    `the user inputs their needs, please suggest products to match their ` +
+    `needs always. Here are the json products you can use to generate a ` +
+    `response: ${stringify(products)}`
+  );
+};
+
+const handleLLMOnComplete = (api, products, content) => {
+  const recommendedProducts = products.map((product) => ({
+    create: {
+      product: {
+        _link: product.id,
+      },
+    },
+  }));
+  void api.chatLog.create({
+    response: content,
+    recommendedProducts,
+  });
+};
+
 async function uploadImage(imageBase64, fileName, fileType) {
   const params = {
     Bucket: BUCKET_NAME,
@@ -53,8 +96,18 @@ export default async function route({ request, reply, api, logger, connections }
 
   let userMessage;
   let imageUrl = null;
+  let chatHistory = [];
 
-  logger.info(payload);
+  const model = new ChatOpenAI({
+    openAIApiKey: connections.openai.configuration.apiKey,
+    modelName: 'gpt-4-turbo-preview',
+    streaming: true,
+  });
+
+  // RAG variables
+  /**@type { number[] } */
+  let embedding = [];
+
   if (payload.Message) {
     userMessage = payload.Message;
   }
@@ -72,153 +125,118 @@ export default async function route({ request, reply, api, logger, connections }
     imageUrl = await uploadImage(imageBase64, imageName, imageType, logger);
   }
 
+  if (payload.ChatHistory && Array.isArray(payload.ChatHistory)) {
+    Array.from(payload.ChatHistory).forEach((value) => {
+      chatHistory.push(
+        value.role === 'system' ? new AIMessage(value.content) : new HumanMessage(value.content)
+      );
+    });
+  }
+
   // Assuming further processing is done only if an image is uploaded
   if (imageUrl) {
-    const imageEmbedding = await createProductImageEmbedding({
-      record: { source: imageUrl },
-      api,
-      logger,
-      connections,
-    });
-
-    const products = await api.shopifyProductImage.findMany({
-      sort: {
-        imageDescriptionEmbedding: {
-          // Sort by the cosine similarity to the image embedding
-          cosineSimilarityTo: imageEmbedding,
-        },
-      },
-      first: 2,
-      select: {
-        id: true,
-        product: {
-          title: true,
-          //status: 'active',
-          body: true,
-          handle: true,
-          shop: {
-            domain: true,
-          },
-        },
-        source: true,
-      },
-    });
-
-    // capture products in Gadget's Logs
-    logger.info({ products, message: userMessage }, 'found products most similar to user input');
-
-    const prompt = `You are a helpful shopping assistant trying to match customers with the right product. You will be given a question from a customer and some JSON objects with the id, title, handle, and description (body) of products available for sale that roughly match the customer's question, as well as the store domain. Respond in HTML markup, with an anchor tag at the end with images that link to the product pages and <br /> tags between your text response and product recommendations. The anchor should be of the format: <a href={"https://" + {domain} + "/products/" + {handle}} target="_blank">{title}<img style={border: "1px black solid"} width="200px" src={product.images.edges[0].node.source} /></a> but with the domain, handle, and title replaced with passed-in variables. If you have recommended products, end your response with "Click on a product to learn more!" If you are unsure or if the question seems unrelated to shopping, say "Sorry, I don't know how to help with that", and include some suggestions for better questions to ask. Please do respond to normal greeting questions like "Hi", and if the user inputs their needs, please suggest products to match their needs always. Here are the json products you can use to generate a response: ${stringify(
-      products
-    )}`;
-
-    // send prompt and similar products to OpenAI to generate a response
-    const chatResponse = await connections.openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages: [
-        {
-          role: 'system',
-          content: prompt,
-        },
-        { role: 'user', content: userMessage },
-      ],
-      stream: true,
-    });
-
-    // function fired after the stream is finished
-    const onComplete = (content) => {
-      // store the response from OpenAI, and the products that were recommended
-      const imageRecommendedProducts = products.map((product) => ({
-        create: {
-          product: {
-            _link: product.id,
-          },
-        },
-      }));
-      void api.chatLog.create({
-        response: content,
-        imageRecommendedProducts,
-      });
-    };
-
-    await reply.send(openAIResponseStream(chatResponse, { onComplete }));
+    // If an image is uploaded, only consider the image as RAG retrieval.
+    embedding = [
+      ...embedding,
+      ...(await createProductImageEmbedding({
+        record: { source: imageUrl },
+        api,
+        logger,
+        connections,
+      })),
+    ];
   } else {
+    // If it is just chat, summarise the conversation into one retrieval qn.
+    const summarisationChain = ChatPromptTemplate.fromMessages([
+      new MessagesPlaceholder('messages'),
+      [
+        'user',
+        'Given the above conversation, generate a search query to look up in ' +
+          'order to get information relevant to the conversation. Only respond ' +
+          'with the query, nothing else.',
+      ],
+    ])
+      .pipe(model)
+      .pipe(new StringOutputParser());
+
+    const embeddingQuery =
+      chatHistory.length > 0
+        ? await summarisationChain.invoke({
+            messages: [...chatHistory, new HumanMessage(userMessage)],
+          })
+        : userMessage;
+
+    // TODO: migrate to image embeddings endpoint since it uses OpenAI CLIP
     // embed the incoming message from the user
+    /** @type { { data: { embedding: number[] }[] } } */
     const embeddingResponse = await connections.openai.embeddings.create({
-      input: userMessage,
+      input: embeddingQuery,
       model: 'text-embedding-ada-002',
     });
 
-    // find similar product descriptions
-    const products = await api.shopifyProduct.findMany({
-      sort: {
-        descriptionEmbedding: {
-          cosineSimilarityTo: embeddingResponse.data[0].embedding,
-        },
-      },
-      first: 2,
-      filter: {
-        status: {
-          equals: 'active',
-        },
-      },
-      select: {
-        id: true,
-        title: true,
-        body: true,
-        handle: true,
-        shop: {
-          domain: true,
-        },
-        images: {
-          edges: {
-            node: {
-              source: true,
-            },
-          },
-        },
-      },
-    });
-
-    // capture products in Gadget's Logs
-    logger.info({ products, message: userMessage }, 'found products most similar to user input');
-
-    const prompt = `You are a helpful shopping assistant trying to match customers with the right product. Always try to give users product recommendations, even when they ask questions out of scope such as "I want to look like a celebrity from ...". You will be given a question from a customer and some JSON objects with the id, title, handle, and description (body) of products available for sale that roughly match the customer's question, as well as the store domain. Respond in HTML markup, with an anchor tag at the end with images that link to the product pages and <br /> tags between your text response and product recommendations. The anchor should be of the format: <a href={"https://" + {domain} + "/products/" + {handle}} target="_blank">{title}<img style={border: "1px black solid"} width="200px" src={product.images.edges[0].node.source} /></a> but with the domain, handle, and title replaced with passed-in variables. If you have recommended products, end your response with "Click on a product to learn more!" If you are unsure or if the question seems unrelated to shopping, say "Sorry, I don't know how to help with that", and include some suggestions for better questions to ask. Please do respond to normal greeting questions like "Hi", and if the user inputs their needs, please suggest products to match their needs always. Here are the json products you can use to generate a response: ${stringify(
-      products
-    )}`;
-
-    // send prompt and similar products to OpenAI to generate a response
-    const chatResponse = await connections.openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages: [
-        {
-          role: 'system',
-          content: prompt,
-        },
-        { role: 'user', content: userMessage },
-      ],
-      stream: true,
-    });
-
-    // function fired after the steam is finished
-    const onComplete = (content) => {
-      // store the response from OpenAI, and the products that were recommended
-      const recommendedProducts = products.map((product) => ({
-        create: {
-          product: {
-            _link: product.id,
-          },
-        },
-      }));
-      void api.chatLog.create({
-        response: content,
-        recommendedProducts,
-      });
-    };
-
-    await reply.send(openAIResponseStream(chatResponse, { onComplete }));
+    embedding = [...embedding, ...embeddingResponse.data[0].embedding];
   }
+
+  // find similar product descriptions
+  const products = await api.shopifyProduct.findMany({
+    sort: {
+      descriptionEmbedding: {
+        cosineSimilarityTo: embedding,
+      },
+    },
+    first: 2,
+    filter: {
+      status: {
+        equals: 'active',
+      },
+    },
+    select: {
+      id: true,
+      title: true,
+      body: true,
+      handle: true,
+      shop: {
+        domain: true,
+      },
+      images: {
+        edges: {
+          node: {
+            source: true,
+          },
+        },
+      },
+    },
+  });
+
+  // capture products in Gadget's Logs
+  logger.info({ products, message: userMessage }, 'found products most similar to user input');
+
+  const systemPrompt = getBaseSystemPrompt(products);
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    new SystemMessage(systemPrompt),
+    new MessagesPlaceholder('messages'),
+  ]);
+
+  const chain = prompt.pipe(model).pipe(new StringOutputParser());
+
+  const responseStream = new Readable({
+    read() {},
+    encoding: 'utf8',
+  });
+
+  const stream = await chain.stream({
+    messages: [new SystemMessage(systemPrompt), ...chatHistory, new HumanMessage(userMessage)],
+  });
+
+  void reply.type('text/plain').send(responseStream);
+
+  let output = '';
+  for await (const chunk of stream) {
+    responseStream.push(chunk);
+    output += chunk;
+  }
+  responseStream.push(null);
+
+  void handleLLMOnComplete(api, products, output);
 }
-
-// module.exports = async function (fastify, opts) {
-
-// };
