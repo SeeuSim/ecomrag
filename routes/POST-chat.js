@@ -52,7 +52,7 @@ const getBaseSystemPrompt = (products) => {
     `question, as well as the store domain. Respond in HTML markup, with an ` +
     `anchor tag at the end with images that link to the product pages and ` +
     `<br /> tags between your text response and product recommendations. ` +
-    `The anchor should be of the format: <a href="https://[domain]/products/[handle]" target="_blank">[title]<img src=[product.images.edges[0].node.source] /></a> ` +
+    `The anchor should be of the format: <a href="https://{domain}/products/{handle}" target="_blank">{title}<img src={product.images.edges[0].node.source} /></a> ` +
     `but with the domain, handle, and title replaced with passed-in ` +
     `variables. If you have recommended products, end your response with ` +
     `"Click on a product to learn more!" If you are unsure or if the ` +
@@ -214,7 +214,7 @@ export default async function route({ request, reply, api, logger, connections }
   const systemPrompt = getBaseSystemPrompt(products);
 
   const prompt = ChatPromptTemplate.fromMessages([
-    ['system', systemPrompt],
+    new SystemMessage(systemPrompt),
     new MessagesPlaceholder('messages'),
   ]);
 
