@@ -135,6 +135,29 @@ export default async function route({ request, reply, api, logger, connections }
 
   // Assuming further processing is done only if an image is uploaded
   if (imageUrl) {
+    // Ensure the shop and plan data is available
+    if (!shop || !shop.plan) {
+      logger.error('Shop or plan information is not available');
+      throw new Error('Unable to access shop plan information');
+    }
+    
+    // Access control for each plan
+    const shop = await api.shopifyShop.findOne({
+      where: { id: connections.shopify.current.id }
+    });
+    const plan = shop.plan;
+    const planFeatures = {
+      free: { imageUploadInChat: false },
+      growth: { imageUploadInChat: true },
+      premium: { imageUploadInChat: true },
+      enterprise: { imageUploadInChat: true}
+    };
+    if (!planFeatures[plan].imageUploadInChat) {
+      // TODO: Frontend give response to user when their plan doesn't allow, or just not show the button (may be harder)
+      logger.info('Image upload in chat is not allowed for the current plan');
+      throw new Error('Image upload in chat is not allowed for the current plan');
+    }
+  
     // If an image is uploaded, only consider the image as RAG retrieval.
     embedding = [
       ...embedding,

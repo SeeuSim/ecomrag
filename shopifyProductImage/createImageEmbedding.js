@@ -32,12 +32,34 @@ export async function downloadImage(s3Url) {
   }
 }
 
-export const createProductImageEmbedding = async ({ record, api, logger, plan }) => {
+export const createProductImageEmbedding = async ({ record, api, logger }) => {
+  const shop = await api.shopifyShop.findOne({ where: { id: record.shopId } });
+  const productImageSyncLimit = shop.productImageSyncLimit;
+  const plan = shop.plan;
   const planFeatures = {
     free: { includeImages: false },
     growth: { includeImages: true },
     premium: { includeImages: true },
+    enterprise: { includeImages: true },
   };
+
+  if (!planFeatures[plan] || !shop) {
+    logger('Shop and plan could not be found.');
+  }
+
+  if (!planFeatures[plan].includeImages) {
+    logger.info(
+      'Image syncing is not allowed for the current plan. Skipping image embedding creation.'
+    );
+    return;
+  }
+
+  if (shop.productImageSyncCount >= productImageSyncLimit) {
+    logger.info(
+      'Product image sync limit reached for the current plan. Skipping image embedding creation.'
+    );
+    return;
+  }
 
   if ((planFeatures[plan].includeImages && !record.imageEmbedding) || record.changed('image')) {
     try {
@@ -96,6 +118,11 @@ export const createProductImageEmbedding = async ({ record, api, logger, plan })
         shopifyProductImage: {
           imageDescriptionEmbedding: embedding,
           imageDescription: caption,
+        },
+      });
+      await api.internal.shopifyShop.update(record.id, {
+        shopifyShop: {
+          productImageSyncCount: shop.productImageSyncCount + 1,
         },
       });
 
