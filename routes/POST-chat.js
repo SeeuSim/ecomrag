@@ -7,7 +7,7 @@ import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts
 const fs = require('node:fs');
 
 import AWS from 'aws-sdk';
-// import { openAIResponseStream } from 'gadget-server/ai';
+import { openAIResponseStream } from 'gadget-server/ai';
 
 import { createProductImageEmbedding } from '../shopifyProductImage/createImageEmbedding';
 
@@ -217,11 +217,19 @@ export default async function route({ request, reply, api, logger, connections }
 
   const systemPrompt = getBaseSystemPrompt(products);
 
-  const prompt = ChatPromptTemplate.fromMessages([new MessagesPlaceholder('messages')]);
-
-  prompt.validateTemplate = false;
+  const prompt = ChatPromptTemplate.fromMessages([
+    new SystemMessage(systemPrompt),
+    new MessagesPlaceholder('messages'),
+  ]);
 
   const chain = prompt.pipe(model).pipe(new StringOutputParser());
+
+  const responseStream = new Readable({
+    read() {},
+    encoding: "utf8",
+  });
+
+  void reply.type("text/plain").send(stream);
 
   const stream = await chain.stream(
     {
@@ -230,17 +238,15 @@ export default async function route({ request, reply, api, logger, connections }
     {
       callbacks: [
         BaseCallbackHandler.fromMethods({
+          handleLLMNewToken(token) {
+            responseStream.push(token);
+          },
           handleLLMEnd(output, _runId) {
+            responseStream.push(null);
             handleLLMOnComplete(products, output);
           },
         }),
       ],
     }
   );
-
-  const response = new Response(stream, {
-    headers: { 'Content-Type': 'application/octet-stream' },
-  });
-
-  await reply.send(response);
 }
