@@ -1,13 +1,10 @@
 import { ChatOpenAI } from '@langchain/openai';
-import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
-import { HumanMessage, AiMessage, SystemMessage } from '@langchain/core/messages';
+import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 
-const fs = require('node:fs');
-
 import AWS from 'aws-sdk';
-import { openAIResponseStream } from 'gadget-server/ai';
+import { Readable } from 'stream';
 
 import { createProductImageEmbedding } from '../shopifyProductImage/createImageEmbedding';
 
@@ -68,8 +65,7 @@ const getBaseSystemPrompt = (products) => {
   );
 };
 
-const handleLLMOnComplete = (products, content) => {
-  // store the response from OpenAI, and the products that were recommended
+const handleLLMOnComplete = (api, products, content) => {
   const recommendedProducts = products.map((product) => ({
     create: {
       product: {
@@ -129,10 +125,10 @@ export default async function route({ request, reply, api, logger, connections }
     imageUrl = await uploadImage(imageBase64, imageName, imageType, logger);
   }
 
-  if (payload.chatHistory && Array.isArray(payload.chatHistory)) {
-    Array.from(payload.chatHistory).forEach((value) => {
+  if (payload.ChatHistory && Array.isArray(payload.ChatHistory)) {
+    Array.from(payload.ChatHistory).forEach((value) => {
       chatHistory.push(
-        value.role === 'system' ? new AiMessage(value.content) : new HumanMessage(value.content)
+        value.role === 'system' ? new AIMessage(value.content) : new HumanMessage(value.content)
       );
     });
   }
@@ -226,27 +222,21 @@ export default async function route({ request, reply, api, logger, connections }
 
   const responseStream = new Readable({
     read() {},
-    encoding: "utf8",
+    encoding: 'utf8',
   });
 
-  void reply.type("text/plain").send(stream);
+  const stream = await chain.stream({
+    messages: [new SystemMessage(systemPrompt), ...chatHistory, new HumanMessage(userMessage)],
+  });
 
-  const stream = await chain.stream(
-    {
-      messages: [new SystemMessage(systemPrompt), ...chatHistory, new HumanMessage(userMessage)],
-    },
-    {
-      callbacks: [
-        BaseCallbackHandler.fromMethods({
-          handleLLMNewToken(token) {
-            responseStream.push(token);
-          },
-          handleLLMEnd(output, _runId) {
-            responseStream.push(null);
-            handleLLMOnComplete(products, output);
-          },
-        }),
-      ],
-    }
-  );
+  void reply.type('text/plain').send(responseStream);
+
+  let output = '';
+  for await (const chunk of stream) {
+    responseStream.push(chunk);
+    output += chunk;
+  }
+  responseStream.push(null);
+
+  void handleLLMOnComplete(api, products, output);
 }
