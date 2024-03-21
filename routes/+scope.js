@@ -13,7 +13,12 @@ const multipart = require('@fastify/multipart');
 export default async function (server) {
   await server.register(cors, {
     origin: '*', // allow requests from any domain
-    allowedHeaders: ['Content-Type', 'Access-Control-Allow-Origin', 'x-gadget-environment'],
+    allowedHeaders: [
+      'Content-Type',
+      'Access-Control-Allow-Origin',
+      'x-gadget-environment',
+      'X-Shopify-Hmac-SHA256',
+    ],
     methods: ['GET', 'POST', 'PUT'],
   });
   await server.register(multipart);
