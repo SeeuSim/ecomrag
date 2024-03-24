@@ -1,6 +1,7 @@
-export const createProductEmbedding = async ({ record, api, logger, connections }) => {
-  const plan = await api.shopifyShop.findOne({ where: { plan: record.plan } });
-
+export const createProductEmbedding = async ({ params, record, api, logger, connections }) => {
+  const currShop = await api.shopifyShop.findOne(record.shopId, { select: { plan: true } });
+  const plan = currShop.Plan;
+  logger('This is the plan logger' + plan);
   const planLimits = {
     free: 100,
     growth: 500,

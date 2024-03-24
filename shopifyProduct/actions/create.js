@@ -12,6 +12,11 @@ import { createProductEmbedding } from '../createEmbedding';
  */
 export async function run({ params, record, logger, api, connections }) {
   applyParams(params, record);
+  // const shop = await api.shopifyShop.findOne({
+  //   where: { id: connections.shopify.current.id }
+  // });
+  // const productSyncLimit = shop.productSyncLimit;
+
   await preventCrossShopDataAccess(params, record);
   await save(record);
 }
@@ -20,7 +25,7 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { CreateShopifyProductActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
-  await createProductEmbedding({ record, api, logger, connections });
+  await createProductEmbedding({ params, record, api, logger, connections });
 }
 
 /** @type { ActionOptions } */
