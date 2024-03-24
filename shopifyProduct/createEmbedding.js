@@ -1,7 +1,6 @@
 export const createProductEmbedding = async ({ params, record, api, logger, connections }) => {
-  const currShop = await api.shopifyShop.findOne(record.shopId, { select: { plan: true } });
+  const currShop = await api.shopifyShop.findOne(record.shopId, { select: { Plan: true } });
   const plan = currShop.Plan;
-  logger('This is the plan logger' + plan);
   const planLimits = {
     free: 100,
     growth: 500,
@@ -12,12 +11,15 @@ export const createProductEmbedding = async ({ params, record, api, logger, conn
   const productLimit = planLimits[plan] || 0;
 
   // Fetch the current count of products with embeddings
-  const productCount = await api.internal.shopifyProduct.count({
-    where: { descriptionEmbedding: { _not_null: true } },
-  });
+  // const embeddedProductCount = await api.internal.shopifyProduct.findMany({
+  //   where: { descriptionEmbedding: { _not_null: true } },
+  // });
+  // const productCount = embeddedProductCount.length;
+  const productCount = currShop.productSyncCount;
 
   // Only proceed if the product count is within the limit
   // only run if the product does not have an embedding, or if the title or body have changed
+  logger.info({ productCount, productLimit }, 'product count and limit');
   if (
     (productCount < productLimit && !record.descriptionEmbedding) ||
     record.changed('title') ||

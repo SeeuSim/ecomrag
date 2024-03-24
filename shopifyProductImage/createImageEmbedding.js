@@ -10,6 +10,7 @@ AWS.config.update({
 });
 
 export async function downloadImage(s3Url) {
+  AWS.config.update({ logger: console });
   const url = new URL(s3Url);
   const bucketName = url.hostname.split('.')[0];
   // Remove the leading slash to get the correct key
@@ -33,9 +34,9 @@ export async function downloadImage(s3Url) {
 }
 
 export const createProductImageEmbedding = async ({ record, api, logger }) => {
-  const shop = await api.shopifyShop.findOne({ where: { id: record.shopId } });
+  const shop = await api.shopifyShop.findOne(record.shopId, { select: { Plan: true } });
   const productImageSyncLimit = shop.productImageSyncLimit;
-  const plan = shop.plan;
+  const plan = shop.Plan;
   const planFeatures = {
     free: { includeImages: false },
     growth: { includeImages: true },
@@ -44,7 +45,7 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
   };
 
   if (!planFeatures[plan] || !shop) {
-    logger('Shop and plan could not be found.');
+    logger.info('Shop and plan could not be found.');
   }
 
   if (!planFeatures[plan].includeImages) {
@@ -96,9 +97,9 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
       /**@type { { Embedding: number[] } } */
       const payload = await response.json();
       const textPayload = await textResponse.json();
-      logger('This is the text payload +' + textPayload);
-      logger('This is the image payload +' + payload);
-      logger('This is the text payload +' + textPayload);
+      logger.info('This is the text payload +' + textPayload);
+      logger.info('This is the image payload +' + payload);
+      logger.info('This is the text payload +' + textPayload);
 
       if (!payload.Embedding || !Array.isArray(payload.Embedding)) {
         logger.error({
@@ -109,8 +110,8 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
 
       const embedding = payload.Embedding;
       const caption = textPayload.Embedding;
-      logger('This is the image embedding +' + embedding);
-      logger('This is the text caption +' + caption);
+      logger.info('This is the image embedding +' + embedding);
+      logger.info('This is the text caption +' + caption);
 
       logger.info({ id: record.id }, 'got image embedding');
 
