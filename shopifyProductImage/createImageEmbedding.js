@@ -11,18 +11,15 @@ AWS.config.update({
 
 export async function downloadImage(s3Url) {
   AWS.config.update({ logger: console });
-  const url = new URL(s3Url);
-
-  // TODO: Fix logic to get correct bucket and image key
-  const bucketName = url.hostname.split('.')[0];
-  // Remove the leading slash to get the correct key
-  const objectKey = url.pathname.substring(1);
+  const objectUrl = new URL(s3Url);
+  const { pathname } = new URL(objectUrl);
+  const [, bucket, key] = pathname.split('/');
 
   const s3 = new AWS.S3();
 
   const params = {
-    Bucket: bucketName,
-    Key: decodeURIComponent(objectKey),
+    Bucket: bucket,
+    Key: decodeURIComponent(key),
   };
 
   try {
