@@ -12,6 +12,8 @@ AWS.config.update({
 export async function downloadImage(s3Url) {
   AWS.config.update({ logger: console });
   const url = new URL(s3Url);
+
+  // TODO: Fix logic to get correct bucket and image key
   const bucketName = url.hostname.split('.')[0];
   // Remove the leading slash to get the correct key
   const objectKey = url.pathname.substring(1);
@@ -69,18 +71,19 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
       const { content: image, fileType } = await downloadImage(imageUrl);
 
       //Fetching the vector embedding under ShopifyProductImage.imageDescriptionEmbedding
-      const response = await fetch(EMBEDDING_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': fileType, Accept: 'application/json' },
-        body: image,
-      });
-
-      //Fetching the text caption under ShopifyProductImage.imageDescription
-      const textResponse = await fetch(CAPTIONING_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
-        body: image,
-      });
+      const [response, textResponse] = await Promise.all([
+        fetch(EMBEDDING_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': fileType, Accept: 'application/json' },
+          body: image,
+        }),
+        //Fetching the text caption under ShopifyProductImage.imageDescription
+        fetch(CAPTIONING_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
+          body: image,
+        }),
+      ]);
 
       if (!response.ok) {
         const error = await response.text();
@@ -115,17 +118,19 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
 
       logger.info({ id: record.id }, 'got image embedding');
 
-      await api.internal.shopifyProductImage.update(record.id, {
-        shopifyProductImage: {
-          imageDescriptionEmbedding: embedding,
-          imageDescription: caption,
-        },
-      });
-      await api.internal.shopifyShop.update(record.id, {
-        shopifyShop: {
-          productImageSyncCount: shop.productImageSyncCount + 1,
-        },
-      });
+      await Promise.all([
+        api.internal.shopifyProductImage.update(record.id, {
+          shopifyProductImage: {
+            imageDescriptionEmbedding: embedding,
+            imageDescription: caption,
+          },
+        }),
+        api.internal.shopifyShop.update(record.id, {
+          shopifyShop: {
+            productImageSyncCount: shop.productImageSyncCount + 1,
+          },
+        }),
+      ]);
 
       return embedding;
     } catch (error) {
@@ -137,13 +142,3 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
     );
   }
 };
-
-// export default createProductImageEmbedding;
-
-// module.exports = {
-//   run: createProductImageEmbedding,
-//   timeoutMS: 900000,
-// };
-
-// //Required export in Gadget syntax
-// module.exports = createProductImageEmbedding;
