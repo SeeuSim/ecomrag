@@ -63,18 +63,18 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
   };
 
   if (!planFeatures[plan] || !shop) {
-    logger.info('Shop and plan could not be found.');
+    logger.error('Shop and plan could not be found.');
   }
 
   if (!planFeatures[plan].includeImages) {
-    logger.info(
+    logger.error(
       'Image syncing is not allowed for the current plan. Skipping image embedding creation.'
     );
     return;
   }
 
   if (shop.productImageSyncCount >= productImageSyncLimit) {
-    logger.info(
+    logger.error(
       'Product image sync limit reached for the current plan. Skipping image embedding creation.'
     );
     return;
@@ -82,7 +82,7 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
 
   if ((planFeatures[plan].includeImages && !record.imageEmbedding) || record.changed('image')) {
     try {
-      logger.info({ record: record }, 'this is the record object');
+      logger.info({ record }, 'this is the record object');
       const imageUrl = record.source;
 
       let image = undefined;
@@ -121,8 +121,6 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
       /**@type { { Embedding: number[] } } */
       const payload = await embedResponse.json();
 
-      logger.info('This is the image payload: ' + JSON.stringify(payload));
-
       if (!payload.Embedding || !Array.isArray(payload.Embedding)) {
         logger.error({
           error: `Expected a response with one key 'Embedding', received object with keys: ${Object.keys(payload)}`,
@@ -131,8 +129,6 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
       }
 
       const embedding = payload.Embedding;
-
-      logger.info(`Got image embedding: ${embedding}`);
 
       // Only caption and upload if action is triggered by model.
       if (record.id) {
@@ -173,7 +169,7 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
       logger.error({ error }, 'error creating embedding');
     }
   } else {
-    logger.info(
+    logger.error(
       'Image syncing is not allowed for the current plan. Skipping image embedding creation.'
     );
   }
