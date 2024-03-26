@@ -1,3 +1,6 @@
+// Our `img-embed` endpoint can handle both text and image data.
+const { EMBEDDING_ENDPOINT } = process.env;
+
 export const createProductEmbedding = async ({ params, record, api, logger, connections }) => {
   const currShop = await api.shopifyShop.findOne(record.shopId, { select: { Plan: true } });
   const plan = currShop.Plan;
@@ -27,11 +30,34 @@ export const createProductEmbedding = async ({ params, record, api, logger, conn
   ) {
     try {
       // get an embedding for the product title + description using the OpenAI connection
-      const response = await connections.openai.embeddings.create({
-        input: `${record.title}: ${record.body}`,
-        model: 'text-embedding-ada-002',
+      const embedResponse = await fetch(EMBEDDING_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain', Accept: 'application/json' },
+        body: `${record.title}: ${record.body}`,
       });
-      const embedding = response.data[0].embedding;
+
+      if (!embedResponse.ok) {
+        const error = await embedResponse.text();
+        logger.error(
+          { error, response: embedResponse },
+          'An error occurred fetching the image embedding.'
+        );
+        return;
+      }
+
+      /**@type { { Embedding: number[] } } */
+      const payload = await embedResponse.json();
+
+      logger.info('This is the product description embedding payload: ' + JSON.stringify(payload));
+
+      if (!payload.Embedding || !Array.isArray(payload.Embedding)) {
+        logger.error({
+          error: `Expected a response with one key 'Embedding', received object with keys: ${Object.keys(payload)}`,
+        });
+        return;
+      }
+
+      const embedding = payload.Embedding;
       // write to the Gadget Logs
       logger.info({ id: record.id }, 'got product embedding');
 
