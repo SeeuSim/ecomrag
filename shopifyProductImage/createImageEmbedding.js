@@ -82,7 +82,6 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
 
   if ((planFeatures[plan].includeImages && !record.imageEmbedding) || record.changed('image')) {
     try {
-      logger.info({ record }, 'this is the record object');
       const imageUrl = record.source;
 
       let image = undefined;
