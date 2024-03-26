@@ -9,8 +9,20 @@ AWS.config.update({
   region: 'us-east-1',
 });
 
-export async function downloadImage(s3Url, logger) {
-  logger.info(`Download Image: ${s3Url}`);
+export async function downloadCDNImage(cdnUrl, logger) {
+  const imageResponse = await fetch(cdnUrl);
+  if (!imageResponse.ok) {
+    return undefined;
+  }
+  const imageBuffer = await imageResponse.arrayBuffer();
+  const image = Buffer.from(imageBuffer);
+  const { pathname } = new URL(cdnUrl);
+  const parts = pathname.split('.');
+
+  return { content: image, fileType: `image/${parts[parts.length - 1]}` };
+}
+
+export async function downloadS3Image(s3Url, logger) {
   AWS.config.update({ logger });
   const objectUrl = new URL(s3Url);
   const { host, pathname } = new URL(objectUrl);
@@ -72,7 +84,23 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
     try {
       logger.info({ record: record }, 'this is the record object');
       const imageUrl = record.source;
-      const { content: image, fileType } = await downloadImage(imageUrl, logger);
+
+      let image = undefined;
+      let fileType = undefined;
+      if (!record.id) {
+        // From chat embed, get from S3
+        const { content: s3Image, fileType: s3FileType } = await downloadS3Image(imageUrl, logger);
+        image = s3Image;
+        fileType = s3FileType;
+      } else {
+        // From product sync, get from Shopify CDN
+        const { content: cdnImage, fileType: cdnFileType } = await downloadCDNImage(
+          imageUrl,
+          logger
+        );
+        image = cdnImage;
+        fileType = cdnFileType;
+      }
 
       //Fetching the vector embedding under ShopifyProductImage.imageDescriptionEmbedding
       const embedResponse = await fetch(EMBEDDING_ENDPOINT, {
