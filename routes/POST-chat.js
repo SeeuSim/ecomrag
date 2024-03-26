@@ -194,6 +194,8 @@ export default async function route({ request, reply, api, logger, connections }
         connections,
       })),
     ];
+
+    logger.info(`Image embedding generated: ${embedding}`);
   } else {
     // If it is just chat, summarise the conversation into one retrieval qn.
     const summarisationChain = ChatPromptTemplate.fromMessages([
@@ -256,6 +258,8 @@ export default async function route({ request, reply, api, logger, connections }
       },
     },
   });
+
+  logger.info(`Products: ${products}`);
 
   // capture products in Gadget's Logs
   logger.info({ products, message: userMessage }, 'found products most similar to user input');

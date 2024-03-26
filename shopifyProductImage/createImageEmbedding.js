@@ -75,38 +75,25 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
       const { content: image, fileType } = await downloadImage(imageUrl, logger);
 
       //Fetching the vector embedding under ShopifyProductImage.imageDescriptionEmbedding
-      const [response, textResponse] = await Promise.all([
-        fetch(EMBEDDING_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': fileType, Accept: 'application/json' },
-          body: image,
-        }),
-        //Fetching the text caption under ShopifyProductImage.imageDescription
-        fetch(CAPTIONING_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
-          body: image,
-        }),
-      ]);
+      const embedResponse = await fetch(EMBEDDING_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': fileType, Accept: 'application/json' },
+        body: image,
+      });
 
-      if (!response.ok) {
-        const error = await response.text();
-        logger.error({ error, response }, 'An error occurred fetching the image embedding.');
-        return;
-      }
-
-      if (!textResponse.ok) {
-        const error = await response.text();
-        logger.error({ error, textResponse }, 'An error occurred fetching the text embedding.');
+      if (!embedResponse.ok) {
+        const error = await embedResponse.text();
+        logger.error(
+          { error, response: embedResponse },
+          'An error occurred fetching the image embedding.'
+        );
         return;
       }
 
       /**@type { { Embedding: number[] } } */
-      const payload = await response.json();
-      const textPayload = await textResponse.json();
-      logger.info('This is the text payload +' + textPayload);
-      logger.info('This is the image payload +' + payload);
-      logger.info('This is the text payload +' + textPayload);
+      const payload = await embedResponse.json();
+
+      logger.info('This is the image payload: ' + JSON.stringify(payload));
 
       if (!payload.Embedding || !Array.isArray(payload.Embedding)) {
         logger.error({
@@ -116,25 +103,42 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
       }
 
       const embedding = payload.Embedding;
-      const caption = textPayload.Embedding;
-      logger.info('This is the image embedding +' + embedding);
-      logger.info('This is the text caption +' + caption);
 
-      logger.info({ id: record.id }, 'got image embedding');
+      logger.info(`Got image embedding: ${embedding}`);
 
-      await Promise.all([
-        api.internal.shopifyProductImage.update(record.id, {
-          shopifyProductImage: {
-            imageDescriptionEmbedding: embedding,
-            imageDescription: caption,
-          },
-        }),
-        api.internal.shopifyShop.update(record.id, {
-          shopifyShop: {
-            productImageSyncCount: shop.productImageSyncCount + 1,
-          },
-        }),
-      ]);
+      // Only caption and upload if action is triggered by model.
+      if (record.id) {
+        const textResponse = await fetch(CAPTIONING_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
+          body: image,
+        });
+
+        if (!textResponse.ok) {
+          const error = await embedResponse.text();
+          logger.error({ error, textResponse }, 'An error occurred fetching the text embedding.');
+          return;
+        }
+
+        /**@type { { Caption: string; Length: number; } } */
+        const textPayload = await textResponse.json();
+        const caption = textPayload.Caption;
+        logger.info(`Got caption: ${caption}`);
+
+        await Promise.all([
+          api.internal.shopifyProductImage.update(record.id, {
+            shopifyProductImage: {
+              imageDescriptionEmbedding: embedding,
+              imageDescription: caption,
+            },
+          }),
+          api.internal.shopifyShop.update(record.id, {
+            shopifyShop: {
+              productImageSyncCount: shop.productImageSyncCount + 1,
+            },
+          }),
+        ]);
+      }
 
       return embedding;
     } catch (error) {
