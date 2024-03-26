@@ -9,11 +9,15 @@ AWS.config.update({
   region: 'us-east-1',
 });
 
-export async function downloadImage(s3Url) {
-  AWS.config.update({ logger: console });
+export async function downloadImage(s3Url, logger) {
+  logger.info(`Download Image: ${s3Url}`);
+  AWS.config.update({ logger });
   const objectUrl = new URL(s3Url);
-  const { pathname } = new URL(objectUrl);
-  const [, bucket, key] = pathname.split('/');
+  const { host, pathname } = new URL(objectUrl);
+
+  // Expected: BUCKET.s3.amazonaws.com/KEY
+  const bucket = host.split('.')[0];
+  const key = pathname;
 
   const s3 = new AWS.S3();
 
@@ -65,7 +69,7 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
     try {
       logger.info({ record: record }, 'this is the record object');
       const imageUrl = record.source;
-      const { content: image, fileType } = await downloadImage(imageUrl);
+      const { content: image, fileType } = await downloadImage(imageUrl, logger);
 
       //Fetching the vector embedding under ShopifyProductImage.imageDescriptionEmbedding
       const [response, textResponse] = await Promise.all([

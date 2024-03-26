@@ -79,16 +79,28 @@ const handleLLMOnComplete = (api, products, content) => {
   });
 };
 
-async function uploadImage(imageBase64, fileName, fileType) {
+async function uploadImage(imageBase64, fileName, fileType, logger) {
+  const key = `${BUCKET_PATH}${getCurrentDateString()}_${fileName}`;
   const params = {
     Bucket: BUCKET_NAME,
-    Key: `${BUCKET_PATH}${getCurrentDateString()}_${fileName}`,
+    Key: key,
     Body: Buffer.from(imageBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64'),
     ContentEncoding: 'base64',
     ContentType: fileType,
   };
-  const response = await s3.putObject(params).promise();
-  return response.Location;
+  const _response = await new Promise((resolve, reject) => {
+    s3.putObject(params, (err, data) => {
+      if (err) {
+        logger.error(`Error uploading image: ${err.message}`);
+        reject(err.message);
+        return;
+      }
+      logger.info(`Uploaded image!`);
+      resolve(data);
+    });
+  });
+
+  return `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
 }
 
 export default async function route({ request, reply, api, logger, connections }) {
@@ -135,29 +147,30 @@ export default async function route({ request, reply, api, logger, connections }
 
   // Assuming further processing is done only if an image is uploaded
   if (imageUrl) {
+    // Access control for each plan
+    const shop = await api.shopifyShop.findOne({
+      where: { id: connections.shopify.current.id },
+    });
+
     // Ensure the shop and plan data is available
     if (!shop || !shop.plan) {
       logger.error('Shop or plan information is not available');
       throw new Error('Unable to access shop plan information');
     }
     
-    // Access control for each plan
-    const shop = await api.shopifyShop.findOne({
-      where: { id: connections.shopify.current.id }
-    });
     const plan = shop.plan;
     const planFeatures = {
       free: { imageUploadInChat: false },
       growth: { imageUploadInChat: true },
       premium: { imageUploadInChat: true },
-      enterprise: { imageUploadInChat: true}
+      enterprise: { imageUploadInChat: true },
     };
     if (!planFeatures[plan].imageUploadInChat) {
       // TODO: Frontend give response to user when their plan doesn't allow, or just not show the button (may be harder)
       logger.info('Image upload in chat is not allowed for the current plan');
       throw new Error('Image upload in chat is not allowed for the current plan');
     }
-  
+
     // If an image is uploaded, only consider the image as RAG retrieval.
     embedding = [
       ...embedding,
