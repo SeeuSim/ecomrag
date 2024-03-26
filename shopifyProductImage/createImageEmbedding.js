@@ -160,7 +160,7 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
               imageDescription: caption,
             },
           }),
-          api.internal.shopifyShop.update(record.id, {
+          api.internal.shopifyShop.update(record.shopId, {
             shopifyShop: {
               productImageSyncCount: shop.productImageSyncCount + 1,
             },
