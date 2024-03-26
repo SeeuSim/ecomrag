@@ -109,6 +109,7 @@ export default async function route({ request, reply, api, logger, connections }
   let userMessage;
   let imageUrl = null;
   let chatHistory = [];
+  let ShopId = undefined;
 
   const model = new ChatOpenAI({
     openAIApiKey: connections.openai.configuration.apiKey,
@@ -145,37 +146,49 @@ export default async function route({ request, reply, api, logger, connections }
     });
   }
 
+  if (payload.ShopId) {
+    ShopId = payload.ShopId;
+  }
+
   // Assuming further processing is done only if an image is uploaded
   if (imageUrl) {
+    const shopId = connections.shopify.current?.id ?? ShopId;
+    if (!shopId) {
+      const error = 'Shopify not installed on current shop.';
+      logger.error(error);
+      await reply.code(500).type('text/plain').send(error);
+      return;
+    }
+
     // Access control for each plan
-    const shop = await api.shopifyShop.findOne({
-      where: { id: connections.shopify.current.id },
-    });
+    const shop = await api.shopifyShop.findOne(shopId);
 
     // Ensure the shop and plan data is available
-    if (!shop || !shop.plan) {
+    if (!shop?.Plan) {
       logger.error('Shop or plan information is not available');
       throw new Error('Unable to access shop plan information');
     }
-    
-    const plan = shop.plan;
+
+    const plan = shop.Plan;
     const planFeatures = {
       free: { imageUploadInChat: false },
       growth: { imageUploadInChat: true },
       premium: { imageUploadInChat: true },
       enterprise: { imageUploadInChat: true },
     };
+
     if (!planFeatures[plan].imageUploadInChat) {
-      // TODO: Frontend give response to user when their plan doesn't allow, or just not show the button (may be harder)
-      logger.info('Image upload in chat is not allowed for the current plan');
-      throw new Error('Image upload in chat is not allowed for the current plan');
+      const error = 'This shop does not support image uploads. Contact the shop owner.';
+      logger.error(error);
+      await reply.code(401).type('text/plain').send(error);
+      return;
     }
 
     // If an image is uploaded, only consider the image as RAG retrieval.
     embedding = [
       ...embedding,
       ...(await createProductImageEmbedding({
-        record: { source: imageUrl },
+        record: { source: imageUrl, shopId },
         api,
         logger,
         connections,

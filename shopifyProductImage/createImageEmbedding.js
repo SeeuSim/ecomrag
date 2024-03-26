@@ -16,8 +16,9 @@ export async function downloadImage(s3Url, logger) {
   const { host, pathname } = new URL(objectUrl);
 
   // Expected: BUCKET.s3.amazonaws.com/KEY
+  // -> BUCKET, '/KEY'
   const bucket = host.split('.')[0];
-  const key = pathname;
+  const key = pathname.replace(/\//, ''); // Replace leading slash in pathname
 
   const s3 = new AWS.S3();
 
@@ -28,7 +29,9 @@ export async function downloadImage(s3Url, logger) {
 
   try {
     const data = await s3.getObject(params).promise();
-    //console.log("got the image from s3")
+
+    // TODO: Add logging and contingencies for error handling
+
     return { content: data.Body, fileType: data.ContentType };
   } catch (error) {
     //console.log(`Failed to download image from S3: ${error.message}`);
