@@ -1,7 +1,7 @@
 import AWS from 'aws-sdk';
 import fetch from 'node-fetch';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBEDDING_ENDPOINT, CAPTIONING_ENDPOINT } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBEDDING_ENDPOINT } = process.env;
 
 AWS.config.update({
   accessKeyId: ACCESS_KEY_ID,
