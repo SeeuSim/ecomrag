@@ -1,5 +1,5 @@
-import { api, logger } from 'gadget-server/dist';
-import { Request, Reply } from 'gadget-server/dist/routes';
+import { api, logger } from 'gadget-server';
+import { Request, Reply } from 'gadget-server';
 
 /**
  * Sends a singular embed update. You may post the request to /embed-update/embed with the following JSON fields:

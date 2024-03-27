@@ -5,7 +5,7 @@ import {
   ActionOptions,
   UpdateShopifyProductImageActionContext,
 } from 'gadget-server';
-import { createProductImageEmbedding } from '../createImageEmbedding';
+// import { createProductImageEmbedding } from '../createImageEmbedding';
 
 /**
  * @param { UpdateShopifyProductImageActionContext } context
