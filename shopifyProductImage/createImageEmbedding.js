@@ -93,12 +93,13 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
         fileType = s3FileType;
       } else {
         // From product sync, get from Shopify CDN
-        const { content: cdnImage, fileType: cdnFileType } = await downloadCDNImage(
-          imageUrl,
-          logger
-        );
-        image = cdnImage;
-        fileType = cdnFileType;
+        // const { content: cdnImage, fileType: cdnFileType } = await downloadCDNImage(
+        //   imageUrl,
+        //   logger
+        // );
+        // image = cdnImage;
+        // fileType = cdnFileType;
+        return;
       }
 
       //Fetching the vector embedding under ShopifyProductImage.imageDescriptionEmbedding
@@ -131,36 +132,37 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
 
       // Only caption and upload if action is triggered by model.
       if (record.id) {
-        const textResponse = await fetch(CAPTIONING_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
-          body: image,
-        });
+        return;
+        // const textResponse = await fetch(CAPTIONING_ENDPOINT, {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
+        //   body: image,
+        // });
 
-        if (!textResponse.ok) {
-          const error = await embedResponse.text();
-          logger.error({ error, textResponse }, 'An error occurred fetching the text embedding.');
-          return;
-        }
+        // if (!textResponse.ok) {
+        //   const error = await embedResponse.text();
+        //   logger.error({ error, textResponse }, 'An error occurred fetching the text embedding.');
+        //   return;
+        // }
 
-        /**@type { { Caption: string; Length: number; } } */
-        const textPayload = await textResponse.json();
-        const caption = textPayload.Caption;
-        logger.info(`Got caption: ${caption}`);
+        // /**@type { { Caption: string; Length: number; } } */
+        // const textPayload = await textResponse.json();
+        // const caption = textPayload.Caption;
+        // logger.info(`Got caption: ${caption}`);
 
-        await Promise.all([
-          api.internal.shopifyProductImage.update(record.id, {
-            shopifyProductImage: {
-              imageDescriptionEmbedding: embedding,
-              imageDescription: caption,
-            },
-          }),
-          api.internal.shopifyShop.update(record.shopId, {
-            shopifyShop: {
-              productImageSyncCount: shop.productImageSyncCount + 1,
-            },
-          }),
-        ]);
+        // await Promise.all([
+        //   api.internal.shopifyProductImage.update(record.id, {
+        //     shopifyProductImage: {
+        //       imageDescriptionEmbedding: embedding,
+        //       imageDescription: caption,
+        //     },
+        //   }),
+        //   api.internal.shopifyShop.update(record.shopId, {
+        //     shopifyShop: {
+        //       productImageSyncCount: shop.productImageSyncCount + 1,
+        //     },
+        //   }),
+        // ]);
       }
 
       return embedding;

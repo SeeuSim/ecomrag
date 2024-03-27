@@ -20,7 +20,7 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { UpdateShopifyProductActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
-  await createProductEmbedding({ params, record, api, logger, connections });
+  // await createProductEmbedding({ params, record, api, logger, connections });
 }
 
 /** @type { ActionOptions } */
