@@ -20,7 +20,7 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { UpdateShopifyProductImageActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
-  await createProductImageEmbedding({ record, api, logger, connections });
+  // await createProductImageEmbedding({ record, api, logger, connections });
 }
 
 /** @type { ActionOptions } */
