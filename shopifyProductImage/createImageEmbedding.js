@@ -18,8 +18,8 @@ export async function downloadCDNImage(cdnUrl, logger) {
   const image = Buffer.from(imageBuffer);
   const { pathname } = new URL(cdnUrl);
   const parts = pathname.split('.');
-
-  return { content: image, fileType: `image/${parts[parts.length - 1]}` };
+  const fileExt = parts[parts.length - 1];
+  return { content: image, fileType: `image/${fileExt}` };
 }
 
 export async function downloadS3Image(s3Url, logger) {
