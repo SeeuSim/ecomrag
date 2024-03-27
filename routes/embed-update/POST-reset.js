@@ -13,26 +13,46 @@ import { Request, Reply } from 'gadget-server';
  **/
 export default async function route({ request, reply, api, logger, connections }) {
   try {
-    const products = await api.shopifyProduct.all();
-    for (const record of products) {
-      try {
-        await record.update({
-          descriptionEmbedding: null,
-        });
-      } catch (error) {
-        logger.error(error);
-      }
+    const allProductRecords = []; // use allRecords to store all records
+    let productRecords = await api.shopifyProduct.findMany({
+      first: 250,
+      select: {
+        id: true,
+      },
+    });
+
+    allProductRecords.push(...productRecords);
+
+    // loop through additional pages to get all protected orders
+    while (productRecords.hasNextPage) {
+      // paginate
+      productRecords = await productRecords.nextPage();
+      allProductRecords.push(...productRecords);
     }
 
-    const productImages = await api.shopifyProductImage.all();
-    for (const record of productImages) {
-      try {
-        await record.update({
-          imageDescriptionEmbedding: null,
-        });
-      } catch (error) {
-        logger.error(error);
-      }
+    for (const record of allProductRecords) {
+      await record.update({ descriptionEmbedding: null });
+    }
+
+    const allProductImageRecords = []; // use allRecords to store all records
+    let productImageRecords = await api.shopifyProductImage.findMany({
+      first: 250,
+      select: {
+        id: true,
+      },
+    });
+
+    allProductRecords.push(...productRecords);
+
+    // loop through additional pages to get all protected orders
+    while (productRecords.hasNextPage) {
+      // paginate
+      productRecords = await productRecords.nextPage();
+      allProductRecords.push(...productRecords);
+    }
+
+    for (const record of allProductRecords) {
+      await record.update({ imageDescriptionEmbedding: null });
     }
     await reply.code(200).send();
   } catch (error) {
