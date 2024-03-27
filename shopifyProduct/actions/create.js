@@ -25,6 +25,7 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { CreateShopifyProductActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
+  // TODO: post to SQS topic if embedding not set
   // await createProductEmbedding({ params, record, api, logger, connections });
 }
 

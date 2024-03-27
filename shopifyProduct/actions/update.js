@@ -20,7 +20,9 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { UpdateShopifyProductActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
+  // TODO: Post to SQS topic if embedding not set
   // await createProductEmbedding({ params, record, api, logger, connections });
+  return;
 }
 
 /** @type { ActionOptions } */

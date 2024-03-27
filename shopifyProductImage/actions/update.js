@@ -5,7 +5,6 @@ import {
   ActionOptions,
   UpdateShopifyProductImageActionContext,
 } from 'gadget-server';
-// import { createProductImageEmbedding } from '../createImageEmbedding';
 
 /**
  * @param { UpdateShopifyProductImageActionContext } context
@@ -20,7 +19,8 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { UpdateShopifyProductImageActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
-  // await createProductImageEmbedding({ record, api, logger, connections });
+  // TODO: Post to SQS topic if embedding/caption not set
+  return;
 }
 
 /** @type { ActionOptions } */
