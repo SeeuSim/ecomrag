@@ -34,7 +34,7 @@ resource "aws_iam_policy_attachment" "allow_caption_exec" {
   policy_arn = aws_iam_policy.async_caption_trigger.arn
 }
 resource "aws_iam_policy_attachment" "allow_caption_lmbd_exec" {
-  name       = "allow-invoke-caption-ep"
+  name       = "allow-invoke-caption-ep-exec"
   roles      = [aws_iam_role.async_caption_trigger_exec.name]
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
@@ -80,7 +80,7 @@ resource "aws_iam_policy_attachment" "allow_embed_exec" {
   policy_arn = aws_iam_policy.async_embed_trigger.arn
 }
 resource "aws_iam_policy_attachment" "allow_embed_lmbd_exec" {
-  name       = "allow-invoke-caption-ep"
+  name       = "allow-invoke-caption-ep-exec"
   roles      = [aws_iam_role.async_caption_trigger_exec.name]
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
