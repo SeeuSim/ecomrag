@@ -16,10 +16,10 @@ variable "async_caption_model_data" {
   type = string
 }
 
-variable "model_success_topic" {
+variable "success_topic_arn" {
   type = string
 }
 
-variable "model_failure_topic" {
+variable "failure_topic_arn" {
   type = string
 }

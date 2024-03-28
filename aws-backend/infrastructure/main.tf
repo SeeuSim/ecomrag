@@ -1,5 +1,20 @@
+module "variables" {
+  source = "./variables"
+
+  inference_model_image_acct           = var.inference_model_image_acct
+  inference_model_image_region         = var.inference_model_image_region
+  inference_model_py_version           = var.inference_model_py_version
+  inference_model_transformers_version = var.inference_model_transformers_version
+  inference_model_pytorch_version      = var.inference_model_pytorch_version
+  inference_model_ubuntu_version       = var.inference_model_ubuntu_version
+}
+
 module "sns" {
   source = "./sns"
+}
+
+module "sqs" {
+  source = "./sqs"
 }
 
 module "sagemaker" {
@@ -7,14 +22,24 @@ module "sagemaker" {
 
   region = var.region
 
-  inference_model_image = var.inference_model_image
+  inference_model_image = module.variables.inference_model_image
 
   async_caption_model_data = var.async_caption_model_data
   async_embed_model_data   = var.async_embed_model_data
   model_s3_bucket          = var.model_s3_bucket
 
-  model_success_topic = module.sns.sns_model_success_topic
-  model_failure_topic = module.sns.sns_model_failure_topic
+  success_topic_arn = module.sns.success_topic_arn
+  failure_topic_arn = module.sns.failure_topic_arn
 
-  depends_on = [module.sns]
+  depends_on = [module.variables, module.sns]
+}
+
+module "lambda" {
+  source                     = "./lambda"
+  account_id                 = var.account_id
+  async_caption_endpoint_arn = module.sagemaker.async_caption_endpoint_arn
+  async_embed_endpoint_arn   = module.sagemaker.async_embed_endpoint_arn
+  sqs_caption_queue          = module.sqs.caption_queue_arn
+  sqs_embed_queue            = module.sqs.embed_queue_arn
+  depends_on                 = [module.sagemaker, module.sqs]
 }
