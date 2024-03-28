@@ -6,6 +6,14 @@ variable "async_embed_endpoint_arn" {
   type = string
 }
 
+variable "async_caption_endpoint_name" {
+  type = string
+}
+
+variable "async_embed_endpoint_name" {
+  type = string
+}
+
 variable "account_id" {
   type = string
 }

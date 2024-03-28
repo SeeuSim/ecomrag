@@ -1,5 +1,6 @@
 import base64
 import boto3
+from datetime import datetime
 import logging
 import json
 import os
@@ -7,13 +8,15 @@ import requests
 
 # grab environment variables
 
+ENDPOINT_NAME = os.environ.get('SM_EP_NAME', '')
+
 logger = logging.getLogger()
 
 runtime = boto3.client("sagemaker-runtime")
 s3 = boto3.client("s3")
 
 bucket_name = "ecomragdev"
-bucket_path = ""
+bucket_path = "models/embed/inputs"
 
 dtypes = {
     "Id": "stringValue",
@@ -65,7 +68,7 @@ def lambda_handler(event, context):
         return
 
     json_data = json.dumps(payload)
-    fkey = f"{id}-{model}-.json"
+    fkey = f"{id}-{model}-{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}.json"
     # Write the JSON string to a file
     with open(fkey, "w") as json_file:
         json_file.write(json_data)
@@ -74,7 +77,7 @@ def lambda_handler(event, context):
 
     if "ETag" in res:
         response = runtime.invoke_endpoint_async(
-            EndpointName="",
+            EndpointName=ENDPOINT_NAME,
             ContentType="application/json",
             Accept="application/json",
             InputLocation=f"s3://{bucket_name}/{bucket_path}/{fkey}",  # Dump JSON to S3
@@ -82,7 +85,7 @@ def lambda_handler(event, context):
         if "InferenceId" not in response:
             print(response)
             return
-        return {"StatusCode": 200}
+        return {"StatusCode": 200, **response}
     else:
         print(res)
         return

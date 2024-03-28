@@ -12,6 +12,12 @@ resource "aws_lambda_function" "async_embed_trigger" {
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
   source_code_hash = data.archive_file.async_embed_trigger.output_base64sha256
+
+  environment {
+    variables = {
+      "SM_EP_NAME" = "${var.async_embed_endpoint_name}"
+    }
+  }
 }
 
 resource "aws_lambda_event_source_mapping" "embed_trigger" {
@@ -33,6 +39,12 @@ resource "aws_lambda_function" "async_caption_trigger" {
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
   source_code_hash = data.archive_file.async_caption_trigger.output_base64sha256
+
+  environment {
+    variables = {
+      "SM_EP_NAME" = "${var.async_caption_endpoint_name}"
+    }
+  }
 }
 
 resource "aws_lambda_event_source_mapping" "caption_trigger" {

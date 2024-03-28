@@ -35,14 +35,16 @@ module "sagemaker" {
 }
 
 module "lambda" {
-  source                     = "./lambda"
-  account_id                 = var.account_id
-  async_caption_endpoint_arn = module.sagemaker.async_caption_endpoint_arn
-  async_embed_endpoint_arn   = module.sagemaker.async_embed_endpoint_arn
-  sqs_caption_queue          = module.sqs.caption_queue_arn
-  sqs_embed_queue            = module.sqs.embed_queue_arn
-  sns_failure_topic          = module.sns.failure_topic_arn
-  sns_success_topic          = module.sns.success_topic_arn
+  source                      = "./lambda"
+  account_id                  = var.account_id
+  async_caption_endpoint_arn  = module.sagemaker.async_caption_endpoint_arn
+  async_embed_endpoint_arn    = module.sagemaker.async_embed_endpoint_arn
+  async_caption_endpoint_name = module.sagemaker.async_caption_endpoint_name
+  async_embed_endpoint_name   = module.sagemaker.async_embed_endpoint_name
+  sqs_caption_queue           = module.sqs.caption_queue_arn
+  sqs_embed_queue             = module.sqs.embed_queue_arn
+  sns_failure_topic           = module.sns.failure_topic_arn
+  sns_success_topic           = module.sns.success_topic_arn
 
   depends_on = [module.sagemaker, module.sqs, module.sns]
 }
