@@ -37,3 +37,33 @@ resource "aws_lambda_event_source_mapping" "caption_trigger" {
   event_source_arn = var.sqs_caption_queue
   function_name    = aws_lambda_function.async_caption_trigger.function_name
 }
+
+data "archive_file" "model_failure_handler" {
+  type = "zip"
+
+  source_dir  = "../lmbd/failure-result-handler"
+  output_path = "../outputs/lmbd-failure-result-handler.zip"
+}
+
+resource "aws_lambda_function" "model_failure_handler" {
+  function_name = "SNS-Subscribe-Errors"
+  role          = aws_iam_role.model_failure_handler.arn
+  filename      = data.archive_file.model_failure_handler.output_path
+  handler       = "lambda_handler.lambda_handler"
+  runtime       = "python3.11"
+}
+
+data "archive_file" "model_success_handler" {
+  type = "zip"
+
+  source_dir  = "../lmbd/success-result-handler"
+  output_path = "../outputs/lmbd-success-result-handler.zip"
+}
+
+resource "aws_lambda_function" "model_success_handler" {
+  function_name = "SNS-Subscribe-Results"
+  role          = aws_iam_role.model_success_handler.arn
+  filename      = data.archive_file.model_success_handler.output_path
+  handler       = "lambda_handler.lambda_handler"
+  runtime       = "python3.11"
+}

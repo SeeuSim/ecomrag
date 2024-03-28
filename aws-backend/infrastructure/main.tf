@@ -41,5 +41,8 @@ module "lambda" {
   async_embed_endpoint_arn   = module.sagemaker.async_embed_endpoint_arn
   sqs_caption_queue          = module.sqs.caption_queue_arn
   sqs_embed_queue            = module.sqs.embed_queue_arn
-  depends_on                 = [module.sagemaker, module.sqs]
+  sns_failure_topic          = module.sns.failure_topic_arn
+  sns_success_topic          = module.sns.success_topic_arn
+
+  depends_on = [module.sagemaker, module.sqs, module.sns]
 }

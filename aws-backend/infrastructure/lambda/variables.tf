@@ -17,3 +17,11 @@ variable "sqs_caption_queue" {
 variable "sqs_embed_queue" {
   type = string
 }
+
+variable "sns_success_topic" {
+  type = string
+}
+
+variable "sns_failure_topic" {
+  type = string
+}
