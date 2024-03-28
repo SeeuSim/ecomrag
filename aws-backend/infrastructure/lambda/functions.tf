@@ -6,11 +6,12 @@ data "archive_file" "async_embed_trigger" {
 }
 
 resource "aws_lambda_function" "async_embed_trigger" {
-  function_name = "SQS-Trigger-Embed"
-  role          = aws_iam_role.async_embed_trigger_exec.arn
-  filename      = data.archive_file.async_embed_trigger.output_path
-  handler       = "lambda_handler.lambda_handler"
-  runtime       = "python3.11"
+  function_name    = "SQS-Trigger-Embed"
+  role             = aws_iam_role.async_embed_trigger_exec.arn
+  filename         = data.archive_file.async_embed_trigger.output_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  source_code_hash = data.archive_file.async_embed_trigger.output_base64sha256
 }
 
 resource "aws_lambda_event_source_mapping" "embed_trigger" {
@@ -26,11 +27,12 @@ data "archive_file" "async_caption_trigger" {
 }
 
 resource "aws_lambda_function" "async_caption_trigger" {
-  function_name = "SQS-Trigger-Caption"
-  role          = aws_iam_role.async_caption_trigger_exec.arn
-  filename      = data.archive_file.async_caption_trigger.output_path
-  handler       = "lambda_handler.lambda_handler"
-  runtime       = "python3.11"
+  function_name    = "SQS-Trigger-Caption"
+  role             = aws_iam_role.async_caption_trigger_exec.arn
+  filename         = data.archive_file.async_caption_trigger.output_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  source_code_hash = data.archive_file.async_caption_trigger.output_base64sha256
 }
 
 resource "aws_lambda_event_source_mapping" "caption_trigger" {
@@ -46,11 +48,12 @@ data "archive_file" "model_failure_handler" {
 }
 
 resource "aws_lambda_function" "model_failure_handler" {
-  function_name = "SNS-Subscribe-Errors"
-  role          = aws_iam_role.model_failure_handler.arn
-  filename      = data.archive_file.model_failure_handler.output_path
-  handler       = "lambda_handler.lambda_handler"
-  runtime       = "python3.11"
+  function_name    = "SNS-Subscribe-Errors"
+  role             = aws_iam_role.model_failure_handler.arn
+  filename         = data.archive_file.model_failure_handler.output_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  source_code_hash = data.archive_file.model_failure_handler.output_base64sha256
 }
 
 data "archive_file" "model_success_handler" {
@@ -61,9 +64,10 @@ data "archive_file" "model_success_handler" {
 }
 
 resource "aws_lambda_function" "model_success_handler" {
-  function_name = "SNS-Subscribe-Results"
-  role          = aws_iam_role.model_success_handler.arn
-  filename      = data.archive_file.model_success_handler.output_path
-  handler       = "lambda_handler.lambda_handler"
-  runtime       = "python3.11"
+  function_name    = "SNS-Subscribe-Results"
+  role             = aws_iam_role.model_success_handler.arn
+  filename         = data.archive_file.model_success_handler.output_path
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.11"
+  source_code_hash = data.archive_file.model_success_handler.output_base64sha256
 }
