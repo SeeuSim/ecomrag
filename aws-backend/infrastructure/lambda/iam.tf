@@ -1,6 +1,6 @@
 data "aws_iam_policy_document" "async_caption_trigger" {
   statement {
-    effect    = "allow"
+    effect    = "Allow"
     actions   = ["sagemaker:InvokeEndpoint"]
     resources = [var.async_caption_endpoint_arn]
   }
@@ -13,7 +13,7 @@ resource "aws_iam_policy" "async_caption_trigger" {
 
 data "aws_iam_policy_document" "async_embed_trigger" {
   statement {
-    effect    = "allow"
+    effect    = "Allow"
     actions   = ["sagemaker:InvokeEndpoint"]
     resources = [var.async_embed_endpoint_arn]
   }

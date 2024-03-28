@@ -4,7 +4,7 @@ resource "aws_sagemaker_endpoint_configuration" "async_caption_config" {
   production_variants {
     variant_name           = "variant-1"
     model_name             = aws_sagemaker_model.async_image_caption.name
-    instance_type          = "ml.t2.medium"
+    instance_type          = "ml.c7g.large"
     initial_instance_count = 1
   }
 
@@ -26,7 +26,7 @@ resource "aws_sagemaker_endpoint_configuration" "async_embed_config" {
   production_variants {
     variant_name           = "variant-1"
     model_name             = aws_sagemaker_model.async_image_embed.name
-    instance_type          = "ml.t2.medium"
+    instance_type          = "ml.c7g.large"
     initial_instance_count = 1
   }
 

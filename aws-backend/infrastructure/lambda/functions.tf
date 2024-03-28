@@ -1,7 +1,7 @@
 data "archive_file" "async_embed_trigger" {
   type = "zip"
 
-  source_file = "`../lmbd/async-trigger-embed-image"
+  source_dir  = "../lmbd/async-trigger-embed-image"
   output_path = "../outputs/lmbd-async-embed-trigger.zip"
 }
 
@@ -21,7 +21,7 @@ resource "aws_lambda_event_source_mapping" "embed_trigger" {
 data "archive_file" "async_caption_trigger" {
   type = "zip"
 
-  source_file = "../lmbd/async-trigger-image-caption"
+  source_dir  = "../lmbd/async-trigger-image-caption"
   output_path = "../outputs/lmbd-async-caption-trigger.zip"
 }
 
