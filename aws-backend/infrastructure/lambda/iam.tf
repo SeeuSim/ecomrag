@@ -2,7 +2,7 @@
 data "aws_iam_policy_document" "async_caption_trigger" {
   statement {
     effect    = "Allow"
-    actions   = ["sagemaker:InvokeEndpoint"]
+    actions   = ["sagemaker:InvokeEndpoint", "sagemaker:InvokeEndpointAsync"]
     resources = [var.async_caption_endpoint_arn]
   }
 }
@@ -28,19 +28,13 @@ resource "aws_iam_role" "async_caption_trigger_exec" {
   })
 }
 
-resource "aws_iam_policy_attachment" "allow_caption_exec" {
-  name       = "allow-invoke-caption-ep"
-  roles      = [aws_iam_role.async_caption_trigger_exec.name]
+resource "aws_iam_role_policy_attachment" "allow_caption_exec_sm" {
+  role       = aws_iam_role.async_caption_trigger_exec.name
   policy_arn = aws_iam_policy.async_caption_trigger.arn
 }
-resource "aws_iam_policy_attachment" "allow_caption_lmbd_exec" {
-  name       = "allow-invoke-caption-ep-exec"
-  roles      = [aws_iam_role.async_caption_trigger_exec.name]
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-resource "aws_iam_policy_attachment" "allow_caption_queue_sub" {
-  name       = "allow-caption-queue-sub"
-  roles      = [aws_iam_role.async_caption_trigger_exec.name]
+
+resource "aws_iam_role_policy_attachment" "allow_caption_queue_sub" {
+  role       = aws_iam_role.async_caption_trigger_exec.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 }
 
@@ -48,7 +42,7 @@ resource "aws_iam_policy_attachment" "allow_caption_queue_sub" {
 data "aws_iam_policy_document" "async_embed_trigger" {
   statement {
     effect    = "Allow"
-    actions   = ["sagemaker:InvokeEndpoint"]
+    actions   = ["sagemaker:InvokeEndpoint", "sagemaker:InvokeEndpointAsync"]
     resources = [var.async_embed_endpoint_arn]
   }
 }
@@ -74,20 +68,40 @@ resource "aws_iam_role" "async_embed_trigger_exec" {
   })
 }
 
-resource "aws_iam_policy_attachment" "allow_embed_exec" {
-  name       = "allow-invoke-caption-ep"
-  roles      = [aws_iam_role.async_embed_trigger_exec.name]
+resource "aws_iam_role_policy_attachment" "allow_embed_exec" {
+  role       = aws_iam_role.async_embed_trigger_exec.name
   policy_arn = aws_iam_policy.async_embed_trigger.arn
 }
-resource "aws_iam_policy_attachment" "allow_embed_lmbd_exec" {
-  name       = "allow-invoke-caption-ep-exec"
-  roles      = [aws_iam_role.async_caption_trigger_exec.name]
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-resource "aws_iam_policy_attachment" "allow_embed_queue_sub" {
-  name       = "allow-embed-queue-sub"
-  roles      = [aws_iam_role.async_embed_trigger_exec.name]
+
+resource "aws_iam_role_policy_attachment" "allow_embed_queue_sub" {
+  role       = aws_iam_role.async_embed_trigger_exec.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+}
+
+
+# S3 Upload
+data "aws_iam_policy_document" "s3_put_object" {
+  statement {
+    effect  = "Allow"
+    actions = ["s3:PutObject"]
+    resources = [
+      "arn:aws:s3:::ecomragdev/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "write_bucket_resources" {
+  name   = "write-bucket-resources"
+  policy = data.aws_iam_policy_document.s3_put_object.json
+}
+
+resource "aws_iam_policy_attachment" "allow_put_object" {
+  name = "add-s3-putobject"
+  roles = [
+    aws_iam_role.async_caption_trigger_exec.name,
+    aws_iam_role.async_embed_trigger_exec.name,
+  ]
+  policy_arn = aws_iam_policy.write_bucket_resources.arn
 }
 
 # Success Handler
@@ -105,12 +119,6 @@ resource "aws_iam_role" "model_success_handler" {
       }
     ]
   })
-}
-
-resource "aws_iam_policy_attachment" "allow_success_lmbd_exec" {
-  name       = "allow-success-lmbd-exec"
-  roles      = [aws_iam_role.model_success_handler.name]
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 resource "aws_iam_policy" "allow_sns_invoke_success" {
@@ -133,9 +141,8 @@ resource "aws_iam_policy" "allow_sns_invoke_success" {
   })
 }
 
-resource "aws_iam_policy_attachment" "allow_sns_invoke_success" {
-  name       = "allow-sns-invoke-success"
-  roles      = [aws_iam_role.model_success_handler.name]
+resource "aws_iam_role_policy_attachment" "allow_sns_invoke_success" {
+  role       = aws_iam_role.model_success_handler.name
   policy_arn = aws_iam_policy.allow_sns_invoke_success.arn
 }
 
@@ -154,12 +161,6 @@ resource "aws_iam_role" "model_failure_handler" {
       }
     ]
   })
-}
-
-resource "aws_iam_policy_attachment" "allow_failure_lmbd_exec" {
-  name       = "allow-failure-lmbd-exec"
-  roles      = [aws_iam_role.model_failure_handler.name]
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 resource "aws_iam_policy" "allow_sns_invoke_failure" {
@@ -182,8 +183,27 @@ resource "aws_iam_policy" "allow_sns_invoke_failure" {
   })
 }
 
-resource "aws_iam_policy_attachment" "allow_sns_invoke_failure" {
-  name       = "allow-sns-invoke-failure"
-  roles      = [aws_iam_role.model_failure_handler.name]
+resource "aws_iam_role_policy_attachment" "allow_sns_invoke_failure" {
+  role       = aws_iam_role.model_failure_handler.name
   policy_arn = aws_iam_policy.allow_sns_invoke_failure.arn
+}
+
+resource "aws_iam_policy_attachment" "lambda_exec_role" {
+  name = "lambda-basic-exec"
+  roles = [
+    aws_iam_role.async_caption_trigger_exec.name,
+    aws_iam_role.async_embed_trigger_exec.name,
+    aws_iam_role.model_failure_handler.name,
+    aws_iam_role.model_success_handler.name
+  ]
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_policy_attachment" "lambda_sqs_role" {
+  name = "lambda-sqs"
+  roles = [
+    aws_iam_role.async_caption_trigger_exec.name,
+    aws_iam_role.async_embed_trigger_exec.name
+  ]
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 }

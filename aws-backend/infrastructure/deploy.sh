@@ -7,4 +7,8 @@ terraform init -var $1/$1.tfvars -backend-config $1/$1.backendconfig
 
 terraform fmt --recursive
 
-terraform apply -var-file $1/$1.tfvars
+if [[ -z "$2" ]]; then
+  terraform apply -var-file $1/$1.tfvars
+else
+  terraform apply -var-file $1/$1.tfvars -auto-approve
+fi

@@ -83,3 +83,25 @@ resource "aws_lambda_function" "model_success_handler" {
   runtime          = "python3.11"
   source_code_hash = data.archive_file.model_success_handler.output_base64sha256
 }
+
+resource "aws_sns_topic_subscription" "success_sub" {
+  topic_arn = var.sns_success_topic
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.model_success_handler.arn
+}
+
+resource "aws_lambda_event_source_mapping" "success_sub" {
+  event_source_arn = var.sns_success_topic
+  function_name    = aws_lambda_function.model_success_handler.function_name
+}
+
+resource "aws_sns_topic_subscription" "failure_sub" {
+  topic_arn = var.sns_failure_topic
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.model_failure_handler.arn
+}
+
+resource "aws_lambda_event_source_mapping" "failure_sub" {
+  event_source_arn = var.sns_failure_topic
+  function_name    = aws_lambda_function.model_failure_handler.function_name
+}
