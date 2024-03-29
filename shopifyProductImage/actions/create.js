@@ -1,5 +1,4 @@
 import { applyParams, preventCrossShopDataAccess, save } from 'gadget-server';
-import { createProductImageEmbedding } from '../createImageEmbedding';
 import { postProductImgEmbedCaption } from '../postSqs';
 import { tryIncrShopSyncCount } from '../checkPlan';
 
