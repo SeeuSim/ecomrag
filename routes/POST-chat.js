@@ -41,7 +41,7 @@ function getCurrentDateString() {
   return new Date(Date.now()).toISOString();
 }
 
-const getBaseSystemPrompt = (products) => {
+const getBaseSystemPrompt = (products, talkativeness, personality) => {
   return (
     `You are a helpful shopping assistant trying to match customers with the ` +
     `right product. Always try to give users product recommendations, even ` +
@@ -61,7 +61,10 @@ const getBaseSystemPrompt = (products) => {
     `ask. Please do respond to normal greeting questions like "Hi", and if ` +
     `the user inputs their needs, please suggest products to match their ` +
     `needs always. Here are the json products you can use to generate a ` +
-    `response: ${stringify(products)}`
+    `response: ${stringify(products)}` +
+    `I will provide you with a talkativeness level. From a scale of 1 - 5 . with 1 being the least talkative and 5 being the most talkative` +
+    `Talkativeness: ${talkativeness}` +
+    `Personality: ${personality}`
   );
 };
 
@@ -149,6 +152,8 @@ export default async function route({ request, reply, api, logger, connections }
   if (payload.ShopId) {
     ShopId = payload.ShopId;
   }
+
+  logger.info(`ShopId: ${ShopId}`);
 
   // Assuming further processing is done only if an image is uploaded
   if (imageUrl) {
@@ -240,6 +245,9 @@ export default async function route({ request, reply, api, logger, connections }
       status: {
         equals: 'active',
       },
+      shop: {
+        equals: ShopId,
+      },
     },
     select: {
       id: true,
@@ -261,10 +269,33 @@ export default async function route({ request, reply, api, logger, connections }
 
   logger.info(`Products: ${products}`);
 
+  const chatbotSettings = await api.ChatbotSettings.findMany({
+    filter: {
+      shop: {
+        equals: ShopId,
+      },
+    },
+    select: {
+      id: true,
+      talkativeness: true,
+      personality: true,
+      shop: {
+        domain: true,
+      },
+    },
+  });
+
+  logger.info(
+    `Chatbot settings: ${chatbotSettings[0].talkativeness} ${chatbotSettings[0].personality}`
+  );
+
+  const talkativeness = chatbotSettings[0]?.talkativeness || '3';
+  const personality = chatbotSettings[0]?.personality || 'Auto';
+
   // capture products in Gadget's Logs
   logger.info({ products, message: userMessage }, 'found products most similar to user input');
 
-  const systemPrompt = getBaseSystemPrompt(products);
+  const systemPrompt = getBaseSystemPrompt(products, talkativeness, personality);
 
   const prompt = ChatPromptTemplate.fromMessages([
     new SystemMessage(systemPrompt),
