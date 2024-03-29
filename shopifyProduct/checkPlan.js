@@ -34,7 +34,7 @@ export const tryIncrShopSyncCount = async ({ params, record, api, logger, connec
       if (shop) {
         await api.internal.shopifyShop.update(shop.id, {
           shopifyShop: {
-            productSyncCount: productSyncCount + 1,
+            productSyncCount: shop.productSyncCount ?? 0 + 1,
           },
         });
         logger.info({ id: shop.id }, 'Incremented productSyncCount');

@@ -29,7 +29,12 @@ export async function onSuccess({ params, record, logger, api, connections }) {
     tryIncrShopSyncCount({ params, record, api, logger, connections }) &&
     (isCaptionEmbed.Caption || isCaptionEmbed.Embed)
   ) {
-    postProductImgEmbedCaption({ Id: record.id, Source: record.source }, isCaptionEmbed, logger);
+    postProductImgEmbedCaption(
+      { Id: record.id, Source: record.source },
+      isCaptionEmbed,
+      record.shopId,
+      logger
+    );
   }
 }
 

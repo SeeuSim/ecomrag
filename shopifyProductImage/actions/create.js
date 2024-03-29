@@ -23,6 +23,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
     postProductImgEmbedCaption(
       { Id: record.id, Source: record.source },
       { Caption: true, Embed: true },
+      record.shopId,
       logger
     );
   }
