@@ -14,9 +14,10 @@ const SQS = new AWS.SQS();
 /**
  *
  * @param {{ Id: string, Description: string}} payload
+ * @param { string | number } shopId
  * @param { typeof logger } logger
  */
-export function postProductDescEmbedding(payload, logger) {
+export function postProductDescEmbedding(payload, shopId, logger) {
   const messagePayload = {
     Id: {
       DataType: 'String',
@@ -36,12 +37,13 @@ export function postProductDescEmbedding(payload, logger) {
       QueueUrl: EMBED_QUEUE_URL,
       MessageBody: 'EmbedDesc',
       MessageAttributes: messagePayload,
+      MessageGroupId: `${shopId}`,
     },
     (err, data) => {
       if (err) {
-        logger.error('Error pushing to embed queue: ' + err.message);
+        console.error('Error pushing to embed queue: ' + err.message);
       } else {
-        logger.info(data, 'Queued embed job');
+        console.log(data, 'Queued embed job');
       }
     }
   );

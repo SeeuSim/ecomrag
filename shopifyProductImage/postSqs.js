@@ -15,9 +15,10 @@ const SQS = new AWS.SQS();
  *
  * @param {{ Id: string, Source: string}} payload
  * @param {{ Caption: boolean, Embed: boolean}} isCaptionEmbed
+ * @param { string | number } shopId
  * @param { typeof logger } logger
  */
-export function postProductImgEmbedCaption(payload, isCaptionEmbed, logger) {
+export function postProductImgEmbedCaption(payload, isCaptionEmbed, shopId, logger) {
   const messagePayload = {
     Id: {
       DataType: 'String',
@@ -38,12 +39,13 @@ export function postProductImgEmbedCaption(payload, isCaptionEmbed, logger) {
         QueueUrl: CAPTION_QUEUE_URL,
         MessageBody: 'CaptionImg',
         MessageAttributes: messagePayload,
+        MessageGroupId: `${shopId}`,
       },
       (err, data) => {
         if (err) {
-          logger.error('Error pushing to embed queue: ' + err.message);
+          console.error('Error pushing to embed queue: ' + err.message);
         } else {
-          logger.info(data, 'Queued embed job');
+          console.log(data, 'Queued embed job');
         }
       }
     );
@@ -54,12 +56,13 @@ export function postProductImgEmbedCaption(payload, isCaptionEmbed, logger) {
         QueueUrl: EMBED_QUEUE_URL,
         MessageBody: 'EmbedImg',
         MessageAttributes: messagePayload,
+        MessageGroupId: `${shopId}`,
       },
       (err, data) => {
         if (err) {
-          logger.error('Error pushing to embed queue: ' + err.message);
+          console.error('Error pushing to embed queue: ' + err.message);
         } else {
-          logger.info(data, 'Queued embed job');
+          console.log(data, 'Queued embed job');
         }
       }
     );
