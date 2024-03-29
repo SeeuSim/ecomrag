@@ -18,7 +18,7 @@ const SQS = new AWS.SQS();
  * @param { typeof logger } logger
  */
 export function postProductImgEmbedCaption(payload, isCaptionEmbed, logger) {
-  const payload = {
+  const messagePayload = {
     Id: {
       DataType: 'String',
       StringValue: payload.Id,
@@ -37,7 +37,7 @@ export function postProductImgEmbedCaption(payload, isCaptionEmbed, logger) {
       {
         QueueUrl: CAPTION_QUEUE_URL,
         MessageBody: 'CaptionImg',
-        MessageAttributes: payload,
+        MessageAttributes: messagePayload,
       },
       (err, data) => {
         if (err) {
@@ -53,7 +53,7 @@ export function postProductImgEmbedCaption(payload, isCaptionEmbed, logger) {
       {
         QueueUrl: EMBED_QUEUE_URL,
         MessageBody: 'EmbedImg',
-        MessageAttributes: payload,
+        MessageAttributes: messagePayload,
       },
       (err, data) => {
         if (err) {

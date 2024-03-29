@@ -17,7 +17,7 @@ const SQS = new AWS.SQS();
  * @param { typeof logger } logger
  */
 export function postProductDescEmbedding(payload, logger) {
-  const payload = {
+  const messagePayload = {
     Id: {
       DataType: 'String',
       StringValue: payload.Id,
@@ -35,7 +35,7 @@ export function postProductDescEmbedding(payload, logger) {
     {
       QueueUrl: EMBED_QUEUE_URL,
       MessageBody: 'EmbedDesc',
-      MessageAttributes: payload,
+      MessageAttributes: messagePayload,
     },
     (err, data) => {
       if (err) {
