@@ -25,7 +25,7 @@ export function postProductDescEmbedding(payload, shopId, logger) {
     },
     Description: {
       DataType: 'String',
-      StringValue: payload.Description,
+      StringValue: payload.Description.slice(0, 77), // CLIP has max length of 77 chars
     },
     Model: {
       DataType: 'String',
