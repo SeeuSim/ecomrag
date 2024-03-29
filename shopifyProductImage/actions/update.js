@@ -32,7 +32,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
     postProductImgEmbedCaption(
       { Id: record.id, Source: record.source },
       isCaptionEmbed,
-      record.shopId,
+      record.shopId ?? 'DUMMYMSGGRPID',
       logger
     );
   }

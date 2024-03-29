@@ -1,6 +1,11 @@
-import { applyParams, preventCrossShopDataAccess, save } from 'gadget-server';
-import { postProductImgEmbedCaption } from '../postSqs';
+import {
+  CreateShopifyProductImageActionContext,
+  applyParams,
+  preventCrossShopDataAccess,
+  save,
+} from 'gadget-server';
 import { tryIncrShopSyncCount } from '../checkPlan';
+import { postProductImgEmbedCaption } from '../postSqs';
 
 /**
  * @param { CreateShopifyProductImageActionContext } context
@@ -16,14 +21,14 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   if (
-    record.source &&
+    !!record.source &&
     record.source.length > 0 &&
     tryIncrShopSyncCount({ params, record, logger, api, connections })
   ) {
     postProductImgEmbedCaption(
       { Id: record.id, Source: record.source },
       { Caption: true, Embed: true },
-      record.shopId,
+      record.shopId ?? 'DUMMYMSGID',
       logger
     );
   }
