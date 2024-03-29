@@ -5,7 +5,8 @@ import {
   ActionOptions,
   UpdateShopifyProductActionContext,
 } from 'gadget-server';
-import { createProductEmbedding } from '../createEmbedding';
+import { tryIncrShopSyncCount } from '../checkPlan';
+import { postProductDescEmbedding } from '../postSqs';
 
 /**
  * @param { UpdateShopifyProductActionContext } context
@@ -20,10 +21,12 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { UpdateShopifyProductActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
-  // TODO: Post to SQS Queue for TEXT EMBEDDING if embedding not set
-  // await createProductEmbedding({ params, record, api, logger, connections });
-  /**@type {{ Id: { DataType: 'String', StringValue: string }, Model: { DataType: 'String', StringValue: string }, Description: { DataType: 'String', StringValue: string }}} */
-  const payload = {};
+  if (tryIncrShopSyncCount({ params, record, logger, api, connections })) {
+    postProductDescEmbedding(
+      { Id: record.id, Description: `${record.title}: ${record.body}` },
+      logger
+    );
+  }
   return;
 }
 

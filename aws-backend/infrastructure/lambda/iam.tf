@@ -80,19 +80,34 @@ resource "aws_iam_role_policy_attachment" "allow_embed_queue_sub" {
 
 
 # S3 Upload
-data "aws_iam_policy_document" "s3_put_object" {
+data "aws_iam_policy_document" "model_bucket_put" {
   statement {
     effect  = "Allow"
     actions = ["s3:PutObject"]
     resources = [
-      "arn:aws:s3:::ecomragdev/*"
+      "arn:aws:s3:::${var.model_io_bucket}/models/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "model_bucket_read_delete" {
+  statement {
+    effect  = "Allow"
+    actions = ["s3:GetObject", "s3:DeleteObject"]
+    resources = [
+      "arn:aws:s3:::${var.model_io_bucket}/models/*"
     ]
   }
 }
 
 resource "aws_iam_policy" "write_bucket_resources" {
-  name   = "write-bucket-resources"
-  policy = data.aws_iam_policy_document.s3_put_object.json
+  name   = "create-bucket-resources"
+  policy = data.aws_iam_policy_document.model_bucket_put.json
+}
+
+resource "aws_iam_policy" "read_delete_bucket_resources" {
+  name   = "read-delete-bucket-resources"
+  policy = data.aws_iam_policy_document.model_bucket_read_delete.json
 }
 
 resource "aws_iam_policy_attachment" "allow_put_object" {
@@ -100,9 +115,16 @@ resource "aws_iam_policy_attachment" "allow_put_object" {
   roles = [
     aws_iam_role.async_caption_trigger_exec.name,
     aws_iam_role.async_embed_trigger_exec.name,
-    aws_iam_role.model_success_handler.name,
   ]
   policy_arn = aws_iam_policy.write_bucket_resources.arn
+}
+
+resource "aws_iam_policy_attachment" "allow_read_delete" {
+  name = "add-s3-read-delete"
+  roles = [
+    aws_iam_role.model_success_handler.name
+  ]
+  policy_arn = aws_iam_policy.read_delete_bucket_resources.arn
 }
 
 # Success Handler

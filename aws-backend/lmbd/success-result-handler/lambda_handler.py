@@ -1,6 +1,4 @@
-import base64
 import boto3
-import logging
 import json
 import os
 import urllib3
@@ -130,10 +128,10 @@ def process_event(event):
         request = http.request(
             "POST",
             BACKEND_UPDATE_EP,
-            json={
+            body=json.dumps({
                 "isBatch": False,
                 "payload": req_payload,
-            },
+            }),
             headers={"Content-Type": "application/json"},
         )
         if request.status > 299:
@@ -165,6 +163,6 @@ def lambda_handler(event, context):
     )
 
     print("Processed successfully: " + json.dumps(successes))
-    print("Processing errors: " + json.dumps(failures))
+    print("Processing errors: " + f"{failures}")
 
     return {"Successes": successes, "Failures": failures}

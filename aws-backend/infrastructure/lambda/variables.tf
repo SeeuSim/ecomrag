@@ -34,6 +34,10 @@ variable "sns_failure_topic" {
   type = string
 }
 
+variable "model_io_bucket" {
+  type = string
+}
+
 variable "backend_ep" {
   type        = string
   description = "The endpoint for the success handler to post the inference result to."
