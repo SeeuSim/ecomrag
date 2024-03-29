@@ -42,7 +42,7 @@ variable "async_caption_model_data" {
 }
 
 variable "backend_ep" {
-  type = string
+  type        = string
   description = "The endpoint for the success handler to post the inference result to."
 }
 

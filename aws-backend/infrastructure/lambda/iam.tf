@@ -100,6 +100,7 @@ resource "aws_iam_policy_attachment" "allow_put_object" {
   roles = [
     aws_iam_role.async_caption_trigger_exec.name,
     aws_iam_role.async_embed_trigger_exec.name,
+    aws_iam_role.model_success_handler.name,
   ]
   policy_arn = aws_iam_policy.write_bucket_resources.arn
 }

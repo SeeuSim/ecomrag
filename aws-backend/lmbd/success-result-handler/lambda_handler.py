@@ -5,55 +5,166 @@ import json
 import os
 import urllib3
 
+http = urllib3.PoolManager()
+
+BACKEND_UPDATE_EP = os.environ.get("BACKEND_EP", "")
+
+s3 = boto3.client("s3")
+
+
+def get_field(model, val):
+    if model == "shopifyProduct":
+        return "descriptionEmbedding"
+    if model == "shopifyProductImage":
+        if type(val) == str:
+            return "imageDescription"
+        return "imageDescriptionEmbedding"
+
+
+event_schema = {
+    "EventSource": "aws:sns",
+    "EventVersion": "1.0",
+    "EventSubscriptionArn": "arn:aws:sns:us-east-1:...",
+    "Sns": {
+        "Type": "Notification",
+        "MessageId": "",
+        "TopicArn": "arn:aws:sns:us-east-1:...",
+        "Subject": None,
+        "Message": {  # JSON String, need to dump first
+            "awsRegion": "us-east-1",
+            "eventTime": "2024-03-29T03:48:05.077Z",
+            "receivedTime": "2024-03-29T03:48:04.279Z",
+            "invocationStatus": "Completed",
+            "requestParameters": {
+                "accept": "application/json",
+                "contentType": "application/json",
+                "endpointName": "async-embed-endpoint",
+                "inputLocation": "s3://{BucketName}/{Key}",
+            },
+            "responseParameters": {
+                "contentType": "application/json",
+                "outputLocation": "s3://{BucketName}/{Key}",
+            },
+            "inferenceId": "",
+            "eventVersion": "1.0",
+            "eventSource": "aws:sagemaker",
+            "eventName": "InferenceResult",
+        },
+        "Timestamp": "2024-03-29T03:48:05.145Z",
+        "SignatureVersion": "1",
+        "Signature": "",
+        "SigningCertUrl": "",
+        "UnsubscribeUrl": "",
+        "MessageAttributes": {},
+    },
+}
+
+
+def get_payload(s3_loc):
+    try:
+        s3_loc = s3_loc.replace("s3://", "")
+        bucket, path = s3_loc.split("/", 1)
+        res = s3.get_object(Bucket=bucket, Key=path)
+        body = res["Body"]
+        data = body.read()
+        payload = json.loads(data)
+        return payload
+    except Exception as e:
+        raise Exception(f"Error retrieving `s3://{s3_loc}`, {e}")
+
+
+def delete_payload(s3_loc: str):
+    try:
+        s3_loc = s3_loc.replace("s3://", "")
+        bucket, path = s3_loc.split("/", 1)
+        s3.delete_object(Bucket=bucket, Key=path)
+    except Exception as e:
+        raise Exception(f"Error deleting `s3://{s3_loc}`, {e}")
+
 
 def process_event(event):
-    event = {
-        "Records": [
-            {
-                "EventSource": "aws:sns",
-                "EventVersion": "1.0",
-                "EventSubscriptionArn": "arn:aws:sns:us-east-1:058264360377:async-model-success:de45de0b-be5f-42a4-8e94-8007db259ca5",
-                "Sns": {
-                    "Type": "Notification",
-                    "MessageId": "35841ea0-745d-50c6-b523-402048683c9f",
-                    "TopicArn": "arn:aws:sns:us-east-1:058264360377:async-model-success",
-                    "Subject": None,
-                    "Message": '{"awsRegion":"us-east-1","eventTime":"2024-03-29T03:48:05.077Z","receivedTime":"2024-03-29T03:48:04.279Z","invocationStatus":"Completed","requestParameters":{"accept":"application/json","contentType":"application/json","endpointName":"async-embed-endpoint","inputLocation":"s3://ecomragdev/models/embed/inputs/30258695110750-shopifyProductImage-2024-03-29 03:48:03.json"},"responseParameters":{"contentType":"application/json","outputLocation":"s3://ecomragdev/models/embed/outputs/dd334eb2-0276-4107-972a-280e0eecfd30.out"},"inferenceId":"03a98604-cf1f-44d1-b9c4-801dcbbe792b","eventVersion":"1.0","eventSource":"aws:sagemaker","eventName":"InferenceResult"}',
-                    "Timestamp": "2024-03-29T03:48:05.145Z",
-                    "SignatureVersion": "1",
-                    "Signature": "rDXlRGECX1AQed+Wm7U51mQ+PFSC/k015rQCE3CWMQooVtZ24LT2POgWHuHUrLxnUpt5vipD9+8vw2cUmF3WvSYsG4mw/YptVt06LOCkH4uBJ+TrgdLKtsgetHgt2hkPmt/yLnUQ8SlopXMjz4TwubSOf4q59HQrAMZX7VzOaqN5KnV0y+ruJ2M/hT9yc0qhXf2/bNCZpWw3PgodP1Mq0vzB3uJQFa/lcDFpvN6hTLrFk1rvqtcR/vVXTOERvzRxrRGsGODy6zqyHmUXhIKuK2UOiqZRrf/GbcsMlE6ONArir4EcdqIDU/Rq6jlua3ZekzBU4a7xvstOdCZjgftJQQ==",
-                    "SigningCertUrl": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-60eadc530605d63b8e62a523676ef735.pem",
-                    "UnsubscribeUrl": "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:058264360377:async-model-success:de45de0b-be5f-42a4-8e94-8007db259ca5",
-                    "MessageAttributes": {},
-                },
-            }
-        ]
-    }
+    if "Sns" not in event:
+        return {"StatusCode": 401, "Reason": "Wrong Params"}
+    sns_payload = event["Sns"]
+    if "Message" not in sns_payload:
+        return {"StatusCode": 401, "Reason": "No Message"}
+    message = sns_payload["Message"]
+    try:
+        message = json.loads(message)
+        if (
+            "invocationStatus" not in message
+            or message["invocationStatus"] != "Completed"
+        ):
+            return {"StatusCode": 500, "Reason": sns_payload["Message"]}
+
+        if "requestParameters" in message:
+            req_params = message["requestParameters"]
+            # Delete Input Loc
+            if "inputLocation" in req_params:
+                inp_loc = req_params["inputLocation"]
+                delete_payload(inp_loc)
+
+        result = {}
+
+        if "responseParameters" in message:
+            # Process and delete output loc
+            res_params = message["responseParameters"]
+            if "outputLocation" in res_params:
+                out_loc = res_params["outputLocation"]
+                result = {**result, **get_payload(out_loc)}
+                delete_payload(out_loc)
+
+        # Process result and post to Gadget
+        id = result["Id"]
+        model = result["Model"]
+        res = result["Result"]
+        if "Embedding" in res:
+            val = res["Embedding"]
+        elif "Caption" in res:
+            val = res["Caption"]
+
+        field = get_field(model, val)
+
+        req_payload = {"id": id, "model": model, "value": val, "field": field}
+
+        request = http.request(
+            "POST",
+            BACKEND_UPDATE_EP,
+            json={
+                "isBatch": False,
+                "payload": req_payload,
+            },
+            headers={"Content-Type": "application/json"},
+        )
+        if request.status > 299:
+            return {"StatusCode": request.status, **request}
+        return {"StatusCode": 200, **req_payload}
+    except Exception as e:
+        return {"StatusCode": 500, "Reason": e}
 
 
 def lambda_handler(event, context):
     """
     To Test with SNS
     """
+    if len(BACKEND_UPDATE_EP) == 0:
+        print("Backend endpoint not configured")
+        return {"StatusCode": 500, "Message": "Backend endpoint not configured."}
+
     if "Records" not in event:
         return {"StatusCode": 401}
-    results = event["Records"]
+    inv_results = event["Records"]
 
-    # # Lambda will encode file binary, decode for raw bytes
-    # if "isBase64Encoded" in event and event["isBase64Encoded"]:
-    #     body = base64.b64decode(event['body'])
-    # else:
-    #     body = event['body']
+    proc_results = list(map(process_event, inv_results))
 
-    # response = runtime.invoke_endpoint(EndpointName=ENDPOINT_NAME,
-    #                                    ContentType=event["headers"].get("content-type", "image/jpeg"),
-    #                                    Body=body)
+    successes = list(
+        filter(lambda x: x["StatusCode"] >= 200 and x["StatusCode"] < 300, proc_results)
+    )
+    failures = list(
+        filter(lambda x: x["StatusCode"] >= 300 or x["StatusCode"] < 200, proc_results)
+    )
 
-    # # print("Received response: {response}".format(response=response))
-    # data = response['Body']
-    # data = data.read()
+    print("Processed successfully: " + json.dumps(successes))
+    print("Processing errors: " + json.dumps(failures))
 
-    # if type(data) == bytes:
-    #     data = data.decode('utf-8') # JSON string
-
-    # return json.loads(data)
+    return {"Successes": successes, "Failures": failures}

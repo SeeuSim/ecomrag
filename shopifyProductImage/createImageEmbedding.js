@@ -9,19 +9,6 @@ AWS.config.update({
   region: 'us-east-1',
 });
 
-export async function downloadCDNImage(cdnUrl, logger) {
-  const imageResponse = await fetch(cdnUrl);
-  if (!imageResponse.ok) {
-    return undefined;
-  }
-  const imageBuffer = await imageResponse.arrayBuffer();
-  const image = Buffer.from(imageBuffer);
-  const { pathname } = new URL(cdnUrl);
-  const parts = pathname.split('.');
-  const fileExt = parts[parts.length - 1];
-  return { content: image, fileType: `image/${fileExt}` };
-}
-
 export async function downloadS3Image(s3Url, logger) {
   AWS.config.update({ logger });
   const objectUrl = new URL(s3Url);
@@ -51,6 +38,11 @@ export async function downloadS3Image(s3Url, logger) {
   }
 }
 
+/**
+ * Create Image Embeddings from Sagemaker Realtime/Serverless Embed endpoint.
+ * Purely for live chat use.
+ * For Product/Product Image Sync, use the SQS Queues for async processing instead.
+ */
 export const createProductImageEmbedding = async ({ record, api, logger }) => {
   const shop = await api.shopifyShop.findOne(record.shopId, { select: { Plan: true } });
   const productImageSyncLimit = shop.productImageSyncLimit;
@@ -92,13 +84,6 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
         image = s3Image;
         fileType = s3FileType;
       } else {
-        // From product sync, get from Shopify CDN
-        // const { content: cdnImage, fileType: cdnFileType } = await downloadCDNImage(
-        //   imageUrl,
-        //   logger
-        // );
-        // image = cdnImage;
-        // fileType = cdnFileType;
         return;
       }
 
@@ -129,41 +114,6 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
       }
 
       const embedding = payload.Embedding;
-
-      // Only caption and upload if action is triggered by model.
-      if (record.id) {
-        return;
-        // const textResponse = await fetch(CAPTIONING_ENDPOINT, {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'image/jpeg', Accept: 'application/json' },
-        //   body: image,
-        // });
-
-        // if (!textResponse.ok) {
-        //   const error = await embedResponse.text();
-        //   logger.error({ error, textResponse }, 'An error occurred fetching the text embedding.');
-        //   return;
-        // }
-
-        // /**@type { { Caption: string; Length: number; } } */
-        // const textPayload = await textResponse.json();
-        // const caption = textPayload.Caption;
-        // logger.info(`Got caption: ${caption}`);
-
-        // await Promise.all([
-        //   api.internal.shopifyProductImage.update(record.id, {
-        //     shopifyProductImage: {
-        //       imageDescriptionEmbedding: embedding,
-        //       imageDescription: caption,
-        //     },
-        //   }),
-        //   api.internal.shopifyShop.update(record.shopId, {
-        //     shopifyShop: {
-        //       productImageSyncCount: shop.productImageSyncCount + 1,
-        //     },
-        //   }),
-        // ]);
-      }
 
       return embedding;
     } catch (error) {

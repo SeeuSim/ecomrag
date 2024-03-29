@@ -81,7 +81,6 @@ def transform_fn(
             {
                 "Id": body.get("Id", ""),
                 "Model": body.get("Model", ""),
-                "InputLocation": body.get("Location", {}),
                 # Model Output
                 "Result": output,
             }

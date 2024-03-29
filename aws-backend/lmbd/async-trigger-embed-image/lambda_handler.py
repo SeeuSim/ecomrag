@@ -66,10 +66,6 @@ def handle_event(event):
         return {"StatusCode": 401}
 
     fkey = f"{id}-{model}-{datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')}.json"
-    payload = {
-        **payload,
-        "Location": {"Bucket": bucket_name, "Key": f"{bucket_path}/{fkey}"},
-    }
 
     json_data = json.dumps(payload)
     # Write the JSON string to a file

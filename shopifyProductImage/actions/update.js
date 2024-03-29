@@ -19,8 +19,11 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { UpdateShopifyProductImageActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
-  // TODO: Post to SQS topic if embedding/caption not set
-  return;
+  // Both payloads are the same.
+  // TODO: Post to SQS Queue for IMAGE EMBEDDING if embedding not set
+  // TODO: Post to SQS Queue for IMAGE CAPTION if caption not set
+  /**@type {{ Id: { DataType: 'String', StringValue: string }, Model: { DataType: 'String', StringValue: string }, Source: { DataType: 'String', StringValue: string }}} */
+  const payload = {};
 }
 
 /** @type { ActionOptions } */

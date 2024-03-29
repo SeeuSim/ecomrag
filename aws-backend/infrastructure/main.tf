@@ -45,6 +45,6 @@ module "lambda" {
   sqs_embed_queue             = module.sqs.embed_queue_arn
   sns_failure_topic           = module.sns.failure_topic_arn
   sns_success_topic           = module.sns.success_topic_arn
-  backend_ep = var.backend_ep
-  depends_on = [module.sagemaker, module.sqs, module.sns]
+  backend_ep                  = var.backend_ep
+  depends_on                  = [module.sagemaker, module.sqs, module.sns]
 }

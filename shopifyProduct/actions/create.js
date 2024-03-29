@@ -25,8 +25,10 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { CreateShopifyProductActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
-  // TODO: post to SQS topic if embedding not set
+  // TODO: Post to SQS Queue for TEXT EMBEDDING if embedding not set
   // await createProductEmbedding({ params, record, api, logger, connections });
+  /**@type {{ Id: { DataType: 'String', StringValue: string }, Model: { DataType: 'String', StringValue: string }, Description: { DataType: 'String', StringValue: string }}} */
+  const payload = {};
 }
 
 /** @type { ActionOptions } */
