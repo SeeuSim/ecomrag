@@ -1,9 +1,10 @@
 import base64
-import boto3
-from datetime import datetime
-import logging
 import json
+import logging
 import os
+from datetime import UTC, datetime
+
+import boto3
 import urllib3
 
 http = urllib3.PoolManager()
@@ -64,8 +65,13 @@ def handle_event(event):
         print("Invalid payload")
         return {"StatusCode": 401}
 
+    fkey = f"{id}-{model}-{datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')}.json"
+    payload = {
+        **payload,
+        "Location": {"Bucket": bucket_name, "Key": f"{bucket_path}/{fkey}"},
+    }
+
     json_data = json.dumps(payload)
-    fkey = f"{id}-{model}-{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}.json"
     # Write the JSON string to a file
     res = s3.put_object(Body=json_data, Bucket=bucket_name, Key=f"{bucket_path}/{fkey}")
 

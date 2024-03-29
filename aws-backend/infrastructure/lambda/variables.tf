@@ -33,3 +33,8 @@ variable "sns_success_topic" {
 variable "sns_failure_topic" {
   type = string
 }
+
+variable "backend_ep" {
+  type = string
+  description = "The endpoint for the success handler to post the inference result to."
+}

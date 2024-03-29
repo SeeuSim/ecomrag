@@ -82,6 +82,12 @@ resource "aws_lambda_function" "model_success_handler" {
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
   source_code_hash = data.archive_file.model_success_handler.output_base64sha256
+
+  environment {
+    variables = {
+      "BACKEND_EP" = var.backend_ep
+    }
+  }
 }
 
 resource "aws_sns_topic_subscription" "success_sub" {
@@ -90,9 +96,13 @@ resource "aws_sns_topic_subscription" "success_sub" {
   endpoint  = aws_lambda_function.model_success_handler.arn
 }
 
-resource "aws_lambda_event_source_mapping" "success_sub" {
-  event_source_arn = var.sns_success_topic
-  function_name    = aws_lambda_function.model_success_handler.function_name
+resource "aws_lambda_permission" "success" {
+  count         = 1
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.model_success_handler.function_name
+  principal     = "sns.amazonaws.com"
+  statement_id  = "AllowSubscriptionToSNS"
+  source_arn    = var.sns_success_topic
 }
 
 resource "aws_sns_topic_subscription" "failure_sub" {
@@ -101,7 +111,11 @@ resource "aws_sns_topic_subscription" "failure_sub" {
   endpoint  = aws_lambda_function.model_failure_handler.arn
 }
 
-resource "aws_lambda_event_source_mapping" "failure_sub" {
-  event_source_arn = var.sns_failure_topic
-  function_name    = aws_lambda_function.model_failure_handler.function_name
+resource "aws_lambda_permission" "failure" {
+  count         = 1
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.model_failure_handler.function_name
+  principal     = "sns.amazonaws.com"
+  statement_id  = "AllowSubscriptionToSNS"
+  source_arn    = var.sns_failure_topic
 }

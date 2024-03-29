@@ -55,6 +55,7 @@ def transform_fn(
         output = {
             "Id": payload.get("Id", ""),
             "Model": payload.get("Model", ""),
+            "InputLocation": body.get("Location", {}),
             # Model Output
             "Result": {
                 "Caption": caption,
