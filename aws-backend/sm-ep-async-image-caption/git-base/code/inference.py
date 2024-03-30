@@ -47,14 +47,17 @@ def transform_fn(
     encode_output = lambda v: encoder.encode(v, accept_type)
     try:
         body = json.loads(data)
+
+        # Image Processing
         payload = body["Payload"]
         img_bytes = base64.b64decode(payload)
         data = BytesIO(img_bytes)
         img = Image.open(data)
         caption = model.get_single_image_caption(img)
+        
         output = {
-            "Id": payload.get("Id", ""),
-            "Model": payload.get("Model", ""),
+            "Id": body.get("Id", ""),
+            "Model": body.get("Model", ""),
             # Model Output
             "Result": {
                 "Caption": caption,
