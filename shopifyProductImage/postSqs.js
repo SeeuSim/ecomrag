@@ -30,7 +30,7 @@ export function postProductImgEmbedCaption(payload, isCaptionEmbed, shopId, logg
     },
     Model: {
       DataType: 'String',
-      StringValue: 'shopifyProduct',
+      StringValue: 'shopifyProductImage',
     },
   };
   logger.info('ProductImg: ' + JSON.stringify(messagePayload));
