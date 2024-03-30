@@ -33,6 +33,7 @@ export default async function route({ request, reply, api, logger, connections }
     res.forEach((v) => aggr.push(v));
   }
 
+  // Try Sending as batches of 10 with delay.
   aggr.forEach((v) => {
     if (counts[v.shopId]) {
       counts[v.shopId] += 1;
