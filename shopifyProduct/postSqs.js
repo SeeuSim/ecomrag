@@ -43,7 +43,7 @@ export function postProductDescEmbedding(payload, shopId, logger) {
       if (err) {
         console.error('Error pushing to embed queue: ' + err.message);
       } else {
-        console.log(data, 'Queued embed job');
+        console.log(`Queued embed job | shopifyProduct | ${JSON.stringify(messagePayload)}`);
       }
     }
   );

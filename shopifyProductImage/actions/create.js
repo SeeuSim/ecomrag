@@ -31,6 +31,8 @@ export async function onSuccess({ params, record, logger, api, connections }) {
       record.shopId ?? 'DUMMYMSGID',
       logger
     );
+  } else {
+    logger.info(`${record.source} | ${!!record.source} | Failed check for productImg | create`);
   }
   return;
 }

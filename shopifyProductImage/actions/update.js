@@ -35,6 +35,10 @@ export async function onSuccess({ params, record, logger, api, connections }) {
       record.shopId ?? 'DUMMYMSGGRPID',
       logger
     );
+  } else {
+    logger.info(
+      `${JSON.stringify(isCaptionEmbed)} | ${record.changed('source')}} | Failed check for productImg | update`
+    );
   }
 }
 

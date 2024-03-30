@@ -33,7 +33,9 @@ export function postProductImgEmbedCaption(payload, isCaptionEmbed, shopId, logg
       StringValue: 'shopifyProduct',
     },
   };
+  logger.info('ProductImg: ' + JSON.stringify(messagePayload));
   if (isCaptionEmbed.Caption) {
+    logger.info('Sending ProductImg Caption');
     SQS.sendMessage(
       {
         QueueUrl: CAPTION_QUEUE_URL,
@@ -43,14 +45,15 @@ export function postProductImgEmbedCaption(payload, isCaptionEmbed, shopId, logg
       },
       (err, data) => {
         if (err) {
-          console.error('Error pushing to embed queue: ' + err.message);
+          console.error('Error pushing to ProductImg caption queue: ' + err.message);
         } else {
-          console.log(data, 'Queued embed job');
+          console.log(`Queued caption job | shopifyProductImg | ${JSON.stringify(messagePayload)}`);
         }
       }
     );
   }
   if (isCaptionEmbed.Embed) {
+    logger.info('Sending ProductImg Embed');
     SQS.sendMessage(
       {
         QueueUrl: EMBED_QUEUE_URL,
@@ -60,9 +63,9 @@ export function postProductImgEmbedCaption(payload, isCaptionEmbed, shopId, logg
       },
       (err, data) => {
         if (err) {
-          console.error('Error pushing to embed queue: ' + err.message);
+          console.error('Error pushing to ProductImg embed queue: ' + err.message);
         } else {
-          console.log(data, 'Queued embed job');
+          console.log(`Queued embed job | shopifyProductImg | ${JSON.stringify(messagePayload)}`);
         }
       }
     );
