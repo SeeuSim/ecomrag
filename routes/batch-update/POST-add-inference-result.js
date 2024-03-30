@@ -49,11 +49,17 @@ export default async function route({ request, reply, api, logger, connections }
           await api.internal.shopifyProduct.update(data.payload.id, {
             [data.payload.field]: data.payload.value,
           });
+          console.log(
+            `Inference Result: |${data.payload.model}|Id=${data.payload.id}|Field=${data.payload.field}`
+          );
           break;
         case 'shopifyProductImage':
           await api.internal.shopifyProductImage.update(data.payload.id, {
             [data.payload.field]: data.payload.value,
           });
+          console.log(
+            `Inference Result: |${data.payload.model}|Id=${data.payload.id}|Field=${data.payload.field}`
+          );
           break;
       }
     }
