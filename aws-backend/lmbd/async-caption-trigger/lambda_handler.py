@@ -54,7 +54,8 @@ def handle_event(event):
     if "MessageAttributes" not in event:
         return {"StatusCode": 401, "Message": "Wrong format"}
     event = event["MessageAttributes"]
-    event = json.loads(event)
+    if type(event) != dict:
+        event = json.loads(event)
 
     id = event["Id"]["Value"]
     model = event["Model"]["Value"]

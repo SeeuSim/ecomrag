@@ -48,8 +48,8 @@ export default async function route({ request, reply, api, logger, connections }
       client.send(
         new PublishBatchCommand({
           TopicArn: CAPTION_TOPIC_ARN,
-          PublishBatchRequestEntries: pl.map((v) => ({
-            Id: `${v.shopId}|${v.id}`,
+          PublishBatchRequestEntries: pl.map((v, id) => ({
+            Id: `${v.shopId}${id}`,
             Message: 'Caption',
             MessageAttributes: {
               Id: {
@@ -71,8 +71,8 @@ export default async function route({ request, reply, api, logger, connections }
       client.send(
         new PublishBatchCommand({
           TopicArn: EMBED_TOPIC_ARN,
-          PublishBatchRequestEntries: pl.map((v) => ({
-            Id: `${v.shopId}|${v.id}`,
+          PublishBatchRequestEntries: pl.map((v, id) => ({
+            Id: `${v.shopId}${id}`,
             Message: 'Embed',
             MessageAttributes: {
               Id: {
@@ -92,9 +92,10 @@ export default async function route({ request, reply, api, logger, connections }
         })
       ),
     ]);
-    const successfulCaptions = captionResult.Successful?.map(
-      (v) => v.Id?.split('|')[0] ?? ''
-    ).filter((v) => v.length > 0);
+    const successfulCaptions =
+      captionResult.Successful?.map((v) => v.Id?.slice(0, v.Id.length - 1) ?? '').filter(
+        (v) => v.length > 0
+      ) ?? [];
     successfulCaptions.forEach((v) => {
       if (counts[v]) {
         counts[v] += 0.5;
@@ -102,9 +103,10 @@ export default async function route({ request, reply, api, logger, connections }
         counts[v] = 0.5;
       }
     });
-    const successfulEmbeds = embedResult.Successful?.map((v) => v.Id?.split('|')[0] ?? '').filter(
-      (v) => v.length > 0
-    );
+    const successfulEmbeds =
+      embedResult.Successful?.map((v) => v.Id?.slice(0, v.Id.length - 1) ?? '').filter(
+        (v) => v.length > 0
+      ) ?? [];
     successfulEmbeds.forEach((v) => {
       if (counts[v]) {
         counts[v] += 0.5;
