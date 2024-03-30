@@ -11,7 +11,7 @@ export const tryIncrShopSyncCount = async ({ params, record, api, logger, connec
   };
 
   // Check the current plan and get the product limit
-  const productLimit = planLimits[plan] || 0;
+  const productLimit = planLimits[plan] || currShop.ProductSyncLimit || 100;
 
   // Fetch the current count of products with embeddings
   // const embeddedProductCount = await api.internal.shopifyProduct.findMany({
@@ -22,7 +22,7 @@ export const tryIncrShopSyncCount = async ({ params, record, api, logger, connec
 
   // Only proceed if the product count is within the limit
   // only run if the product does not have an embedding, or if the title or body have changed
-  logger.info({ productCount: productSyncCount, productLimit }, 'product count and limit');
+  //logger.info({ productCount: productSyncCount, productLimit }, 'product count and limit');
   if (
     (productSyncCount < productLimit && !record.descriptionEmbedding) ||
     record.changed('title') ||
