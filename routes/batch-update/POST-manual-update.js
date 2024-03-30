@@ -1,6 +1,15 @@
-import { api, logger } from 'gadget-server';
-import { Request, Reply } from 'gadget-server';
-import { postProductImgEmbedCaption } from '../../shopifyProductImage/postSqs';
+import { api, logger, Request, Reply } from 'gadget-server';
+import { SNSClient, PublishBatchCommand } from '@aws-sdk/client-sns';
+
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_TOPIC_ARN, CAPTION_TOPIC_ARN } = process.env;
+
+const client = new SNSClient({
+  credentials: {
+    accessKeyId: ACCESS_KEY_ID,
+    secretAccessKey: SECRET_ACCESS_KEY,
+  },
+  region: 'us-east-1',
+});
 
 /**
  * Sends a singular embed update. You may post the request to /embed-update/embed with the following JSON fields:
@@ -33,28 +42,82 @@ export default async function route({ request, reply, api, logger, connections }
     res.forEach((v) => aggr.push(v));
   }
 
-  // Try Sending as batches of 10 with delay.
-  aggr.forEach((v) => {
-    if (counts[v.shopId]) {
-      counts[v.shopId] += 1;
-    } else {
-      counts[v.shopId] = 1;
-    }
-    postProductImgEmbedCaption(
-      {
-        Id: v.id,
-        Source: v.source,
-      },
-      { Caption: true, Embed: true },
-      v.shopId,
-      logger
+  for (let i = 0; i < aggr.length; i = i + 10) {
+    let pl = aggr.slice(i, i + 10);
+    const [captionResult, embedResult] = await Promise.all([
+      client.send(
+        new PublishBatchCommand({
+          TopicArn: CAPTION_TOPIC_ARN,
+          PublishBatchRequestEntries: pl.map((v) => ({
+            Id: `${v.shopId}|${v.id}`,
+            Message: 'Caption',
+            MessageAttributes: {
+              Id: {
+                DataType: 'String',
+                StringValue: `${v.id}`,
+              },
+              Model: {
+                DataType: 'String',
+                StringValue: 'shopifyProductImage',
+              },
+              Source: {
+                DataType: 'String',
+                StringValue: v.source,
+              },
+            },
+          })),
+        })
+      ),
+      client.send(
+        new PublishBatchCommand({
+          TopicArn: EMBED_TOPIC_ARN,
+          PublishBatchRequestEntries: pl.map((v) => ({
+            Id: `${v.shopId}|${v.id}`,
+            Message: 'Embed',
+            MessageAttributes: {
+              Id: {
+                DataType: 'String',
+                StringValue: `${v.id}`,
+              },
+              Model: {
+                DataType: 'String',
+                StringValue: 'shopifyProductImage',
+              },
+              Source: {
+                DataType: 'String',
+                StringValue: v.source,
+              },
+            },
+          })),
+        })
+      ),
+    ]);
+    const successfulCaptions = captionResult.Successful?.map(
+      (v) => v.Id?.split('|')[0] ?? ''
+    ).filter((v) => v.length > 0);
+    successfulCaptions.forEach((v) => {
+      if (counts[v]) {
+        counts[v] += 0.5;
+      } else {
+        counts[v] = 0.5;
+      }
+    });
+    const successfulEmbeds = embedResult.Successful?.map((v) => v.Id?.split('|')[0] ?? '').filter(
+      (v) => v.length > 0
     );
-  });
+    successfulEmbeds.forEach((v) => {
+      if (counts[v]) {
+        counts[v] += 0.5;
+      } else {
+        counts[v] = 0.5;
+      }
+    });
+  }
 
   for (const [id, count] of Object.entries(counts)) {
     const shop = await api.shopifyShop.findOne(id);
     await api.internal.shopifyShop.update(id, {
-      productImageSyncCount: Number(shop.productImageSyncCount) + Number(count)
+      productImageSyncCount: Number(shop.productImageSyncCount) + Number(count),
     });
     logger.info({}, `Updated shopId ${id} with ${count} embeds/captions`);
   }

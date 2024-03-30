@@ -1,11 +1,13 @@
-import AWS from 'aws-sdk';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import fetch from 'node-fetch';
 
 const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBEDDING_ENDPOINT } = process.env;
 
-AWS.config.update({
-  accessKeyId: ACCESS_KEY_ID,
-  secretAccessKey: SECRET_ACCESS_KEY,
+const client = new S3Client({
+  credentials: {
+    accessKeyId: ACCESS_KEY_ID,
+    secretAccessKey: SECRET_ACCESS_KEY,
+  },
   region: 'us-east-1',
 });
 
@@ -19,19 +21,18 @@ export async function downloadS3Image(s3Url, logger) {
   const bucket = host.split('.')[0];
   const key = pathname.replace(/\//, ''); // Replace leading slash in pathname
 
-  const s3 = new AWS.S3();
-
   const params = {
     Bucket: bucket,
     Key: decodeURIComponent(key),
   };
 
   try {
-    const data = await s3.getObject(params).promise();
-
-    // TODO: Add logging and contingencies for error handling
-
-    return { content: data.Body, fileType: data.ContentType };
+    const response = await client.send(new GetObjectCommand(params));
+    if (response.Body) {
+      const content = await response.Body.arrayBuffer();
+      const fileType = response.ContentType;
+      return { content: Buffer.from(content), fileType };
+    }
   } catch (error) {
     //console.log(`Failed to download image from S3: ${error.message}`);
     throw new Error(error);

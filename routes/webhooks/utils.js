@@ -8,4 +8,4 @@ export const verifyHmac = (data, hMac) => {
     .update(data)
     .digest('hex');
   return hMac === computed;
-}
+};

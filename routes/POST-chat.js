@@ -2,8 +2,8 @@ import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
-import AWS from 'aws-sdk';
 import { Readable } from 'stream';
 
 import { createProductImageEmbedding } from '../shopifyProductImage/createImageEmbedding';
@@ -12,13 +12,13 @@ const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME } = process.env;
 
 const BUCKET_PATH = 'images/';
 
-AWS.config.update({
-  accessKeyId: ACCESS_KEY_ID,
-  secretAccessKey: SECRET_ACCESS_KEY,
+const client = new S3Client({
+  credentials: {
+    accessKeyId: ACCESS_KEY_ID,
+    secretAccessKey: SECRET_ACCESS_KEY,
+  },
   region: 'us-east-1',
 });
-
-const s3 = new AWS.S3();
 
 function stringify(obj) {
   let cache = [];
@@ -84,24 +84,23 @@ const handleLLMOnComplete = (api, products, content) => {
 
 async function uploadImage(imageBase64, fileName, fileType, logger) {
   const key = `${BUCKET_PATH}${getCurrentDateString()}_${fileName}`;
-  const params = {
-    Bucket: BUCKET_NAME,
-    Key: key,
-    Body: Buffer.from(imageBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64'),
-    ContentEncoding: 'base64',
-    ContentType: fileType,
-  };
-  const _response = await new Promise((resolve, reject) => {
-    s3.putObject(params, (err, data) => {
-      if (err) {
-        logger.error(`Error uploading image: ${err.message}`);
-        reject(err.message);
-        return;
-      }
-      logger.info(`Uploaded image!`);
-      resolve(data);
-    });
-  });
+
+  try {
+    const _response = await client.send(
+      new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+        Body: Buffer.from(imageBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64'),
+        ContentEncoding: 'base64',
+        ContentType: fileType,
+      })
+    );
+
+    logger.info('Image Uploaded!');
+  } catch (error) {
+    logger.error(`Error uploading image: ${error}`);
+    return;
+  }
 
   return `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
 }

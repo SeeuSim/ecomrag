@@ -5,7 +5,7 @@ import {
   ActionOptions,
   UpdateShopifyProductImageActionContext,
 } from 'gadget-server';
-import { postProductImgEmbedCaption } from '../postSqs';
+import { postProductImgEmbedCaption } from '../publishSns';
 import { tryIncrShopSyncCount } from '../checkPlan';
 
 /**
@@ -29,7 +29,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
     tryIncrShopSyncCount({ params, record, api, logger, connections }) &&
     (isCaptionEmbed.Caption || isCaptionEmbed.Embed)
   ) {
-    postProductImgEmbedCaption(
+    await postProductImgEmbedCaption(
       { Id: record.id, Source: record.source },
       isCaptionEmbed,
       record.shopId ?? 'DUMMYMSGGRPID',

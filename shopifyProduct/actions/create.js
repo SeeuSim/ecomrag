@@ -6,7 +6,7 @@ import {
   CreateShopifyProductActionContext,
 } from 'gadget-server';
 import { tryIncrShopSyncCount } from '../checkPlan';
-import { postProductDescEmbedding } from '../postSqs';
+import { postProductDescEmbedding } from '../publishSns';
 
 /**
  * @param { CreateShopifyProductActionContext } context
@@ -27,7 +27,7 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   if (tryIncrShopSyncCount({ params, record, logger, api, connections })) {
-    postProductDescEmbedding(
+    await postProductDescEmbedding(
       { Id: record.id, Description: `${record.title}: ${record.body}` },
       record.shopId ?? 'DUMMYMSGGRPID',
       logger

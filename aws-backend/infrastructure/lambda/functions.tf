@@ -1,13 +1,14 @@
+# Put Embed Payload
 data "archive_file" "async_embed_trigger" {
   type = "zip"
 
-  source_dir  = "../lmbd/async-trigger-embed-image"
-  output_path = "../outputs/lmbd-async-embed-trigger.zip"
+  source_dir  = "../lmbd/async-embed-trigger"
+  output_path = "../outputs/async-embed-trigger.zip"
 }
 
 resource "aws_lambda_function" "async_embed_trigger" {
-  function_name    = "SQS-Trigger-Embed"
-  role             = aws_iam_role.async_embed_trigger_exec.arn
+  function_name    = "SNS-Embed-Trigger"
+  role             = aws_iam_role.async_embed_trigger_exec.arn #
   filename         = data.archive_file.async_embed_trigger.output_path
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
@@ -20,21 +21,17 @@ resource "aws_lambda_function" "async_embed_trigger" {
   }
 }
 
-resource "aws_lambda_event_source_mapping" "embed_trigger" {
-  event_source_arn = var.sqs_embed_queue
-  function_name    = aws_lambda_function.async_embed_trigger.function_name
-}
-
+# Put Caption Payload
 data "archive_file" "async_caption_trigger" {
   type = "zip"
 
-  source_dir  = "../lmbd/async-trigger-image-caption"
-  output_path = "../outputs/lmbd-async-caption-trigger.zip"
+  source_dir  = "../lmbd/async-caption-trigger"
+  output_path = "../outputs/async-caption-trigger.zip"
 }
 
 resource "aws_lambda_function" "async_caption_trigger" {
-  function_name    = "SQS-Trigger-Caption"
-  role             = aws_iam_role.async_caption_trigger_exec.arn
+  function_name    = "SNS-Caption-Trigger"
+  role             = aws_iam_role.async_caption_trigger_exec.arn #
   filename         = data.archive_file.async_caption_trigger.output_path
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.11"
@@ -47,11 +44,7 @@ resource "aws_lambda_function" "async_caption_trigger" {
   }
 }
 
-resource "aws_lambda_event_source_mapping" "caption_trigger" {
-  event_source_arn = var.sqs_caption_queue
-  function_name    = aws_lambda_function.async_caption_trigger.function_name
-}
-
+# Model Failure
 data "archive_file" "model_failure_handler" {
   type = "zip"
 
@@ -68,6 +61,7 @@ resource "aws_lambda_function" "model_failure_handler" {
   source_code_hash = data.archive_file.model_failure_handler.output_base64sha256
 }
 
+# Model Success
 data "archive_file" "model_success_handler" {
   type = "zip"
 
@@ -90,6 +84,39 @@ resource "aws_lambda_function" "model_success_handler" {
   }
 }
 
+# SNS Subscriptions Caption
+resource "aws_sns_topic_subscription" "caption_sub" {
+  topic_arn = var.sns_caption_topic
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.async_caption_trigger.arn
+}
+
+resource "aws_lambda_permission" "caption_sub" {
+  statement_id  = "AllowSubscriptionToSNS"
+  count         = 1
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.async_caption_trigger.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = var.sns_caption_topic
+}
+
+# SNS Subscriptions Embed
+resource "aws_sns_topic_subscription" "embed_sub" {
+  topic_arn = var.sns_embed_topic
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.async_embed_trigger.arn
+}
+
+resource "aws_lambda_permission" "embed_sub" {
+  statement_id  = "AllowSubscriptionToSNS"
+  count         = 1
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.async_embed_trigger.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = var.sns_embed_topic
+}
+
+# SNS Subscriptions Success
 resource "aws_sns_topic_subscription" "success_sub" {
   topic_arn = var.sns_success_topic
   protocol  = "lambda"
@@ -105,6 +132,7 @@ resource "aws_lambda_permission" "success" {
   source_arn    = var.sns_success_topic
 }
 
+# SNS Subscriptions Failure
 resource "aws_sns_topic_subscription" "failure_sub" {
   topic_arn = var.sns_failure_topic
   protocol  = "lambda"
@@ -118,4 +146,9 @@ resource "aws_lambda_permission" "failure" {
   principal     = "sns.amazonaws.com"
   statement_id  = "AllowSubscriptionToSNS"
   source_arn    = var.sns_failure_topic
+}
+
+# Bucket Notifications - For setting up other behavior
+resource "aws_s3_bucket" "model_bucket" {
+  bucket = var.model_io_bucket
 }
