@@ -14,8 +14,8 @@ export default async function route({ request, reply, api, logger, connections }
   let data = request.body;
 
   let aggr = [];
-
-  switch (data.model) {
+  
+  switch (data.Model) {
     case 'shopifyProductImage':
       let iRes = await api.shopifyProductImage.findMany({
         filter: {
@@ -33,24 +33,26 @@ export default async function route({ request, reply, api, logger, connections }
         iRes = await iRes.nextPage();
         iRes.forEach((v) => aggr.push(v));
       }
-      break;
-      case 'shopifyProduct':
-        let pRes = await api.shopifyProduct.findMany({
-          filter: {
-            descriptionEmbedding: {
-              isSet: false,
-            },
+      await reply.code(200).type('application/json').send({ count: aggr.length, model:'shopifyProductImage' });
+      return;
+    case 'shopifyProduct':
+      console.log('Starting...');
+      let pRes = await api.shopifyProduct.findMany({
+        filter: {
+          descriptionEmbedding: {
+            isSet: false,
           },
-          select: {
-            id: true,
-            shopId: true,
-          },
-        });
+        },
+        select: {
+          id: true,
+          shopId: true,
+        },
+      });
+      pRes.forEach((v) => aggr.push(v));
+      while (pRes.hasNextPage) {
+        pRes = await pRes.nextPage();
         pRes.forEach((v) => aggr.push(v));
-        while (pRes.hasNextPage) {
-          pRes = await pRes.nextPage();
-          pRes.forEach((v) => aggr.push(v));
-        }
+      }
+      await reply.code(200).type('application/json').send({ count: aggr.length, model:'shopifyProduct' });
   }
-  await reply.code(200).type('application/json').send({ count: aggr.length });
 }

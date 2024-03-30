@@ -11,6 +11,7 @@ import {
   Button,
   Select,
 } from '@shopify/polaris';
+import Alert from '@mui/material/Alert';
 import { useAction, useFindOne } from '@gadgetinc/react';
 import { useState, useCallback, useEffect } from 'react';
 import { api } from './api';
@@ -83,6 +84,8 @@ const SettingsPage = () => {
 
   const [{ loading }, updateChatbotSettings] = useAction(api.ChatbotSettings.update);
 
+  const [showSuccess, setShowSuccess] = useState(false);
+
   const handleSave = async () => {
     try {
       console.log('hi');
@@ -95,6 +98,7 @@ const SettingsPage = () => {
         role: selectedRole,
         talkativeness: selectedTalkativeness,
       });
+      setShowSuccess(true);
       console.log(newTask);
       // Handle success (e.g., clear form, show message, etc.)
     } catch (err) {
@@ -197,6 +201,13 @@ const SettingsPage = () => {
 			</Card>
 		  </InlineGrid> */}
       </BlockStack>
+      <div className='mt-5'>
+        {showSuccess && (
+          <Alert icon={null} severity='success'>
+            ChatBot Settings Updated
+          </Alert>
+        )}
+      </div>
     </Page>
   );
 };

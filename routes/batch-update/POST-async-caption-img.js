@@ -26,7 +26,7 @@ export default async function route({ request, reply, api, logger, connections }
   let counts = {};
   let res = await api.shopifyProductImage.findMany({
     filter: {
-      imageDescriptionEmbedding: {
+      imageDescription: {
         isSet: false,
       },
     },
@@ -44,12 +44,12 @@ export default async function route({ request, reply, api, logger, connections }
 
   for (let i = 0; i < aggr.length; i = i + 10) {
     let pl = aggr.slice(i, i + 10);
-    const embedResult = await client.send(
+    const captionResult = await client.send(
       new SendMessageBatchCommand({
-        QueueUrl: EMBED_QUEUE_URL,
+        QueueUrl: CAPTION_QUEUE_URL,
         Entries: pl.map((v, index) => ({
           Id: `${v.shopId}${index}`,
-          MessageBody: 'Embed',
+          MessageBody: 'Caption',
           MessageAttributes: {
             Id: {
               DataType: 'String',
@@ -68,11 +68,10 @@ export default async function route({ request, reply, api, logger, connections }
         })),
       })
     );
-
-    const successfulEmbeds = embedResult.Successful.map((v) => {
+    const successfulCaptions = captionResult.Successful.map((v) => {
       return v.Id.slice(0, v.Id.length - 1);
     });
-    successfulEmbeds.forEach((v) => {
+    successfulCaptions.forEach((v) => {
       if (counts[v]) {
         counts[v] += 0.5;
       } else {
@@ -89,12 +88,12 @@ export default async function route({ request, reply, api, logger, connections }
     await api.internal.shopifyShop.update(id, {
       productImageSyncCount: Number(shop.productImageSyncCount) + Number(count),
     });
-    logger.info({}, `Updated shopId ${id} with ${count / 0.5} product image embeds`);
+    logger.info({}, `Updated shopId ${id} with ${count / 0.5} product image captions`);
   }
   logger.info('Total jobs: ' + `${aggr.length}`);
 
   await reply
     .code(200)
     .type('text/plain')
-    .send(`Sent: ${aggr.length} Jobs`);
+    .send(`Sent: ${aggr.length * 2} Jobs`);
 }

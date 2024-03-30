@@ -24,15 +24,16 @@ const client = new SQSClient({
 export default async function route({ request, reply, api, logger, connections }) {
   let aggr = [];
   let counts = {};
-  let res = await api.shopifyProductImage.findMany({
+  let res = await api.shopifyProduct.findMany({
     filter: {
-      imageDescriptionEmbedding: {
+      descriptionEmbedding: {
         isSet: false,
       },
     },
     select: {
       id: true,
-      source: true,
+      title: true,
+      body: true,
       shopId: true,
     },
   });
@@ -57,11 +58,11 @@ export default async function route({ request, reply, api, logger, connections }
             },
             Model: {
               DataType: 'String',
-              StringValue: 'shopifyProductImage',
+              StringValue: 'shopifyProduct',
             },
-            Source: {
+            Description: {
               DataType: 'String',
-              StringValue: `${v.source}`,
+              StringValue: `${v.title}: ${v.body}`.slice(0, 77),
             },
           },
           // MessageGroupId: `${record.shopId}`
@@ -74,9 +75,9 @@ export default async function route({ request, reply, api, logger, connections }
     });
     successfulEmbeds.forEach((v) => {
       if (counts[v]) {
-        counts[v] += 0.5;
+        counts[v] += 1;
       } else {
-        counts[v] = 0.5;
+        counts[v] = 1;
       }
     });
   }
@@ -87,9 +88,9 @@ export default async function route({ request, reply, api, logger, connections }
     }
     const shop = await api.shopifyShop.findOne(id);
     await api.internal.shopifyShop.update(id, {
-      productImageSyncCount: Number(shop.productImageSyncCount) + Number(count),
+      productSyncCount: Number(shop.productSyncCount) + Number(count),
     });
-    logger.info({}, `Updated shopId ${id} with ${count / 0.5} product image embeds`);
+    logger.info({}, `Updated shopId ${id} with ${count / 0.5} product embeds`);
   }
   logger.info('Total jobs: ' + `${aggr.length}`);
 

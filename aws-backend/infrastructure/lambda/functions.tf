@@ -120,7 +120,7 @@ resource "aws_lambda_function" "sqs_embed_handler" {
 }
 
 resource "aws_lambda_event_source_mapping" "sqs_embed_handler" {
-  event_source_arn = var.sqs_caption_queue_arn
+  event_source_arn = var.sqs_embed_queue_arn
   function_name    = aws_lambda_function.sqs_embed_handler.function_name
 }
 
