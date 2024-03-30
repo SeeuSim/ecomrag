@@ -61,5 +61,5 @@ export default async function route({ request, reply, api, logger, connections }
   await reply
     .code(200)
     .type('text/plain')
-    .send('Done');
+    .send(`Sent: ${aggr.length * 2} Jobs`);
 }

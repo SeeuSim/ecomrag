@@ -45,7 +45,9 @@ export function postProductImgEmbedCaption(payload, isCaptionEmbed, shopId, logg
       },
       (err, data) => {
         if (err) {
-          console.error('Error pushing to ProductImg caption queue: ' + err.message);
+          console.error(
+            'Error pushing to ProductImg caption queue: ' + JSON.stringify(messagePayload)
+          );
         } else {
           console.log(`Queued caption job | shopifyProductImg | ${JSON.stringify(messagePayload)}`);
         }
@@ -63,7 +65,9 @@ export function postProductImgEmbedCaption(payload, isCaptionEmbed, shopId, logg
       },
       (err, data) => {
         if (err) {
-          console.error('Error pushing to ProductImg embed queue: ' + err.message);
+          console.error(
+            'Error pushing to ProductImg embed queue: ' + JSON.stringify(messagePayload)
+          );
         } else {
           console.log(`Queued embed job | shopifyProductImg | ${JSON.stringify(messagePayload)}`);
         }
