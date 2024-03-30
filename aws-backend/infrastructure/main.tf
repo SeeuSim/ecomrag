@@ -13,6 +13,10 @@ module "sns" {
   source = "./sns"
 }
 
+module "sqs" {
+  source = "./sqs"
+}
+
 module "sagemaker" {
   source = "./sagemaker"
 
@@ -39,9 +43,9 @@ module "lambda" {
   async_embed_endpoint_name   = module.sagemaker.async_embed_endpoint_name
   sns_failure_topic           = module.sns.failure_topic_arn
   sns_success_topic           = module.sns.success_topic_arn
-  sns_caption_topic           = module.sns.caption_topic_arn
-  sns_embed_topic             = module.sns.embed_topic_arn
+  sqs_caption_queue_arn       = module.sqs.sqs_caption_queue_arn
+  sqs_embed_queue_arn         = module.sqs.sqs_embed_queue_arn
   backend_ep                  = var.backend_ep
   model_io_bucket             = var.model_s3_bucket
-  depends_on                  = [module.sagemaker, module.sns]
+  depends_on                  = [module.sagemaker, module.sns, module.sqs]
 }

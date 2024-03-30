@@ -157,10 +157,10 @@
     "@smithy/util-waiter" "^2.2.0"
     tslib "^2.6.2"
 
-"@aws-sdk/client-sns@^3.540.0":
+"@aws-sdk/client-sqs@^3.540.0":
   version "3.540.0"
-  resolved "https://registry.yarnpkg.com/@aws-sdk/client-sns/-/client-sns-3.540.0.tgz#52b4de9563d5f2cacb8607b1c202849473a80188"
-  integrity sha512-xAYpxzCzcSL2Lirm9hyC7kpkVVWo+zewnvMGzNRv2iKlexa7MBcNMr8J3YJmTH3in8eCN1CQ6hK+zsVmUT37Dw==
+  resolved "https://registry.yarnpkg.com/@aws-sdk/client-sqs/-/client-sqs-3.540.0.tgz#d1f99d101ea3b91af3f62b013f4654ecd642e75f"
+  integrity sha512-PYyFIUZwN1LcrUtHQ/KJqNUgPgY3bNGjVp/SbwJ8cKGALBUvUNN6E7VpEDYglY1X/CuMolxK00TFZOSR9O056Q==
   dependencies:
     "@aws-crypto/sha256-browser" "3.0.0"
     "@aws-crypto/sha256-js" "3.0.0"
@@ -170,6 +170,7 @@
     "@aws-sdk/middleware-host-header" "3.535.0"
     "@aws-sdk/middleware-logger" "3.535.0"
     "@aws-sdk/middleware-recursion-detection" "3.535.0"
+    "@aws-sdk/middleware-sdk-sqs" "3.535.0"
     "@aws-sdk/middleware-user-agent" "3.540.0"
     "@aws-sdk/region-config-resolver" "3.535.0"
     "@aws-sdk/types" "3.535.0"
@@ -181,6 +182,7 @@
     "@smithy/fetch-http-handler" "^2.5.0"
     "@smithy/hash-node" "^2.2.0"
     "@smithy/invalid-dependency" "^2.2.0"
+    "@smithy/md5-js" "^2.2.0"
     "@smithy/middleware-content-length" "^2.2.0"
     "@smithy/middleware-endpoint" "^2.5.0"
     "@smithy/middleware-retry" "^2.2.0"
@@ -532,6 +534,18 @@
     "@smithy/smithy-client" "^2.5.0"
     "@smithy/types" "^2.12.0"
     "@smithy/util-config-provider" "^2.3.0"
+    tslib "^2.6.2"
+
+"@aws-sdk/middleware-sdk-sqs@3.535.0":
+  version "3.535.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/middleware-sdk-sqs/-/middleware-sdk-sqs-3.535.0.tgz#56d289303abeb714a709dc798f145b3cf20264f4"
+  integrity sha512-E6En+QI7AFp5DsUhhA+DexMRjrJmYYte/wkArY47+6gw8VO6z7WYW6KtrhUP2OyJRYMil7o/1z76+j69vc2PBQ==
+  dependencies:
+    "@aws-sdk/types" "3.535.0"
+    "@smithy/smithy-client" "^2.5.0"
+    "@smithy/types" "^2.12.0"
+    "@smithy/util-hex-encoding" "^2.2.0"
+    "@smithy/util-utf8" "^2.3.0"
     tslib "^2.6.2"
 
 "@aws-sdk/middleware-signing@3.535.0":
@@ -5423,6 +5437,7 @@ string-argv@0.3.2:
   integrity sha512-aqD2Q0144Z+/RqG52NeHEkZauTAUWJO8c6yTftGJKO3Tja5tUgIfmIl6kExvhtxSDP7fXB6DvzkfMpCd/F3G+Q==
 
 "string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0:
+  name string-width-cjs
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==

@@ -6,7 +6,7 @@ import {
   CreateShopifyProductActionContext,
 } from 'gadget-server';
 import { tryIncrShopSyncCount } from '../checkPlan';
-import { postProductDescEmbedding } from '../publishSns';
+import { postProductDescEmbedding } from '../postSqs';
 
 /**
  * @param { CreateShopifyProductActionContext } context

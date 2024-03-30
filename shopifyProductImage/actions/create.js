@@ -5,7 +5,7 @@ import {
   save,
 } from 'gadget-server';
 import { tryIncrShopSyncCount } from '../checkPlan';
-import { postProductImgEmbedCaption } from '../publishSns';
+import { postProductImgEmbedCaption } from '../postSqs';
 
 /**
  * @param { CreateShopifyProductImageActionContext } context

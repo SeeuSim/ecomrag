@@ -1,9 +1,9 @@
-import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { logger } from 'gadget-server';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_TOPIC_ARN, CAPTION_TOPIC_ARN } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_QUEUE_URL, CAPTION_QUEUE_URL } = process.env;
 
-const client = new SNSClient({
+const client = new SQSClient({
   credentials: {
     accessKeyId: ACCESS_KEY_ID,
     secretAccessKey: SECRET_ACCESS_KEY,
@@ -37,10 +37,11 @@ export async function postProductImgEmbedCaption(payload, isCaptionEmbed, shopId
   if (isCaptionEmbed.Caption) {
     try {
       const _response = await client.send(
-        new PublishCommand({
-          TopicArn: CAPTION_TOPIC_ARN,
-          Message: 'Caption',
+        new SendMessageCommand({
+          QueueUrl: CAPTION_QUEUE_URL,
+          MessageBody: 'Caption',
           MessageAttributes: messagePayload,
+          // MessageGroupId: shopId
         })
       );
       console.log(`Queued caption job | shopifyProductImage | ${JSON.stringify(messagePayload)}`);
@@ -51,10 +52,11 @@ export async function postProductImgEmbedCaption(payload, isCaptionEmbed, shopId
   if (isCaptionEmbed.Embed) {
     try {
       const _response = await client.send(
-        new PublishCommand({
-          TopicArn: EMBED_TOPIC_ARN,
-          Message: 'Embed',
+        new SendMessageCommand({
+          QueueUrl: EMBED_QUEUE_URL,
+          MessageBody: 'Embed',
           MessageAttributes: messagePayload,
+          // MessageGroupId: shopId
         })
       );
       console.log(`Queued embed job | shopifyProductImage | ${JSON.stringify(messagePayload)}`);

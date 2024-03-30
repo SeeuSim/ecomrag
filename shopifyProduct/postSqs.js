@@ -1,9 +1,9 @@
-import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { logger } from 'gadget-server';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_TOPIC_ARN } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_QUEUE_URL } = process.env;
 
-const client = new SNSClient({
+const client = new SQSClient({
   credentials: {
     accessKeyId: ACCESS_KEY_ID,
     secretAccessKey: SECRET_ACCESS_KEY,
@@ -35,10 +35,10 @@ export async function postProductDescEmbedding(payload, shopId, logger) {
 
   try {
     const _response = await client.send(
-      new PublishCommand({
+      new SendMessageCommand({
+        QueueUrl: EMBED_QUEUE_URL,
         Message: 'Embed',
         MessageAttributes: messagePayload,
-        TopicArn: EMBED_TOPIC_ARN,
       })
     );
     console.log(`Queued embed job | shopifyProduct | ${JSON.stringify(messagePayload)}`);

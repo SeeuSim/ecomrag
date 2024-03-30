@@ -26,11 +26,11 @@ variable "sns_failure_topic" {
   type = string
 }
 
-variable "sns_caption_topic" {
+variable "sqs_caption_queue_arn" {
   type = string
 }
 
-variable "sns_embed_topic" {
+variable "sqs_embed_queue_arn" {
   type = string
 }
 

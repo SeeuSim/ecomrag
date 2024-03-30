@@ -1,9 +1,9 @@
 import { api, logger, Request, Reply } from 'gadget-server';
-import { SNSClient, PublishBatchCommand } from '@aws-sdk/client-sns';
+import { SQSClient, SendMessageBatchCommand } from '@aws-sdk/client-sqs';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_TOPIC_ARN, CAPTION_TOPIC_ARN } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, CAPTION_QUEUE_URL, EMBED_QUEUE_URL } = process.env;
 
-const client = new SNSClient({
+const client = new SQSClient({
   credentials: {
     accessKeyId: ACCESS_KEY_ID,
     secretAccessKey: SECRET_ACCESS_KEY,
@@ -28,7 +28,7 @@ export default async function route({ request, reply, api, logger, connections }
     filter: {
       imageDescriptionEmbedding: {
         isSet: false,
-      },
+      }
     },
     select: {
       id: true,
@@ -46,11 +46,11 @@ export default async function route({ request, reply, api, logger, connections }
     let pl = aggr.slice(i, i + 10);
     const [captionResult, embedResult] = await Promise.all([
       client.send(
-        new PublishBatchCommand({
-          TopicArn: CAPTION_TOPIC_ARN,
-          PublishBatchRequestEntries: pl.map((v, id) => ({
-            Id: `${v.shopId}${id}`,
-            Message: 'Caption',
+        new SendMessageBatchCommand({
+          QueueUrl: CAPTION_QUEUE_URL,
+          Entries: pl.map((v, index) => ({
+            Id: `${v.shopId}${index}`,
+            MessageBody: 'Caption',
             MessageAttributes: {
               Id: {
                 DataType: 'String',
@@ -62,18 +62,19 @@ export default async function route({ request, reply, api, logger, connections }
               },
               Source: {
                 DataType: 'String',
-                StringValue: v.source,
+                StringValue: `${v.source}`,
               },
             },
+            // MessageGroupId: `${record.shopId}`
           })),
         })
       ),
       client.send(
-        new PublishBatchCommand({
-          TopicArn: EMBED_TOPIC_ARN,
-          PublishBatchRequestEntries: pl.map((v, id) => ({
-            Id: `${v.shopId}${id}`,
-            Message: 'Embed',
+        new SendMessageBatchCommand({
+          QueueUrl: EMBED_QUEUE_URL,
+          Entries: pl.map((v, index) => ({
+            Id: `${v.shopId}${index}`,
+            MessageBody: 'Caption',
             MessageAttributes: {
               Id: {
                 DataType: 'String',
@@ -85,17 +86,17 @@ export default async function route({ request, reply, api, logger, connections }
               },
               Source: {
                 DataType: 'String',
-                StringValue: v.source,
+                StringValue: `${v.source}`,
               },
             },
+            // MessageGroupId: `${record.shopId}`
           })),
         })
       ),
     ]);
-    const successfulCaptions =
-      captionResult.Successful?.map((v) => v.Id?.slice(0, v.Id.length - 1) ?? '').filter(
-        (v) => v.length > 0
-      ) ?? [];
+    const successfulCaptions = captionResult.Successful.map((v) => {
+      return v.Id.slice(0, v.Id.length - 1);
+    });
     successfulCaptions.forEach((v) => {
       if (counts[v]) {
         counts[v] += 0.5;
@@ -103,10 +104,9 @@ export default async function route({ request, reply, api, logger, connections }
         counts[v] = 0.5;
       }
     });
-    const successfulEmbeds =
-      embedResult.Successful?.map((v) => v.Id?.slice(0, v.Id.length - 1) ?? '').filter(
-        (v) => v.length > 0
-      ) ?? [];
+    const successfulEmbeds = embedResult.Successful.map((v) => {
+      return v.Id.slice(0, v.Id.length - 1);
+    });
     successfulEmbeds.forEach((v) => {
       if (counts[v]) {
         counts[v] += 0.5;
@@ -117,12 +117,16 @@ export default async function route({ request, reply, api, logger, connections }
   }
 
   for (const [id, count] of Object.entries(counts)) {
+    if (!id.matchAll(/^\d+$/g)) {
+      continue;
+    }
     const shop = await api.shopifyShop.findOne(id);
     await api.internal.shopifyShop.update(id, {
       productImageSyncCount: Number(shop.productImageSyncCount) + Number(count),
     });
-    logger.info({}, `Updated shopId ${id} with ${count} embeds/captions`);
+    logger.info({}, `Updated shopId ${id} with ${count} captions`);
   }
+  logger.info('Total jobs: ' + `${aggr.length}`);
 
   await reply
     .code(200)

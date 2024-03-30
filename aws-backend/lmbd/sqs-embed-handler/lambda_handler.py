@@ -1,7 +1,7 @@
 import base64
 import json
-import logging
 import os
+import re
 from datetime import UTC, datetime
 
 import boto3
@@ -9,26 +9,29 @@ import urllib3
 
 http = urllib3.PoolManager()
 
-# grab environment variables
-
 ENDPOINT_NAME = os.environ.get("SM_EP_NAME", "")
-
-logger = logging.getLogger()
 
 runtime = boto3.client("sagemaker-runtime")
 s3 = boto3.client("s3")
 
 bucket_name = "ecomragdev"
 bucket_path = "models/caption/inputs"
-
-event_schema = {
+schema = {
     "Records": [
         {
-            "Sns": {
-                "MessageAttributes": {
-                    "Model": {"Type": "String", "Value": "shopifyProduct"},
-                    "Id": {"Type": "String", "Value": "123"},
-                    "Source": {"Type": "String", "Value": "https://google.com"},
+            "body": "Caption",
+            "messageAttributes": {
+                "Model": {
+                    "stringValue": "shopifyProductImage",
+                },
+                "Id": {
+                    "stringValue": "30263993827422",
+                },
+                "Source": {
+                    "stringValue": "https://cdn.shopify.com/s/files/1/0561/5399/7406/products/90e0be2e-413e-4a57-9173-de32679614fe-Min.jpg?v=1707274529",
+                },
+                "Description": {
+                    "stringValue": "",
                 },
             },
         }
@@ -48,30 +51,35 @@ def fetch_image_bytes(src):
 
 
 def handle_event(event):
-    if "Sns" not in event:
+    if "messageAttributes" not in event:
         return {"StatusCode": 401, "Message": "Wrong format"}
-    event = event["Sns"]
-    if "MessageAttributes" not in event:
-        return {"StatusCode": 401, "Message": "Wrong format"}
-    event = event["MessageAttributes"]
+    event = event["messageAttributes"]
     if type(event) != dict:
         event = json.loads(event)
 
-    id = event["Id"]["Value"]
-    model = event["Model"]["Value"]
+    id = event["Id"]["stringValue"]
+    model = event["Model"]["stringValue"]
 
     payload = {
         "Id": id,
         "Model": model,
     }
 
+    if (
+        not str(model).startswith("shopifyProduct")
+        or re.match(r"^\d+$", str(id)) == None
+    ):
+        return {"StatusCode": 401, "Message": "Invalid Payload"}
+
     if "Source" in event:
-        # Image Embedding
-        source = event["Source"]["Value"]
+        source = event["Source"]["stringValue"]
         img_b64_s, err = fetch_image_bytes(source)
         if img_b64_s is None:
             return {"StatusCode": 500, "Cause": err}
         payload = {**payload, "Payload": img_b64_s, "Content-Type": "image"}
+    elif "Description" in event:
+        desc = event["Description"]["stringValue"]
+        payload = {**payload, "Payload": desc, "Content-Type": "text/plain"}
     else:
         return {"StatusCode": 401, "Message": "Invalid Payload"}
 
@@ -100,11 +108,12 @@ def handle_event(event):
 
 
 def lambda_handler(event, context):
+    """ """
     if "Records" not in event:
         return {"StatusCode": 401}
-    requests = event["Records"]
+    events = event["Records"]
 
-    results = list(map(handle_event, requests))
+    results = list(map(handle_event, events))
 
     print(
         json.dumps(
@@ -123,3 +132,5 @@ def lambda_handler(event, context):
             }
         )
     )
+
+    return {"StatusCode": 200}

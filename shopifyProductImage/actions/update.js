@@ -5,7 +5,7 @@ import {
   ActionOptions,
   UpdateShopifyProductImageActionContext,
 } from 'gadget-server';
-import { postProductImgEmbedCaption } from '../publishSns';
+import { postProductImgEmbedCaption } from '../postSqs';
 import { tryIncrShopSyncCount } from '../checkPlan';
 
 /**
