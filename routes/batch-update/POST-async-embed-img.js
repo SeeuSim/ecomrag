@@ -74,7 +74,7 @@ export default async function route({ request, reply, api, logger, connections }
           QueueUrl: EMBED_QUEUE_URL,
           Entries: pl.map((v, index) => ({
             Id: `${v.shopId}${index}`,
-            MessageBody: 'Caption',
+            MessageBody: 'Embed',
             MessageAttributes: {
               Id: {
                 DataType: 'String',
@@ -124,7 +124,7 @@ export default async function route({ request, reply, api, logger, connections }
     await api.internal.shopifyShop.update(id, {
       productImageSyncCount: Number(shop.productImageSyncCount) + Number(count),
     });
-    logger.info({}, `Updated shopId ${id} with ${count} captions`);
+    logger.info({}, `Updated shopId ${id} with ${count} captions/embeds`);
   }
   logger.info('Total jobs: ' + `${aggr.length}`);
 

@@ -37,7 +37,7 @@ export async function postProductDescEmbedding(payload, shopId, logger) {
     const _response = await client.send(
       new SendMessageCommand({
         QueueUrl: EMBED_QUEUE_URL,
-        Message: 'Embed',
+        MessageBody: 'Embed',
         MessageAttributes: messagePayload,
       })
     );
