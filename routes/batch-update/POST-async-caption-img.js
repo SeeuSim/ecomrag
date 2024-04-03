@@ -1,7 +1,8 @@
 import { api, logger, Request, Reply } from 'gadget-server';
 import { SQSClient, SendMessageBatchCommand } from '@aws-sdk/client-sqs';
+import { getMessagePayload } from './utils';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, CAPTION_QUEUE_URL, EMBED_QUEUE_URL } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, CAPTION_QUEUE_URL } = process.env;
 
 const client = new SQSClient({
   credentials: {
@@ -50,20 +51,7 @@ export default async function route({ request, reply, api, logger, connections }
         Entries: pl.map((v, index) => ({
           Id: `${v.shopId}${index}`,
           MessageBody: 'Caption',
-          MessageAttributes: {
-            Id: {
-              DataType: 'String',
-              StringValue: `${v.id}`,
-            },
-            Model: {
-              DataType: 'String',
-              StringValue: 'shopifyProductImage',
-            },
-            Source: {
-              DataType: 'String',
-              StringValue: `${v.source}`,
-            },
-          },
+          MessageAttributes: getMessagePayload({ ...v, model: 'shopifyProductImage' }),
           // MessageGroupId: `${record.shopId}`
         })),
       })

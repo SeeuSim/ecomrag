@@ -1,7 +1,8 @@
 import { api, logger, Request, Reply } from 'gadget-server';
 import { SQSClient, SendMessageBatchCommand } from '@aws-sdk/client-sqs';
+import { getMessagePayload } from './utils';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, CAPTION_QUEUE_URL, EMBED_QUEUE_URL } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_QUEUE_URL } = process.env;
 
 const client = new SQSClient({
   credentials: {
@@ -51,20 +52,11 @@ export default async function route({ request, reply, api, logger, connections }
         Entries: pl.map((v, index) => ({
           Id: `${v.shopId}${index}`,
           MessageBody: 'Embed',
-          MessageAttributes: {
-            Id: {
-              DataType: 'String',
-              StringValue: `${v.id}`,
-            },
-            Model: {
-              DataType: 'String',
-              StringValue: 'shopifyProduct',
-            },
-            Description: {
-              DataType: 'String',
-              StringValue: `${v.title}: ${v.body}`.slice(0, 77),
-            },
-          },
+          MessageAttributes: getMessagePayload({
+            ...v,
+            model: 'shopifyProduct',
+            description: `${v.title}: ${v.body}`.slice(0, 77),
+          }),
           // MessageGroupId: `${record.shopId}`
         })),
       })
@@ -94,8 +86,5 @@ export default async function route({ request, reply, api, logger, connections }
   }
   logger.info('Total jobs: ' + `${aggr.length}`);
 
-  await reply
-    .code(200)
-    .type('text/plain')
-    .send(`Sent: ${aggr.length} Jobs`);
+  await reply.code(200).type('text/plain').send(`Sent: ${aggr.length} Jobs`);
 }

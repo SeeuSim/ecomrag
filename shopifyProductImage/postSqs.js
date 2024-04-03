@@ -1,7 +1,8 @@
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { logger } from 'gadget-server';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_QUEUE_URL, CAPTION_QUEUE_URL } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_QUEUE_URL, CAPTION_QUEUE_URL, NODE_ENV } =
+  process.env;
 
 const client = new SQSClient({
   credentials: {
@@ -31,6 +32,10 @@ export async function postProductImgEmbedCaption(payload, isCaptionEmbed, shopId
     Model: {
       DataType: 'String',
       StringValue: 'shopifyProductImage',
+    },
+    Environment: {
+      DataType: 'String',
+      StringValue: `${NODE_ENV}`,
     },
   };
 
