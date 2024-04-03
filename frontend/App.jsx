@@ -10,6 +10,7 @@ import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import AboutPage from './AboutPage';
 import ShopPage from './ShopPage';
 import SettingsPage from './SettingsPage';
+import PricingPage from './PricingPage';
 import { api } from './api';
 
 const Error404 = () => {
@@ -78,6 +79,7 @@ function EmbeddedApp() {
       <Routes>
         <Route path='/' element={<ShopPage />} />
         <Route path='/settings' element={<SettingsPage />} />
+        <Route path='/pricing' element={<PricingPage />} />
         <Route path='/about' element={<AboutPage />} />
         <Route path='*' element={<Error404 />} />
       </Routes>

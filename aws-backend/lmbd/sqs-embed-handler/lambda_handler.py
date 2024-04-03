@@ -59,10 +59,12 @@ def handle_event(event):
 
     id = event["Id"]["stringValue"]
     model = event["Model"]["stringValue"]
+    env = event["Environment"]["stringValue"]
 
     payload = {
         "Id": id,
         "Model": model,
+        "Environment": env,
     }
 
     if (

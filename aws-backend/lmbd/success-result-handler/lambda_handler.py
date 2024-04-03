@@ -5,7 +5,8 @@ import urllib3
 
 http = urllib3.PoolManager()
 
-BACKEND_UPDATE_EP = os.environ.get("BACKEND_EP", "")
+BACKEND_UPDATE_EP_DEV = os.environ.get("BACKEND_EP_DEV", "")
+BACKEND_UPDATE_EP_PROD = os.environ.get("BACKEND_EP_PROD", "")
 
 s3 = boto3.client("s3")
 
@@ -115,6 +116,7 @@ def process_event(event):
         # Process result and post to Gadget
         id = result["Id"]
         model = result["Model"]
+        env = result["Environment"]
         res = result["Result"]
         if "Embedding" in res:
             val = res["Embedding"]
@@ -124,10 +126,10 @@ def process_event(event):
         field = get_field(model, val)
 
         req_payload = {"id": id, "model": model, "value": val, "field": field}
-
+        endpoint = BACKEND_UPDATE_EP_DEV if env == 'development' else BACKEND_UPDATE_EP_PROD
         request = http.request(
             "POST",
-            BACKEND_UPDATE_EP,
+            endpoint,
             body=json.dumps({
                 "isBatch": False,
                 "payload": req_payload,
@@ -145,7 +147,7 @@ def lambda_handler(event, context):
     """
     To Test with SNS
     """
-    if len(BACKEND_UPDATE_EP) == 0:
+    if len(BACKEND_UPDATE_EP_DEV) == 0:
         print("Backend endpoint not configured")
         return {"StatusCode": 500, "Message": "Backend endpoint not configured."}
 

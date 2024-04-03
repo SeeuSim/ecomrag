@@ -38,7 +38,12 @@ variable "model_io_bucket" {
   type = string
 }
 
-variable "backend_ep" {
+variable "backend_ep_dev" {
+  type        = string
+  description = "The endpoint for the success handler to post the inference result to."
+}
+
+variable "backend_ep_prod" {
   type        = string
   description = "The endpoint for the success handler to post the inference result to."
 }

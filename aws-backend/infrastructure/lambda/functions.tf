@@ -33,7 +33,8 @@ resource "aws_lambda_function" "model_success_handler" {
 
   environment {
     variables = {
-      "BACKEND_EP" = var.backend_ep
+      "BACKEND_EP_DEV"  = var.backend_ep_dev
+      "BACKEND_EP_PROD" = var.backend_ep_prod
     }
   }
 }

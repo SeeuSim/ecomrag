@@ -13,4 +13,5 @@ model_s3_bucket          = "ecomragdev"
 async_embed_model_data   = "models/clip-vit-base-patch32-async.tar.gz"
 async_caption_model_data = "models/git-base-async.tar.gz"
 
-backend_ep = "ecomrag--development.gadget.app/batch-update/add-inference-result"
+backend_ep_dev  = "ecomrag--development.gadget.app/batch-update/add-inference-result"
+backend_ep_prod = "ecomrag.gadget.app/batch-update/add-inference-result"

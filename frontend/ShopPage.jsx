@@ -69,6 +69,7 @@ const ShopPage = () => {
         </Layout.Section>
         <Layout.Section>
           <Link to={'/settings'}>Go to settings page</Link>
+          <Link to={'/pricing'}>Go to pricing page</Link>
         </Layout.Section>
         <Layout.Section>
           <Card>

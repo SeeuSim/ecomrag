@@ -45,7 +45,8 @@ module "lambda" {
   sns_success_topic           = module.sns.success_topic_arn
   sqs_caption_queue_arn       = module.sqs.sqs_caption_queue_arn
   sqs_embed_queue_arn         = module.sqs.sqs_embed_queue_arn
-  backend_ep                  = var.backend_ep
+  backend_ep_dev              = var.backend_ep_dev
+  backend_ep_prod             = var.backend_ep_prod
   model_io_bucket             = var.model_s3_bucket
   depends_on                  = [module.sagemaker, module.sns, module.sqs]
 }

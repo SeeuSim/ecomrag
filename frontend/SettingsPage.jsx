@@ -10,8 +10,8 @@ import {
   TextField,
   Button,
   Select,
+  Banner,
 } from '@shopify/polaris';
-import Alert from '@mui/material/Alert';
 import { useAction, useFindOne } from '@gadgetinc/react';
 import { useState, useCallback, useEffect } from 'react';
 import { api } from './api';
@@ -201,17 +201,18 @@ const SettingsPage = () => {
 			</Card>
 		  </InlineGrid> */}
       </BlockStack>
-      <Box
-        sx={{
-          marginTop: '10px',
-        }}
-      >
-        {showSuccess && (
-          <Alert icon={null} severity='success'>
-            ChatBot Settings Updated
-          </Alert>
-        )}
-      </Box>
+
+      {showSuccess && (
+        <div className='bannerTopPadding' style={{ paddingTop: '20px' }}>
+          <Banner
+            title='Chatbot settings updated'
+            onDismiss={() => {
+              setShowSuccess(false);
+            }}
+            tone={'success'}
+          />
+        </div>
+      )}
     </Page>
   );
 };
