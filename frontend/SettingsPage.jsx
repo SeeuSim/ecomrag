@@ -201,13 +201,17 @@ const SettingsPage = () => {
 			</Card>
 		  </InlineGrid> */}
       </BlockStack>
-      <div className='mt-5'>
+      <Box
+        sx={{
+          marginTop: '10px',
+        }}
+      >
         {showSuccess && (
           <Alert icon={null} severity='success'>
             ChatBot Settings Updated
           </Alert>
         )}
-      </div>
+      </Box>
     </Page>
   );
 };

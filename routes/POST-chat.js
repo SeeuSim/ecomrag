@@ -285,7 +285,7 @@ export default async function route({ request, reply, api, logger, connections }
   });
 
   logger.info(
-    `Chatbot settings: ${chatbotSettings[0].talkativeness} ${chatbotSettings[0].personality}`
+    `Chatbot settings: ${chatbotSettings[0]?.talkativeness} ${chatbotSettings[0]?.personality}`
   );
 
   const talkativeness = chatbotSettings[0]?.talkativeness || '3';
