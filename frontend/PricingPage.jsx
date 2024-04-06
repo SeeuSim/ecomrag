@@ -1,111 +1,33 @@
 // This example is for guidance purposes. Copying it will come with caveats.
 
-import {
-  BlockStack,
-  Box,
-  Card,
-  InlineGrid,
-  Page,
-  Text,
-  TextField,
-  Button,
-  Select,
-  Banner,
-} from '@shopify/polaris';
-import { useAction, useFindOne } from '@gadgetinc/react';
-import { useState, useCallback, useEffect } from 'react';
+import { BlockStack, Box, Card, InlineGrid, Page, Text, Button } from '@shopify/polaris';
+import { useCallback } from 'react';
+import { useNavigate } from '@shopify/app-bridge-react';
+import { useAction, useFindFirst } from '@gadgetinc/react';
 import { api } from './api';
 
 const PricingPage = () => {
-  const [{ data }] = useFindOne(api.ChatbotSettings, '1');
+  const [{ fetching, error, data }, createSubscription] = useAction(api.shopifyShop.subscribe);
+  const navigate = useNavigate();
+  const [{ data: shop }] = useFindFirst(api.shopifyShop);
+  console.log(shop?.id, 'shop');
 
-  const [name, setName] = useState('');
-  const [introductionMessage, setIntroductionMessage] = useState('');
+  const subscribe = useCallback(async (plan) => {
+    // create the resource in the backend
+    const currShop = await createSubscription({
+      address1: 'example value for address1',
+      customerAccountsV2: {
+        example: true,
+        key: 'value',
+      },
+      id: shop?.id,
+      plan: plan,
+    });
 
-  useEffect(() => {
-    if (data) {
-      setIntroductionMessage(data?.introductionMessage || '');
-      setName(data?.name || '');
-      setSelectedPersonality(data?.personality || 'Friendly');
-      setSelectedRole(data?.role || 'Advisor');
-      setSelectedTalkativeness(data?.talkativeness || '1');
-    }
-  }, [data]);
-
-  const handleNameChange = useCallback((newValue) => setName(newValue), []);
-  const handleIntroductionMessageChange = useCallback(
-    (newValue) => setIntroductionMessage(newValue),
-    []
-  );
-
-  const [selectedPersonality, setSelectedPersonality] = useState('');
-
-  const handleSelectChange = useCallback((value) => setSelectedPersonality(value), []);
-
-  const personalityOptions = [
-    { label: 'Friendly', value: 'FRIENDLY' },
-    { label: 'Informative', value: 'INFORMATIVE' },
-    { label: 'Persuasive', value: 'PERSUASIVE' },
-    { label: 'Witty', value: 'WITTY' },
-    {
-      label: 'Empathetic',
-      value: 'EMPATHETIC',
-    },
-    {
-      label: 'Auto',
-      value: 'AUTO',
-    },
-  ];
-
-  const talkativenessOptions = [
-    { label: '1', value: '1' },
-    { label: '2', value: '2' },
-    { label: '3', value: '3' },
-    { label: '4', value: '4' },
-    { label: '5', value: '5' },
-  ];
-
-  const roleOptions = [
-    { label: 'Advisor', value: 'ADVISOR' },
-    { label: 'Enthusiast', value: 'ENTHUSIAST' },
-    { label: 'Professional', value: 'PROFESSIONAL' },
-    { label: 'Storyteller', value: 'STORYTELLER' },
-    { label: 'Concierge', value: 'CONCIERGE' },
-    { label: 'Auto', value: 'AUTO' },
-  ];
-
-  const [selectedRole, setSelectedRole] = useState('');
-
-  const handleRoleChange = useCallback((value) => setSelectedRole(value), []);
-
-  const [selectedTalkativeness, setSelectedTalkativeness] = useState('');
-
-  const handleTalkativenessChange = useCallback((value) => setSelectedTalkativeness(value), []);
-
-  const [{ loading }, updateChatbotSettings] = useAction(api.ChatbotSettings.update);
-
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  const handleSave = async () => {
-    try {
-      console.log('hi');
-      console.log(data.id);
-      const newTask = await updateChatbotSettings({
-        id: data.id,
-        name: name,
-        introductionMessage: introductionMessage,
-        personality: selectedPersonality,
-        role: selectedRole,
-        talkativeness: selectedTalkativeness,
-      });
-      setShowSuccess(true);
-      console.log(newTask);
-      // Handle success (e.g., clear form, show message, etc.)
-    } catch (err) {
-      // Handle error (e.g., show error message)
-      console.log('error', err);
-    }
-  };
+    console.log(currShop?.data?.confirmationUrl, 'curr shop');
+    // redirect the merchant to accept the charge within Shopify's interface
+    navigate(currShop?.data?.confirmationUrl);
+  });
 
   return (
     <Page
@@ -190,7 +112,14 @@ const PricingPage = () => {
                   </Text>
                 </Box>
                 <Box as='section' padding={100} width='80%'>
-                  <Button onClick={handleSave} disabled={loading} fullWidth variant='primary'>
+                  <Button
+                    fullWidth
+                    variant='primary'
+                    onClick={() => {
+                      subscribe('free');
+                    }}
+                    disabled={fetching}
+                  >
                     Subscribe
                   </Button>
                 </Box>
@@ -248,7 +177,14 @@ const PricingPage = () => {
                   </Text>
                 </Box>
                 <Box as='section' padding={100} width='80%'>
-                  <Button onClick={handleSave} disabled={loading} fullWidth variant='primary'>
+                  <Button
+                    fullWidth
+                    variant='primary'
+                    onClick={() => {
+                      subscribe('growth');
+                    }}
+                    disabled={fetching}
+                  >
                     Subscribe
                   </Button>
                 </Box>
@@ -306,7 +242,14 @@ const PricingPage = () => {
                   </Text>
                 </Box>
                 <Box as='section' padding={100} width='80%'>
-                  <Button onClick={handleSave} disabled={loading} fullWidth variant='primary'>
+                  <Button
+                    fullWidth
+                    variant='primary'
+                    onClick={() => {
+                      subscribe('premium');
+                    }}
+                    disabled={fetching}
+                  >
                     Subscribe
                   </Button>
                 </Box>

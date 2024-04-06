@@ -1,6 +1,6 @@
 const PLANS = {
   free: {
-    price: 0.0,
+    price: 1.0,
   },
   growth: {
     price: 9.0,

@@ -6,8 +6,6 @@ import {
   ShopifyShopState,
   InstallShopifyShopActionContext,
 } from 'gadget-server';
-import { createProductEmbedding } from '../../shopifyProduct/createEmbedding';
-import { createProductImageEmbedding } from '../../shopifyProductImage/createImageEmbedding';
 
 /**
  * @param { InstallShopifyShopActionContext } context
@@ -67,20 +65,9 @@ export async function onSuccess({ params, record, logger, api, connections }) {
           _link: record.id,
         },
         models: ['shopifyProduct'],
-        limit: productSyncLimit, // Use the limit parameter to control the number of products
+        // limit: productSyncLimit, // Use the limit parameter to control the number of products
       },
     });
-  }
-  // Sync existing products and create embeddings for them
-  const existingProducts = await api.shopifyProduct.findMany({
-    where: { shopId: record.id },
-    limit: productSyncLimit,
-  });
-
-  for (const product of existingProducts) {
-    // Create embeddings for each product
-    await createProductEmbedding({ params, record: product, api, logger, connections });
-    await createProductImageEmbedding({ params, record: product, api, logger, connections });
   }
 }
 

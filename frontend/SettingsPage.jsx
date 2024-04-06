@@ -12,12 +12,14 @@ import {
   Select,
   Banner,
 } from '@shopify/polaris';
-import { useAction, useFindOne } from '@gadgetinc/react';
+import { useAction, useFindFirst } from '@gadgetinc/react';
 import { useState, useCallback, useEffect } from 'react';
 import { api } from './api';
 
 const SettingsPage = () => {
-  const [{ data }] = useFindOne(api.ChatbotSettings, '1');
+  const [{ data: shop, fetching, error }] = useFindFirst(api.shopifyShop);
+  console.log(shop?.id, 'shop');
+  const [{ data }] = useFindFirst(api.ChatbotSettings, { id: shop?.id });
 
   const [name, setName] = useState('');
   const [introductionMessage, setIntroductionMessage] = useState('');
@@ -88,8 +90,6 @@ const SettingsPage = () => {
 
   const handleSave = async () => {
     try {
-      console.log('hi');
-      console.log(data.id);
       const newTask = await updateChatbotSettings({
         id: data.id,
         name: name,
