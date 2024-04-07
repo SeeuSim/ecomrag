@@ -175,6 +175,7 @@ export default async function route({ request, reply, api, logger, connections }
     }
 
     const plan = shop.Plan;
+    logger.info(`Shop plan: ${plan}`);
     const planFeatures = {
       free: { imageUploadInChat: false },
       growth: { imageUploadInChat: true },
@@ -182,12 +183,12 @@ export default async function route({ request, reply, api, logger, connections }
       enterprise: { imageUploadInChat: true },
     };
 
-    if (!planFeatures[plan].imageUploadInChat) {
-      const error = 'This shop does not support image uploads. Contact the shop owner.';
-      logger.error(error);
-      await reply.code(401).type('text/plain').send(error);
-      return;
-    }
+    // if (!planFeatures[plan].imageUploadInChat || !planFeatures[plan]) {
+    //   const error = 'This shop does not support image uploads. Contact the shop owner.';
+    //   logger.error(error);
+    //   await reply.code(401).type('text/plain').send(error);
+    //   return;
+    // }
 
     // If an image is uploaded, only consider the image as RAG retrieval.
     embedding = [
