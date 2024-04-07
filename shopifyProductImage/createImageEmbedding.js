@@ -12,7 +12,6 @@ const client = new S3Client({
 });
 
 export async function downloadS3Image(s3Url, logger) {
-  AWS.config.update({ logger });
   const objectUrl = new URL(s3Url);
   const { host, pathname } = new URL(objectUrl);
 

@@ -65,7 +65,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
           _link: record.id,
         },
         models: ['shopifyProduct'],
-        limit: productSyncLimit, // Use the limit parameter to control the number of products
+        // limit: productSyncLimit, // Use the limit parameter to control the number of products
       },
     });
   }

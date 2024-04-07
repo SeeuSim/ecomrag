@@ -63,7 +63,7 @@ const ShopPage = () => {
       <Layout>
         <Layout.Section>
           <Banner
-            title={`${metaData.gadgetMeta.slug} is successfully connected to Shopifysss`}
+            title={`${metaData.gadgetMeta.slug} is successfully connected to askshop.ai`}
             tone='success'
           />
         </Layout.Section>
@@ -78,80 +78,13 @@ const ShopPage = () => {
           <Link to={'/privacy'}>Go to privacy page</Link>
         </Layout.Section>
         <Layout.Section>
-          <Card>
-            <div style={{ width: '100%' }}>
-              <img
-                src='https://assets.gadget.dev/assets/icon.svg'
-                style={{
-                  margin: '14px auto',
-                  height: '56px',
-                }}
-              />
-            </div>
-            <BlockStack gap='200'>
-              <Text variant='headingLg' as='h1' alignment='center'>
-                This page is powered by{' '}
-                <Link url={`${metaData.gadgetMeta.editURL}/files/frontend/ShopPage.jsx`} external>
-                  <code
-                    style={{
-                      fontFamily:
-                        'SFMono-Regular, Consolas, Liberation Mono, Menlo, Courier, monospace',
-                      fontSize: '0.95em',
-                    }}
-                  >
-                    ShopPage.jsx
-                  </code>
-                </Link>
-              </Text>
-              <Text variant='bodyMd' as='p' alignment='center'>
-                Start building your UI by editing file hosted on Gadget.
-              </Text>
-            </BlockStack>
-          </Card>
+          <Link to={'/privacy'}>Go to privacy page</Link>
         </Layout.Section>
-        <Layout.Section>
-          <Card>
-            <BlockStack gap='400'>
-              <Text variant='headingMd' as='h6'>
-                Example Shop Query from your Gadget Database
-              </Text>
-              <div
-                style={{
-                  border: '1px solid #e1e3e5',
-                  padding: '12px',
-                  borderRadius: '0.25rem',
-                }}
-              >
-                <InlineStack align='space-between' blockAlign='center'>
-                  <InlineStack gap='400' blockAlign='center'>
-                    <Icon source={StoreMajor} tone='emphasis' />
-                    <div>
-                      <Text variant='headingMd' as='h6'>
-                        {data.name}
-                      </Text>
-                      <Text variant='bodyMd' as='p'>
-                        {data.city}, {data.countryName}
-                      </Text>
-                    </div>
-                  </InlineStack>
-                  <Text variant='bodyMd' as='p'>
-                    Created at:{' '}
-                    {data.shopifyCreatedAt.toLocaleDateString('en-GB', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </Text>
-                </InlineStack>
-              </div>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-        <Layout.Section>
+        {/* <Layout.Section>
           <FooterHelp>
             <p>Build by James Liu.</p>
           </FooterHelp>
-        </Layout.Section>
+        </Layout.Section> */}
       </Layout>
     </Page>
   );

@@ -8,7 +8,7 @@ import { Readable } from 'stream';
 
 import { createProductImageEmbedding } from '../shopifyProductImage/createImageEmbedding';
 
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME } = process.env;
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME, EMBEDDING_ENDPOINT } = process.env;
 
 const BUCKET_PATH = 'images/';
 
@@ -225,12 +225,18 @@ export default async function route({ request, reply, api, logger, connections }
     // TODO: migrate to image embeddings endpoint since it uses OpenAI CLIP
     // embed the incoming message from the user
     /** @type { { data: { embedding: number[] }[] } } */
-    const embeddingResponse = await connections.openai.embeddings.create({
-      input: embeddingQuery,
-      model: 'text-embedding-ada-002',
+    const embedResponse = await fetch(EMBEDDING_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain', Accept: 'application/json' },
+      body: embeddingQuery,
     });
 
-    embedding = [...embedding, ...embeddingResponse.data[0].embedding];
+    if (embedResponse.ok) {
+      const payload = await embedResponse.json();
+      if (payload?.Embedding && Array.isArray(payload.Embedding)) {
+        embedding = [...embedding, ...payload.Embedding];
+      }
+    }
   }
 
   // find similar product descriptions
