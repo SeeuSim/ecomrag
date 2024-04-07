@@ -1,6 +1,11 @@
+import { logger } from 'gadget-server';
+
 export default async function route({ request, reply }) {
   const { api, connections } = request;
 
+  logger.info(request.query.shop_id, 'shop_id');
+  logger.info(request.query.charge_id, 'charge_id');
+  logger.info('hiiiiii charge_id');
   // get an instance of the shopify-api-node API client for this shop
   const shopify = await connections.shopify.forShopId(request.query.shop_id);
 
@@ -26,9 +31,10 @@ export default async function route({ request, reply }) {
   // the merchant has accepted the charge, so we can grant them access to our application
   // retrieve the plan name from the AppSubscription query result
   const planName = result.node.name;
+  logger.info(planName, 'planName here!');
 
   // example: mark the shop as paid by setting a `plan` attribute with the retrieved plan name
-  await api.internal.shopifyShop.update(request.query.shop_id, { plan: planName });
+  await api.internal.shopifyShop.update(request.query.shop_id, { Plan: planName });
 
   // send the user back to the embedded app
   await reply.redirect('/');

@@ -37,7 +37,7 @@ export async function run({ api, record, params, connections, logger }) {
       appSubscriptionCreate(
         name: $name,
         test: true,
-        returnUrl: "http://ecombillingtest.gadget.app/finish-payment?shop_id=${connections.shopify.currentShopId}",
+        returnUrl: "http://ecomrag--development.gadget.app/finish-payment?shop_id=${connections.shopify.currentShopId}",
         lineItems: [{
           plan: {
             appRecurringPricingDetails: {
