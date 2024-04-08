@@ -21,7 +21,10 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { UpdateShopifyProductActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
-  if (tryIncrShopSyncCount({ params, record, logger, api, connections })) {
+  if (
+    !record.getField('descriptionEmbedding') &&
+    tryIncrShopSyncCount({ params, record, logger, api, connections })
+  ) {
     await postProductDescEmbedding(
       { Id: record.id, Description: `${record.title}: ${record.body}` },
       record.shopId ?? 'DUMMYMSGGRPID',
