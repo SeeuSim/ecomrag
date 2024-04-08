@@ -1,5 +1,6 @@
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { logger } from 'gadget-server';
+import { stripHTMLTags } from '../routes/batch-update/utils';
 
 const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_QUEUE_URL, NODE_ENV } = process.env;
 
@@ -25,7 +26,7 @@ export async function postProductDescEmbedding(payload, shopId, logger) {
     },
     Description: {
       DataType: 'String',
-      StringValue: payload.Description.slice(0, 77), // CLIP has max length of 77 chars
+      StringValue: stripHTMLTags(payload.Description).slice(0, 77), // CLIP has max length of 77 chars
     },
     Model: {
       DataType: 'String',
