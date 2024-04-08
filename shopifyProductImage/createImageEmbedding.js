@@ -1,4 +1,5 @@
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { logger as GadgetLogger } from 'gadget-server';
 import fetch from 'node-fetch';
 
 const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBEDDING_ENDPOINT } = process.env;
@@ -11,6 +12,7 @@ const client = new S3Client({
   region: 'us-east-1',
 });
 
+/**@type { (s3Url: string, logger: typeof GadgetLogger) => { content: Buffer, fileType: string}} */
 export async function downloadS3Image(s3Url, logger) {
   const objectUrl = new URL(s3Url);
   const { host, pathname } = new URL(objectUrl);
@@ -28,7 +30,8 @@ export async function downloadS3Image(s3Url, logger) {
   try {
     const response = await client.send(new GetObjectCommand(params));
     if (response.Body) {
-      const content = await response.Body.arrayBuffer();
+      logger.info(response.Body, 'S3 Get Image');
+      const content = await response.Body.transformToByteArray();
       const fileType = response.ContentType;
       return { content: Buffer.from(content), fileType };
     }
@@ -58,7 +61,7 @@ export const createProductImageEmbedding = async ({ record, api, logger }) => {
     logger.error('Shop and plan could not be found.');
   }
 
-  if (!planFeatures[plan].includeImages) {
+  if (!planFeatures[plan]?.includeImages) {
     logger.error(
       'Image syncing is not allowed for the current plan. Skipping image embedding creation.'
     );
