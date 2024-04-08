@@ -92,6 +92,18 @@ function EmbeddedApp() {
             destination: '/',
           },
           {
+            label: 'Settings',
+            destination: '/settings',
+          },
+          {
+            label: 'Pricing',
+            destination: '/pricing',
+          },
+          {
+            label: 'Privacy',
+            destination: '/privacy',
+          },
+          {
             label: 'About',
             destination: '/about',
           },
