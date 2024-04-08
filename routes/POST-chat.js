@@ -3,8 +3,8 @@ import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { api, logger, Request, Reply } from 'gadget-server';
 
+import { api, logger, Request, Reply } from 'gadget-server';
 import { Readable } from 'stream';
 
 import { createProductImageEmbedding } from '../shopifyProductImage/createImageEmbedding';
@@ -64,6 +64,7 @@ const getBaseSystemPrompt = (products, talkativeness, personality) => {
     `the user inputs their needs, always suggest products to match their ` +
     `needs. Here are the JSON products you can use to generate a ` +
     `response: ${stringify(
+      // To reduce OpenAI token usage
       products.map((product) => ({
         handle: product.handle,
         domain: product.shop.domain,
@@ -80,6 +81,7 @@ const getBaseSystemPrompt = (products, talkativeness, personality) => {
 /**@type {(gadgetApi: typeof api, products: any[], content: any) => void} */
 const handleLLMOnComplete = (gadgetApi, products, content) => {
   try {
+    // For some reason, nested queries don't work here
     void gadgetApi.chatLog
       .create({
         response: content,
@@ -115,12 +117,11 @@ async function uploadImage(imageBase64, fileName, fileType, logger) {
       })
     );
 
-    logger.info('Image Uploaded!');
+    logger.info(_response, 'Chat Image Uploaded to S3!');
   } catch (error) {
-    logger.error(`Error uploading image: ${error}`);
+    logger.error(error, `Error uploading Chat Image to S3`);
     return;
   }
-
   return `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
 }
 
@@ -197,7 +198,7 @@ export default async function route({ request, reply, api, logger, connections }
     }
 
     const plan = shop.Plan;
-    logger.info(plan, `Shop plan`);
+    logger.info(`Shop plan: ${plan}`);
 
     // If an image is uploaded, only consider the image as RAG retrieval.
     embedding = [
@@ -211,7 +212,7 @@ export default async function route({ request, reply, api, logger, connections }
     ];
 
     if (embedding.length > 0) {
-      logger.info(embedding, `Image embedding generated.`);
+      logger.info(embedding.slice(0, 5), `Image embedding generated.`);
 
       const recommendedImageProducts = await api.shopifyProductImage.findMany({
         sort: {
@@ -229,13 +230,9 @@ export default async function route({ request, reply, api, logger, connections }
           id: true,
           source: true,
           imageDescription: true,
-          shop: {
-            domain: true,
-          },
           product: {
             id: true,
             title: true,
-            body: true,
             handle: true,
             shop: {
               domain: true,
@@ -253,18 +250,14 @@ export default async function route({ request, reply, api, logger, connections }
 
       if (recommendedImageProducts.length > 0) {
         const recommendedProduct = recommendedImageProducts[0].product;
-
-        const [_imageRecProduct] = await Promise.all([
-          api.imageRecommendedProduct.create({
-            product: {
-              _link: recommendedProduct.id,
-            },
-          }),
-        ]);
-
         logger.info(recommendedProduct, 'SimSearch Linked');
-
         imageSearchProducts.push(recommendedProduct);
+
+        void api.imageRecommendedProduct.create({
+          product: {
+            _link: recommendedProduct.id,
+          },
+        });
       }
     }
   } else {
@@ -302,7 +295,10 @@ export default async function route({ request, reply, api, logger, connections }
       const payload = await embedResponse.json();
       if (payload?.Embedding && Array.isArray(payload.Embedding)) {
         embedding = [...embedding, ...payload.Embedding];
-        logger.info({ embedding, embeddingQuery }, 'Text Embedding generated');
+        logger.info(
+          { embedding: embedding.slice(0, 5), embeddingQuery },
+          'Text Embedding generated'
+        );
       }
     }
   }
