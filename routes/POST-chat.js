@@ -239,44 +239,7 @@ export default async function route({ request, reply, api, logger, connections }
     });
 
     void handleLLMOnComplete(api, imageRecProduct, userMessage);
-    const recommendedImageProducts = await api.shopifyProduct.findMany({
-      sort: {
-        imageDescriptionEmbedding: {
-          cosineSimilarityTo: embedding,
-        },
-      },
-      first: 1,
-      filter: {
-        status: {
-          equals: 'active',
-        },
-        shop: {
-          equals: ShopId,
-        },
-      },
-      select: {
-        id: true,
-        title: true,
-        body: true,
-        handle: true,
-        shop: {
-          domain: true,
-        },
-        images: {
-          edges: {
-            node: {
-              source: true,
-            },
-          },
-        },
-      },
-    });
 
-    const imageRecProduct = await api.imageRecommendedProduct.create({
-      product: recommendedImageProducts[0].id,
-    });
-
-    void handleLLMOnComplete(api, imageRecProduct, userMessage);
     logger.info(`Image embedding generated: ${embedding}`);
   } else {
     // If it is just chat, summarise the conversation into one retrieval qn.
