@@ -3,6 +3,7 @@ import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { api, logger, Request, Reply } from 'gadget-server';
 
 import { Readable } from 'stream';
 
@@ -106,6 +107,9 @@ async function uploadImage(imageBase64, fileName, fileType, logger) {
   return `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
 }
 
+/**
+ * @type { (params: { request: Request, reply: Reply, api: typeof api, logger: typeof logger }) => Promise<void> }
+ **/
 export default async function route({ request, reply, api, logger, connections }) {
   let payload = request.body;
 
@@ -113,6 +117,7 @@ export default async function route({ request, reply, api, logger, connections }
   let imageUrl = null;
   let chatHistory = [];
   let ShopId = undefined;
+  let imageRecommendedProducts = [];
 
   const model = new ChatOpenAI({
     openAIApiKey: connections.openai.configuration.apiKey,
@@ -176,19 +181,6 @@ export default async function route({ request, reply, api, logger, connections }
 
     const plan = shop.Plan;
     logger.info(`Shop plan: ${plan}`);
-    const planFeatures = {
-      free: { imageUploadInChat: false },
-      growth: { imageUploadInChat: true },
-      premium: { imageUploadInChat: true },
-      enterprise: { imageUploadInChat: true },
-    };
-
-    // if (!planFeatures[plan].imageUploadInChat || !planFeatures[plan]) {
-    //   const error = 'This shop does not support image uploads. Contact the shop owner.';
-    //   logger.error(error);
-    //   await reply.code(401).type('text/plain').send(error);
-    //   return;
-    // }
 
     // If an image is uploaded, only consider the image as RAG retrieval.
     embedding = [
@@ -223,6 +215,9 @@ export default async function route({ request, reply, api, logger, connections }
         handle: true,
         shop: {
           domain: true,
+        },
+        product: {
+          id: true,
         },
         images: {
           edges: {
