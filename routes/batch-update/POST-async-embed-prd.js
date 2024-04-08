@@ -1,6 +1,6 @@
 import { api, logger, Request, Reply } from 'gadget-server';
 import { SQSClient, SendMessageBatchCommand } from '@aws-sdk/client-sqs';
-import { getMessagePayload } from './utils';
+import { getMessagePayload, stripHTMLTags } from './utils';
 
 const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_QUEUE_URL } = process.env;
 
@@ -55,7 +55,9 @@ export default async function route({ request, reply, api, logger, connections }
           MessageAttributes: getMessagePayload({
             ...v,
             model: 'shopifyProduct',
-            description: `${v.title}: ${v.body}`.slice(0, 77),
+
+            // TODO: change the body to a summary.
+            description: `${v.title}: ${stripHTMLTags(v.body)}`.slice(0, 77),
           }),
           // MessageGroupId: `${record.shopId}`
         })),
