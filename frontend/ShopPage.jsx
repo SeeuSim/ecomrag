@@ -73,6 +73,10 @@ const ShopPage = () => {
         <Layout.Section>
           <Link to={'/pricing'}>Go to pricing page</Link>
         </Layout.Section>
+        j{' '}
+        <Layout.Section>
+          <Link to={'/privacy'}>Go to privacy page</Link>
+        </Layout.Section>
         <Layout.Section>
           <Link to={'/privacy'}>Go to privacy page</Link>
         </Layout.Section>
