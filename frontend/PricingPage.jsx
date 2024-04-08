@@ -7,7 +7,14 @@ import { useAction, useFindFirst } from '@gadgetinc/react';
 import { api } from './api';
 
 const PricingPage = () => {
-  const [{ fetching, error, data }, createSubscription] = useAction(api.shopifyShop.subscribe);
+  const [
+    {
+      fetching,
+      // error: _error,
+      // data: _data
+    },
+    createSubscription,
+  ] = useAction(api.shopifyShop.subscribe);
   const navigate = useNavigate();
   const [{ data: shop }] = useFindFirst(api.shopifyShop);
   console.log(shop?.id, 'shop');
@@ -32,6 +39,7 @@ const PricingPage = () => {
   return (
     <Page
       divider
+      backAction={{ url: '/' }}
       primaryAction={{ content: 'View on your store', disabled: true }}
       secondaryActions={[
         {

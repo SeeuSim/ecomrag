@@ -17,7 +17,13 @@ import { useState, useCallback, useEffect } from 'react';
 import { api } from './api';
 
 const SettingsPage = () => {
-  const [{ data: shop, fetching, error }] = useFindFirst(api.shopifyShop);
+  const [
+    {
+      data: shop,
+      // fetching: _fecthing,
+      // error: _error
+    },
+  ] = useFindFirst(api.shopifyShop);
   console.log(shop?.id, 'shop');
   const [{ data }] = useFindFirst(api.ChatbotSettings, { id: shop?.id });
 
@@ -110,6 +116,7 @@ const SettingsPage = () => {
   return (
     <Page
       divider
+      backAction={{ url: '/' }}
       primaryAction={{ content: 'View on your store', disabled: true }}
       secondaryActions={[
         {

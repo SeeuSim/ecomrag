@@ -78,8 +78,17 @@ const getBaseSystemPrompt = (products, talkativeness, personality) => {
   );
 };
 
-/**@type {(gadgetApi: typeof api, products: any[], content: any) => void} */
-const handleLLMOnComplete = (gadgetApi, products, content) => {
+/**@type {(gadgetApi: typeof api, products: any[], content: any, isImageRecommended: boolean) => void} */
+const handleLLMOnComplete = (gadgetApi, products, content, isImageRecommended) => {
+  const productMapFunc = (record) => (product) => ({
+    chatLog: {
+      _link: record.id,
+    },
+    product: {
+      _link: product.id,
+    },
+  });
+
   try {
     // For some reason, nested queries don't work here
     void gadgetApi.chatLog
@@ -87,16 +96,11 @@ const handleLLMOnComplete = (gadgetApi, products, content) => {
         response: content,
       })
       .then((record) => {
-        void gadgetApi.recommendedProduct.bulkCreate(
-          products.map((product) => ({
-            chatLog: {
-              _link: record.id,
-            },
-            product: {
-              _link: product.id,
-            },
-          }))
-        );
+        if (isImageRecommended) {
+          void gadgetApi.imageRecommendedProduct.bulkCreate(products.map(productMapFunc(record)));
+        } else {
+          void gadgetApi.recommendedProduct.bulkCreate(products.map(productMapFunc(record)));
+        }
       });
   } catch (error) {
     logger.error(error?.message?.slice(0, 50) ?? 'An error occurred creating the chatlog.');
@@ -250,14 +254,8 @@ export default async function route({ request, reply, api, logger, connections }
 
       if (recommendedImageProducts.length > 0) {
         const recommendedProduct = recommendedImageProducts[0].product;
-        logger.info(recommendedProduct, 'SimSearch Linked');
+        logger.info(recommendedProduct, 'ImageSimSearch Found');
         imageSearchProducts.push(recommendedProduct);
-
-        void api.imageRecommendedProduct.create({
-          product: {
-            _link: recommendedProduct.id,
-          },
-        });
       }
     }
   } else {
@@ -399,5 +397,5 @@ export default async function route({ request, reply, api, logger, connections }
   }
   responseStream.push(null);
 
-  void handleLLMOnComplete(api, products, output);
+  void handleLLMOnComplete(api, products, output, imageSearchProducts.length > 0);
 }

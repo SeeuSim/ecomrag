@@ -1,19 +1,7 @@
 import { useFindFirst, useQuery } from '@gadgetinc/react';
 import { Link } from 'react-router-dom';
 
-import {
-  Card,
-  Banner,
-  FooterHelp,
-  InlineStack,
-  Icon,
-  Layout,
-  Page,
-  Spinner,
-  Text,
-  BlockStack,
-} from '@shopify/polaris';
-import { StoreMajor } from '@shopify/polaris-icons';
+import { Banner, BlockStack, Box, Card, Layout, Page, Spinner, Text } from '@shopify/polaris';
 import { api } from './api';
 
 const gadgetMetaQuery = `
@@ -26,7 +14,13 @@ const gadgetMetaQuery = `
 `;
 
 const ShopPage = () => {
-  const [{ data, fetching, error }] = useFindFirst(api.shopifyShop);
+  const [
+    {
+      // data: _data,
+      fetching,
+      error,
+    },
+  ] = useFindFirst(api.shopifyShop);
 
   const [{ data: metaData, fetching: fetchingGadgetMeta }] = useQuery({
     query: gadgetMetaQuery,
@@ -68,23 +62,44 @@ const ShopPage = () => {
           />
         </Layout.Section>
         <Layout.Section>
-          <Link to={'/settings'}>Go to settings page</Link>
+          <Card roundedAbove='sm' padding={500}>
+            <Text as='h1' variant='headingLg'>
+              AskShop.AI
+            </Text>
+            <Box paddingBlock='400'>
+              <BlockStack gap='200'>
+                <Text as='h3' variant='headingMd' fontWeight='medium'>
+                  <Link to={'/settings'}>Settings</Link>
+                </Text>
+                <Text as='p' variant='bodyLg'>
+                  Tune your chatbot settings, such as its name, introduction message, personality
+                  and talkativeness.
+                </Text>
+              </BlockStack>
+            </Box>
+            <Box paddingBlockStart='400'>
+              <BlockStack gap='200'>
+                <Text as='h3' variant='headingMd' fontWeight='medium'>
+                  <Link to={'/pricing'}>Pricing</Link>
+                </Text>
+                <Text as='p' variant='bodyMd'>
+                  View a summary of your online store’s performance, including sales, visitors, top
+                  products, and referrals.
+                </Text>
+              </BlockStack>
+            </Box>
+            <Box paddingBlockStart='400'>
+              <BlockStack gap='200'>
+                <Text as='h3' variant='headingMd' fontWeight='medium'>
+                  <Link to={'/privacy'}>Privacy</Link>
+                </Text>
+                <Text as='p' variant='bodyLg'>
+                  Review the App's Privacy Policy
+                </Text>
+              </BlockStack>
+            </Box>
+          </Card>
         </Layout.Section>
-        <Layout.Section>
-          <Link to={'/pricing'}>Go to pricing page</Link>
-        </Layout.Section>
-        j{' '}
-        <Layout.Section>
-          <Link to={'/privacy'}>Go to privacy page</Link>
-        </Layout.Section>
-        <Layout.Section>
-          <Link to={'/privacy'}>Go to privacy page</Link>
-        </Layout.Section>
-        {/* <Layout.Section>
-          <FooterHelp>
-            <p>Build by James Liu.</p>
-          </FooterHelp>
-        </Layout.Section> */}
       </Layout>
     </Page>
   );

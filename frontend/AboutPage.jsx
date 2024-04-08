@@ -13,7 +13,9 @@ const AboutPage = () => {
       }}
     >
       <Text variant='bodyMd' as='p'>
-        This is a simple Shopify Embedded App.
+        AskShop.AI is a one-stop AI chatbot for your store to recommend its products through a chat
+        interface. It performs product recommendations for your store either by using text, or image
+        uploads from the chat.
       </Text>
     </Page>
   );
