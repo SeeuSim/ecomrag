@@ -4,7 +4,11 @@ import { BlockStack, Box, InlineGrid, Page, Text } from '@shopify/polaris';
 
 const PricingPage = () => {
   return (
-    <Page backAction={{ url: '/' }} divider>
+    <Page
+      // backAction={{ url: '/' }}
+      backAction={{ url: '/api/shopify/install-or-render' }}
+      divider
+    >
       <BlockStack gap={{ xs: '800', sm: '400' }}>
         <InlineGrid columns={1} gap='400'>
           <Text variant='headingXl' as='h4' alignment='left'>
