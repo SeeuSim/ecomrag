@@ -40,7 +40,7 @@ const PricingPage = () => {
     <Page
       divider
       // TODO: fix this
-      backAction={{ url: '/' }}
+      // backAction={{ url: '/' }}
       primaryAction={{ content: 'View on your store', disabled: true }}
       secondaryActions={[
         {

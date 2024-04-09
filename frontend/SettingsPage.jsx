@@ -117,7 +117,7 @@ const SettingsPage = () => {
     <Page
       divider
       // TODO: fix back nav
-      backAction={{ url: '/' }}
+      // backAction={{ url: '/' }}
       primaryAction={{ content: 'View on your store', disabled: true }}
       secondaryActions={[
         {

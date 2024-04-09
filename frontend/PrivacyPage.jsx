@@ -6,7 +6,7 @@ const PricingPage = () => {
   return (
     <Page
       // TODO: fix this
-      backAction={{ url: '/' }}
+      // backAction={{ url: '/' }}
       divider
     >
       <BlockStack gap={{ xs: '800', sm: '400' }}>
