@@ -77,7 +77,7 @@ const ShopPage = () => {
                 </Text>
               </BlockStack>
             </Box>
-            <Box paddingBlockStart='400'>
+            <Box paddingBlock='400'>
               <BlockStack gap='200'>
                 <Text as='h3' variant='headingMd' fontWeight='medium'>
                   <Link to={'/pricing'}>Pricing</Link>
