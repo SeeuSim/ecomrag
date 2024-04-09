@@ -116,8 +116,8 @@ const SettingsPage = () => {
   return (
     <Page
       divider
-      // backAction={{ url: '/' }
-      backAction={{ url: 'https://${shop.domain}/admin/apps/askshop-ai' }}
+      // TODO: fix back nav
+      backAction={{ url: '/' }}
       primaryAction={{ content: 'View on your store', disabled: true }}
       secondaryActions={[
         {

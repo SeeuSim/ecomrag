@@ -1,17 +1,9 @@
-import { useFindFirst, useQuery } from '@gadgetinc/react';
+import { useFindFirst } from '@gadgetinc/react';
 import { Link } from 'react-router-dom';
 
 import { Banner, BlockStack, Box, Card, Layout, Page, Spinner, Text } from '@shopify/polaris';
 import { api } from './api';
-
-const gadgetMetaQuery = `
-  query {
-    gadgetMeta {
-      slug
-      editURL
-    }
-  }
-`;
+import { useGadgetMeta } from './utils';
 
 const ShopPage = () => {
   const [
@@ -22,9 +14,7 @@ const ShopPage = () => {
     },
   ] = useFindFirst(api.shopifyShop);
 
-  const [{ data: metaData, fetching: fetchingGadgetMeta }] = useQuery({
-    query: gadgetMetaQuery,
-  });
+  const { metaData, fetchingGadgetMeta } = useGadgetMeta();
 
   if (error) {
     return (
