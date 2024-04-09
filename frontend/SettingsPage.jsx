@@ -13,10 +13,15 @@ import {
   Banner,
 } from '@shopify/polaris';
 import { useAction, useFindFirst } from '@gadgetinc/react';
+
+import { useNavigate } from 'react-router-dom';
 import { useState, useCallback, useEffect } from 'react';
+
 import { api } from './api';
 
 const SettingsPage = () => {
+  const navigate = useNavigate();
+
   const [
     {
       data: shop,
@@ -116,8 +121,10 @@ const SettingsPage = () => {
   return (
     <Page
       divider
-      // TODO: fix back nav
-      // backAction={{ url: '/' }}
+      backAction={{
+        content: 'Home',
+        onAction: () => navigate('/'),
+      }}
       primaryAction={{ content: 'View on your store', disabled: true }}
       secondaryActions={[
         {
