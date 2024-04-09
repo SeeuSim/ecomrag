@@ -117,7 +117,7 @@ const SettingsPage = () => {
     <Page
       divider
       // backAction={{ url: '/' }
-      backAction={{ url: '/api/shopify/install-or-render' }}
+      backAction={{ url: 'https://${shop.domain}/admin/apps/askshop-ai' }}
       primaryAction={{ content: 'View on your store', disabled: true }}
       secondaryActions={[
         {

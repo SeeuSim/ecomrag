@@ -5,8 +5,8 @@ import { BlockStack, Box, InlineGrid, Page, Text } from '@shopify/polaris';
 const PricingPage = () => {
   return (
     <Page
-      // backAction={{ url: '/' }}
-      backAction={{ url: '/api/shopify/install-or-render' }}
+      // TODO: fix this
+      backAction={{ url: '/' }}
       divider
     >
       <BlockStack gap={{ xs: '800', sm: '400' }}>

@@ -39,8 +39,8 @@ const PricingPage = () => {
   return (
     <Page
       divider
-      // backAction={{ url: '/' }}
-      backAction={{ url: '/api/shopify/install-or-render' }}
+      // TODO: fix this
+      backAction={{ url: '/' }}
       primaryAction={{ content: 'View on your store', disabled: true }}
       secondaryActions={[
         {
