@@ -82,9 +82,8 @@ const ShopPage = () => {
                 <Text as='h3' variant='headingMd' fontWeight='medium'>
                   <Link to={'/pricing'}>Pricing</Link>
                 </Text>
-                <Text as='p' variant='bodyMd'>
-                  View a summary of your online store’s performance, including sales, visitors, top
-                  products, and referrals.
+                <Text as='p' variant='bodyLg'>
+                  Change your subscription plan to fit your shop's needs.
                 </Text>
               </BlockStack>
             </Box>
