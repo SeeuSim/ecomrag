@@ -1,12 +1,15 @@
-// This example is for guidance purposes. Copying it will come with caveats.
-
 import { BlockStack, Box, InlineGrid, Page, Text } from '@shopify/polaris';
 
+import { useNavigate } from 'react-router-dom';
+
 const PricingPage = () => {
+  const navigate = useNavigate();
   return (
     <Page
-      // backAction={{ url: '/' }}
-      backAction={{ url: '/api/shopify/install-or-render' }}
+      backAction={{
+        content: 'Home',
+        onAction: () => navigate('/'),
+      }}
       divider
     >
       <BlockStack gap={{ xs: '800', sm: '400' }}>

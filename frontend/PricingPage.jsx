@@ -1,12 +1,17 @@
 // This example is for guidance purposes. Copying it will come with caveats.
 
 import { BlockStack, Box, Card, InlineGrid, Page, Text, Button } from '@shopify/polaris';
-import { useCallback } from 'react';
-import { useNavigate } from '@shopify/app-bridge-react';
+import { useNavigate as useShopifyNavigate } from '@shopify/app-bridge-react';
 import { useAction, useFindFirst } from '@gadgetinc/react';
+
+import { useNavigate as useReactRouterNavigate } from 'react-router-dom';
+import { useCallback } from 'react';
+
 import { api } from './api';
 
 const PricingPage = () => {
+  const reactRouterNavigate = useReactRouterNavigate();
+  const shopifyNavigate = useShopifyNavigate();
   const [
     {
       fetching,
@@ -15,7 +20,6 @@ const PricingPage = () => {
     },
     createSubscription,
   ] = useAction(api.shopifyShop.subscribe);
-  const navigate = useNavigate();
   const [{ data: shop }] = useFindFirst(api.shopifyShop);
   console.log(shop?.id, 'shop');
 
@@ -33,14 +37,16 @@ const PricingPage = () => {
 
     console.log(currShop?.data?.confirmationUrl, 'curr shop');
     // redirect the merchant to accept the charge within Shopify's interface
-    navigate(currShop?.data?.confirmationUrl);
+    shopifyNavigate(currShop?.data?.confirmationUrl);
   });
 
   return (
     <Page
       divider
-      // backAction={{ url: '/' }}
-      backAction={{ url: '/api/shopify/install-or-render' }}
+      backAction={{
+        content: 'Home',
+        onAction: () => reactRouterNavigate('/'),
+      }}
       primaryAction={{ content: 'View on your store', disabled: true }}
       secondaryActions={[
         {

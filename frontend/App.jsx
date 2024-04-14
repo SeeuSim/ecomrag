@@ -88,7 +88,7 @@ function EmbeddedApp() {
       <NavigationMenu
         navigationLinks={[
           {
-            label: 'Shop Information',
+            label: 'Home',
             destination: '/',
           },
           {
