@@ -5,6 +5,7 @@ import {
   ActionOptions,
   UpdateShopifyShopActionContext,
 } from 'gadget-server';
+import { postShopUpdateResult } from '../../routes/main-backend/utils';
 
 /**
  * @param { UpdateShopifyShopActionContext } context
@@ -20,6 +21,7 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
+  await postShopUpdateResult(record, logger);
 }
 
 /** @type { ActionOptions } */

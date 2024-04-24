@@ -4,6 +4,7 @@ import {
   ActionOptions,
   DeleteShopifyProductActionContext,
 } from 'gadget-server';
+import { postProductDeleteResult } from '../../routes/main-backend/utils';
 
 /**
  * @param { DeleteShopifyProductActionContext } context
@@ -18,6 +19,7 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
+  await postProductDeleteResult(record, logger);
 }
 
 /** @type { ActionOptions } */

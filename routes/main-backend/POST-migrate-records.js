@@ -1,16 +1,12 @@
 import { Reply, Request, api as gadgetApi, logger as gadgetLogger } from 'gadget-server';
-import { stripHTMLTags } from '../batch-update/utils';
-
-const BATCH_SIZE = 50;
-const NEXTJS_BE_CONFIG = {
-  host: 'https://searchshop-ai.vercel.app',
-  route: 'api/models',
-  shopModel: 'shop',
-  productModel: 'product',
-  productImageModel: 'productImage',
-};
-const SHOP_ALLOWED_PLANS = ['free', 'growth', 'premium', 'enterprise'];
-const BASE_URL = `${NEXTJS_BE_CONFIG.host}/${NEXTJS_BE_CONFIG.route}`;
+import {
+  BASE_URL,
+  BATCH_SIZE,
+  NEXTJS_BE_CONFIG,
+  getProductImageInsertRow,
+  getProductInsertRow,
+  getShopInsertRow,
+} from './utils';
 
 /**@type { (api: typeof gadgetApi, logger: typeof gadgetLogger, pgProductId: string, gadgetProductId: string) => Promise<void> } */
 async function migrateProductImages(api, logger, pgProductId, gadgetProductId) {
@@ -33,19 +29,7 @@ async function migrateProductImages(api, logger, pgProductId, gadgetProductId) {
     const payload = {
       action: 'create',
       payload: {
-        CreatePayload: batch.map((v) => ({
-          source: v.source,
-          productId: pgProductId,
-
-          description:
-            v.imageDescription && v.imageDescription.length > 0 ? v.imageDescription : '<>',
-          alt: v.alt && v.alt.length > 0 ? v.alt : '<>',
-
-          position: v.position ?? undefined,
-          height: v.height ?? undefined,
-          width: v.width ?? undefined,
-          embedding: v.imageDescriptionEmbedding ?? undefined,
-        })),
+        CreatePayload: batch.map((row) => getProductImageInsertRow(row, pgProductId)),
       },
     };
     const response = await fetch(endpoint, {
@@ -92,19 +76,7 @@ async function migrateProducts(api, logger, pgShopId, gadgetShopId) {
     const payload = {
       action: 'create',
       payload: {
-        CreatePayload: batch.map((v) => {
-          const strippedBody = stripHTMLTags(v.body);
-          return {
-            title: v.title && v.title.length > 0 ? v.title : 'PLACEHOLDER',
-            shopId: pgShopId,
-            body: strippedBody.length > 0 ? strippedBody : undefined,
-            handle: v.handle ?? undefined,
-            vendor: v.vendor ?? undefined,
-            status: v.status ?? undefined,
-            tags: v.tags ?? [],
-            embedding: v.descriptionEmbedding ?? undefined,
-          };
-        }),
+        CreatePayload: batch.map((row) => getProductInsertRow(row, pgShopId)),
       },
     };
     const res = await fetch(endpoint, {
@@ -171,16 +143,7 @@ export default async function route({ request, reply, api, logger, connections }
     const payload = {
       action: 'create',
       payload: {
-        CreatePayload: batch.map((v) => ({
-          // Required Fields
-          name: v.name,
-          email: v.email ?? 'placeholder@searchshop.ai',
-          country: v.country ?? 'USA',
-          city: v.city ?? 'San Francisco',
-          // Optional Fields
-          domain: v.domain ?? undefined,
-          plan: SHOP_ALLOWED_PLANS.includes(v.Plan) ? v.Plan : undefined,
-        })),
+        CreatePayload: batch.map(getShopInsertRow),
       },
     };
     try {

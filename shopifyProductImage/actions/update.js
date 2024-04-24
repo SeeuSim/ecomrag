@@ -7,6 +7,7 @@ import {
 } from 'gadget-server';
 import { postProductImgEmbedCaption } from '../postSqs';
 import { tryIncrShopSyncCount } from '../checkPlan';
+import { postProductImageUpdateResult } from '../../routes/main-backend/utils';
 
 /**
  * @param { UpdateShopifyProductImageActionContext } context
@@ -40,6 +41,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
       `${JSON.stringify(isCaptionEmbed)} | ${record.changed('source')}} | Failed check for productImg | update`
     );
   }
+  await postProductImageUpdateResult(record, logger);
 }
 
 /** @type { ActionOptions } */

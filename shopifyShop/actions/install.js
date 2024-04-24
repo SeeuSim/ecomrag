@@ -6,6 +6,7 @@ import {
   ShopifyShopState,
   InstallShopifyShopActionContext,
 } from 'gadget-server';
+import { postShopCreateResult } from '../../routes/main-backend/utils';
 
 /**
  * @param { InstallShopifyShopActionContext } context
@@ -55,6 +56,8 @@ export async function onSuccess({ params, record, logger, api, connections }) {
   record.chatSessionsLimit = chatSessionsLimit;
 
   await save(record);
+
+  await postShopCreateResult(record, logger);
 
   // Sync a limited number of products based on the plan
   if (productSyncLimit) {

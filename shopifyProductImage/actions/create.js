@@ -6,6 +6,7 @@ import {
 } from 'gadget-server';
 import { tryIncrShopSyncCount } from '../checkPlan';
 import { postProductImgEmbedCaption } from '../postSqs';
+import { postProductImageCreateResult } from '../../routes/main-backend/utils';
 
 /**
  * @param { CreateShopifyProductImageActionContext } context
@@ -34,6 +35,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
   } else {
     logger.info(`${record.source} | ${!!record.source} | Failed check for productImg | create`);
   }
+  await postProductImageCreateResult(record, logger);
   return;
 }
 

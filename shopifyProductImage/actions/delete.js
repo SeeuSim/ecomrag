@@ -4,6 +4,7 @@ import {
   ActionOptions,
   DeleteShopifyProductImageActionContext,
 } from 'gadget-server';
+import { postProductImageDeleteResult } from '../../routes/main-backend/utils';
 
 /**
  * @param { DeleteShopifyProductImageActionContext } context
@@ -18,6 +19,7 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
+  await postProductImageDeleteResult(record, logger);
 }
 
 /** @type { ActionOptions } */

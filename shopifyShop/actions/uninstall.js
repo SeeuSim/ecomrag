@@ -7,6 +7,7 @@ import {
   ShopifyShopState,
   UninstallShopifyShopActionContext,
 } from 'gadget-server';
+import { postShopDeleteResult } from '../../routes/main-backend/utils';
 
 /**
  * @param { UninstallShopifyShopActionContext } context
@@ -23,6 +24,7 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
+  await postShopDeleteResult(record, logger);
 }
 
 /** @type { ActionOptions } */

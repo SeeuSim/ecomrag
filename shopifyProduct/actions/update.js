@@ -7,6 +7,7 @@ import {
 } from 'gadget-server';
 import { tryIncrShopSyncCount } from '../checkPlan';
 import { postProductDescEmbedding } from '../postSqs';
+import { postProductUpdateResult } from '../../routes/main-backend/utils';
 
 /**
  * @param { UpdateShopifyProductActionContext } context
@@ -31,6 +32,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
       logger
     );
   }
+  await postProductUpdateResult(record, logger);
   return;
 }
 

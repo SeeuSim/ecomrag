@@ -7,6 +7,7 @@ import {
   ShopifyShopState,
   ReinstallShopifyShopActionContext,
 } from 'gadget-server';
+import { postShopCreateResult } from '../../routes/main-backend/utils';
 
 /**
  * @param { ReinstallShopifyShopActionContext } context
@@ -23,6 +24,7 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
+  await postShopCreateResult(record, logger);
 }
 
 /** @type { ActionOptions } */

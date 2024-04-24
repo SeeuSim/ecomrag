@@ -7,6 +7,7 @@ import {
 } from 'gadget-server';
 import { tryIncrShopSyncCount } from '../checkPlan';
 import { postProductDescEmbedding } from '../postSqs';
+import { postProductCreateResult } from '../../routes/main-backend/utils';
 
 /**
  * @param { CreateShopifyProductActionContext } context
@@ -33,6 +34,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
       logger
     );
   }
+  await postProductCreateResult(record, logger);
 }
 
 /** @type { ActionOptions } */
