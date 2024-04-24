@@ -63,7 +63,7 @@ export const getShopDeleteRow = (row) => {
 };
 
 /**@type { (record: Awaited<ReturnType<typeof gadgetApi.shopifyShop.findOne>>, logger: typeof gadgetLogger) => Promise<void> } */
-export async function postProductCreateResult(record, logger) {
+export async function postShopCreateResult(record, logger) {
   const endpoint = `${BASE_URL}/${NEXTJS_BE_CONFIG.shopModel}`;
   const payload = {
     action: 'create',
@@ -89,7 +89,7 @@ export async function postProductCreateResult(record, logger) {
 }
 
 /**@type { (record: Awaited<ReturnType<typeof gadgetApi.shopifyShop.findOne>>, logger: typeof gadgetLogger) => Promise<void> } */
-export async function postProductUpdateResult(record, logger) {
+export async function postShopUpdateResult(record, logger) {
   const endpoint = `${BASE_GADGET_URL}/${NEXTJS_BE_CONFIG.shopModel}`;
   const payload = {
     action: 'update',
@@ -116,7 +116,7 @@ export async function postProductUpdateResult(record, logger) {
 }
 
 /**@type { (record: Awaited<ReturnType<typeof gadgetApi.shopifyShop.findOne>>, logger: typeof gadgetLogger) => Promise<void> } */
-export async function postProductDeleteResult(record, logger) {
+export async function postShopDeleteResult(record, logger) {
   const endpoint = `${BASE_GADGET_URL}/${NEXTJS_BE_CONFIG.shopModel}`;
   const payload = {
     action: 'delete',
@@ -221,7 +221,7 @@ export async function postProductCreateResult(record, logger) {
 }
 
 /**@type { (record: Awaited<ReturnType<typeof gadgetApi.shopifyShop.findOne>>, logger: typeof gadgetLogger) => Promise<void> } */
-export async function postShopUpdateResult(record, logger) {
+export async function postProductUpdateResult(record, logger) {
   const endpoint = `${BASE_GADGET_URL}/${NEXTJS_BE_CONFIG.productModel}`;
   const payload = {
     action: 'update',
@@ -248,7 +248,7 @@ export async function postShopUpdateResult(record, logger) {
 }
 
 /**@type { (record: Awaited<ReturnType<typeof gadgetApi.shopifyShop.findOne>>, logger: typeof gadgetLogger) => Promise<void> } */
-export async function postShopDeleteResult(record, logger) {
+export async function postProductDeleteResult(record, logger) {
   const endpoint = `${BASE_GADGET_URL}/${NEXTJS_BE_CONFIG.productModel}`;
   const payload = {
     action: 'delete',
