@@ -29,8 +29,8 @@ const SettingsPage = () => {
       // error: _error
     },
   ] = useFindFirst(api.shopifyShop);
-  console.log(shop?.id, 'shop');
-  const [{ data }] = useFindFirst(api.ChatbotSettings, { id: shop?.id });
+
+  const [{ data }] = useFindFirst(api.ChatbotSettings, { shop: shop?.id });
 
   const [name, setName] = useState('');
   const [introductionMessage, setIntroductionMessage] = useState('');
@@ -39,8 +39,8 @@ const SettingsPage = () => {
     if (data) {
       setIntroductionMessage(data?.introductionMessage || '');
       setName(data?.name || '');
-      setSelectedPersonality(data?.personality || 'Friendly');
-      setSelectedRole(data?.role || 'Advisor');
+      setSelectedPersonality(data?.personality || 'FRIENDLY');
+      setSelectedRole(data?.role || 'ADVISOR');
       setSelectedTalkativeness(data?.talkativeness || '1');
     }
   }, [data]);
@@ -102,7 +102,7 @@ const SettingsPage = () => {
   const handleSave = async () => {
     try {
       const newTask = await updateChatbotSettings({
-        id: data.id,
+        id: data?.id,
         name: name,
         introductionMessage: introductionMessage,
         personality: selectedPersonality,

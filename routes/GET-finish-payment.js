@@ -9,6 +9,12 @@ export default async function route({ request, reply }) {
   // get an instance of the shopify-api-node API client for this shop
   const shopify = await connections.shopify.forShopId(request.query.shop_id);
 
+	logger.info(shopify, "shopify");
+	logger.info(shopify.current, "shopify.current");
+
+	logger.info(shopify.baseUrl, "shopify.baseUrl");
+
+
   // make an API call to Shopify to validate that the charge object for this shop is active
   const result = await shopify.graphql(`
     query {
@@ -37,5 +43,13 @@ export default async function route({ request, reply }) {
   await api.internal.shopifyShop.update(request.query.shop_id, { Plan: planName });
 
   // send the user back to the embedded app
-  await reply.redirect('/');
+
+	
+
+	const shopName = shopify.baseUrl.hostname.split('.')[0];
+	logger.info(shopName, "shopName");
+
+	
+
+  await reply.redirect(`https://admin.shopify.com/store/${shopName}/apps/askshop-ai`);
 }

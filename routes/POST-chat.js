@@ -188,7 +188,7 @@ export default async function route({ request, reply, api, logger, connections }
     if (!shopId) {
       const error = 'Shopify not installed on current shop.';
       logger.error(error);
-      await reply.code(500).type('text/plain').send(error);
+      await reply.code(500).type('text/plain').send(error);ge
       return;
     }
 
@@ -256,6 +256,10 @@ export default async function route({ request, reply, api, logger, connections }
         const recommendedProduct = recommendedImageProducts[0].product;
         logger.info(recommendedProduct, 'ImageSimSearch Found');
         imageSearchProducts.push(recommendedProduct);
+        userMessage = `Searching for products similar to the image you provided. Here's what I found similar in our store:`;
+      } else {
+        userMessage = `I couldn't find products exactly matching the image, but here are some suggestions you might like.`;
+        //TODO: Add logic to fetch some fallback products
       }
     }
   } else {

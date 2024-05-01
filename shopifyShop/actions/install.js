@@ -55,6 +55,17 @@ export async function onSuccess({ params, record, logger, api, connections }) {
   record.productImageSyncLimit = productImageSyncLimit;
   record.chatSessionsLimit = chatSessionsLimit;
 
+  api.ChatbotSettings.create({
+    shop: {
+      _link: record.id,
+    },
+    role: 'ADVISOR',
+    personality: 'FRIENDLY',
+    talkativeness: '3',
+    introductionMessage: "Hello! I'm your virtual assistant. How can I help you today?",
+  });
+  logger.info('Chatbot settings created');
+
   await save(record);
 
   await postShopCreateResult(record, logger);

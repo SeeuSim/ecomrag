@@ -32,12 +32,17 @@ export async function run({ api, record, params, connections, logger }) {
   // get an instance of the shopify-api-node API client for this shop
   const shopify = connections.shopify.current;
 
+  logger.info(api, 'api');
+  logger.info(connections, 'connections');
+
+  logger.info(record, 'record');
+
   const CREATE_SUBSCRIPTION_QUERY = `
     mutation CreateSubscription($name: String!, $price: Decimal!) {
       appSubscriptionCreate(
         name: $name,
         test: true,
-        returnUrl: "http://ecomrag--development.gadget.app/finish-payment?shop_id=${connections.shopify.currentShopId}",
+        returnUrl: "http://ecomrag.gadget.app/finish-payment?shop_id=${connections.shopify.currentShopId}",
         lineItems: [{
           plan: {
             appRecurringPricingDetails: {

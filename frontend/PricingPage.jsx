@@ -21,7 +21,6 @@ const PricingPage = () => {
     createSubscription,
   ] = useAction(api.shopifyShop.subscribe);
   const [{ data: shop }] = useFindFirst(api.shopifyShop);
-  console.log(shop?.id, 'shop');
 
   const subscribe = useCallback(async (plan) => {
     // create the resource in the backend
@@ -36,6 +35,7 @@ const PricingPage = () => {
     });
 
     console.log(currShop?.data?.confirmationUrl, 'curr shop');
+
     // redirect the merchant to accept the charge within Shopify's interface
     shopifyNavigate(currShop?.data?.confirmationUrl);
   });
