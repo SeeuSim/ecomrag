@@ -82,7 +82,6 @@ export async function run({ api, record, params, connections, logger }) {
  * @param { SubscribeShopifyShopActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
-  // Your logic goes here
 }
 
 /** @type { ActionOptions } */

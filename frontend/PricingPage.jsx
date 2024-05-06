@@ -21,7 +21,8 @@ const PricingPage = () => {
     createSubscription,
   ] = useAction(api.shopifyShop.subscribe);
   const [{ data: shop }] = useFindFirst(api.shopifyShop);
-
+  const shopPlan = shop?.plan;
+  
   const subscribe = useCallback(async (plan) => {
     // create the resource in the backend
     const currShop = await createSubscription({
@@ -133,7 +134,7 @@ const PricingPage = () => {
                     onClick={() => {
                       subscribe('free');
                     }}
-                    disabled={fetching}
+                    disabled={fetching || shopPlan == 'free'}
                   >
                     Subscribe
                   </Button>
@@ -198,7 +199,7 @@ const PricingPage = () => {
                     onClick={() => {
                       subscribe('growth');
                     }}
-                    disabled={fetching}
+                    disabled={fetching || shopPlan == 'growth'}
                   >
                     Subscribe
                   </Button>
@@ -263,7 +264,7 @@ const PricingPage = () => {
                     onClick={() => {
                       subscribe('premium');
                     }}
-                    disabled={fetching}
+                    disabled={fetching || shopPlan == 'premium'}
                   >
                     Subscribe
                   </Button>
