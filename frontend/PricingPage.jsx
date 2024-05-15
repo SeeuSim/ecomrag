@@ -21,8 +21,8 @@ const PricingPage = () => {
     createSubscription,
   ] = useAction(api.shopifyShop.subscribe);
   const [{ data: shop }] = useFindFirst(api.shopifyShop);
-  const shopPlan = shop?.plan;
-  
+  const shopPlan = shop?.Plan;
+
   const subscribe = useCallback(async (plan) => {
     // create the resource in the backend
     const currShop = await createSubscription({

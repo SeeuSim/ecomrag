@@ -24,9 +24,7 @@ export async function run({ api, record, params, connections, logger }) {
   // get the plan object from the list of available plans
   const name = params.plan;
   const plan = PLANS[name];
-  logger.info(params, 'params');
-  logger.info(name, 'nameeeee');
-  logger.info(plan.price, 'plan');
+
   if (!plan) throw new Error(`unknown plan name ${name}`);
 
   // get an instance of the shopify-api-node API client for this shop
@@ -73,7 +71,10 @@ export async function run({ api, record, params, connections, logger }) {
   const { confirmationUrl, appSubscription } = result.appSubscriptionCreate;
 
   // update this shop record to send the confirmation URL back to the frontend
-  await api.internal.shopifyShop.update(record.id, { confirmationUrl });
+  await api.internal.shopifyShop.update(record.id, {
+    confirmationUrl: confirmationUrl,
+    subscriptionId: appSubscription?.id,
+  });
 
   logger.info({ appSubscriptionId: appSubscription?.id }, 'created subscription');
 }
@@ -81,8 +82,7 @@ export async function run({ api, record, params, connections, logger }) {
 /**
  * @param { SubscribeShopifyShopActionContext } context
  */
-export async function onSuccess({ params, record, logger, api, connections }) {
-}
+export async function onSuccess({ params, record, logger, api, connections }) {}
 
 /** @type { ActionOptions } */
 export const options = {

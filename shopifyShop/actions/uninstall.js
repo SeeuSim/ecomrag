@@ -14,9 +14,54 @@ import { postShopDeleteResult } from '../../routes/main-backend/utils';
  */
 export async function run({ params, record, logger, api, connections }) {
   transitionState(record, { from: ShopifyShopState.Installed, to: ShopifyShopState.Uninstalled });
-  applyParams(params, record);
+  // logger.info(params, "params");
+  logger.info(params, 'alalala');
+  // applyParams({ plan: "Free" }, record);
+
+  logger.info('deleting shop');
+  logger.info(record.id, 'record id');
+  api.internal.shopifyShop
+    .delete(record.id)
+    .then(() => {
+      console.log('Shop deleted successfully');
+    })
+    .catch((error) => {
+      console.error('Error deleting shop:', error);
+    });
+
+  logger.info("hi i'm here");
+  logger.info(record, 'record');
+  const CANCEL_SUBSCRIPTION_QUERY = `
+		mutation AppSubscriptionCancel($id: ID!) {
+			appSubscriptionCancel(id: $id) {
+				userErrors {
+					field
+					message
+				}
+				appSubscription {
+					id
+					status
+				}
+			}
+		}
+	`;
+
+  const shopify = connections.shopify.current;
+
+  // const result = await shopify.graphql(CANCEL_SUBSCRIPTION_QUERY, {
+  // 	id: record.subscriptionId,
+  // });
+
+  // logger.info(result, 'result');
+
   await preventCrossShopDataAccess(params, record);
-  await save(record);
+  try {
+    await save(record);
+    logger.info('Record saved successfully.');
+  } catch (error) {
+    logger.error('Error saving record:', error);
+    // Handle the error appropriately
+  }
 }
 
 /**

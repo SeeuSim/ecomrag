@@ -54,6 +54,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
   record.productSyncLimit = productSyncLimit;
   record.productImageSyncLimit = productImageSyncLimit;
   record.chatSessionsLimit = chatSessionsLimit;
+  record.subscriptionId = '';
 
   api.ChatbotSettings.create({
     shop: {
