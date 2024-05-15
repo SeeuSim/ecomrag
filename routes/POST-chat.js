@@ -1,10 +1,10 @@
-import { ChatOpenAI } from '@langchain/openai';
-import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { ChatOpenAI } from '@langchain/openai';
 
-import { api, logger, Request, Reply } from 'gadget-server';
+import { Reply, Request, api, logger } from 'gadget-server';
 import { Readable } from 'stream';
 
 import { createProductImageEmbedding } from '../shopifyProductImage/createImageEmbedding';
@@ -169,11 +169,14 @@ export default async function route({ request, reply, api, logger, connections }
   }
 
   if (payload.ChatHistory && Array.isArray(payload.ChatHistory)) {
-    Array.from(payload.ChatHistory).forEach((value) => {
-      chatHistory.push(
-        value.role === 'system' ? new AIMessage(value.content) : new HumanMessage(value.content)
-      );
-    });
+    chatHistory = [
+      ...chatHistory,
+      ...Array.from(payload.ChatHistory).map((value) => {
+        return value.role === 'system'
+          ? new AIMessage(value.content)
+          : new HumanMessage(value.content);
+      }),
+    ];
   }
 
   if (payload.ShopId) {
@@ -188,7 +191,8 @@ export default async function route({ request, reply, api, logger, connections }
     if (!shopId) {
       const error = 'Shopify not installed on current shop.';
       logger.error(error);
-      await reply.code(500).type('text/plain').send(error);ge
+      await reply.code(500).type('text/plain').send(error);
+      ge;
       return;
     }
 
@@ -256,8 +260,11 @@ export default async function route({ request, reply, api, logger, connections }
         const recommendedProduct = recommendedImageProducts[0].product;
         logger.info(recommendedProduct, 'ImageSimSearch Found');
         imageSearchProducts.push(recommendedProduct);
+      }
+
+      if (!userMessage && recommendedImageProducts.length > 0) {
         userMessage = `Searching for products similar to the image you provided. Here's what I found similar in our store:`;
-      } else {
+      } else if (!userMessage) {
         userMessage = `I couldn't find products exactly matching the image, but here are some suggestions you might like.`;
         //TODO: Add logic to fetch some fallback products
       }
@@ -341,8 +348,6 @@ export default async function route({ request, reply, api, logger, connections }
           },
         })
       : imageSearchProducts;
-
-  logger.info(products, 'Recommended Products');
 
   const chatbotSettings = await api.ChatbotSettings.findMany({
     filter: {
