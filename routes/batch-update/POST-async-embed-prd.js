@@ -43,6 +43,7 @@ export default async function route({ request, reply, api, logger, connections }
     res = await res.nextPage();
     res.forEach((v) => aggr.push(v));
   }
+  logger.info(`Total jobs: ${aggr.length}`);
 
   for (let i = 0; i < aggr.length; i = i + 10) {
     let pl = aggr.slice(i, i + 10);

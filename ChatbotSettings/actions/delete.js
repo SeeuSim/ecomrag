@@ -1,9 +1,10 @@
-import { deleteRecord, ActionOptions, DeleteChatbotSettingsActionContext } from 'gadget-server';
+import { deleteRecord, ActionOptions, DeleteChatbotSettingsActionContext,preventCrossShopDataAccess  } from 'gadget-server';
 
 /**
  * @param { DeleteChatbotSettingsActionContext } context
  */
 export async function run({ params, record, logger, api, connections }) {
+  await preventCrossShopDataAccess(params, record);
   await deleteRecord(record);
 }
 

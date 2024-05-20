@@ -12,7 +12,7 @@ import {
   Select,
   Banner,
 } from '@shopify/polaris';
-import { useAction, useFindFirst } from '@gadgetinc/react';
+import { useAction, useFindFirst, useFindMany } from '@gadgetinc/react';
 
 import { useNavigate } from 'react-router-dom';
 import { useState, useCallback, useEffect } from 'react';
@@ -30,20 +30,25 @@ const SettingsPage = () => {
     },
   ] = useFindFirst(api.shopifyShop);
 
-  const [{ data }] = useFindFirst(api.ChatbotSettings, { shop: shop?.id });
+  console.log('shop', shop?.id);
+  const [{ data }] = useFindMany(api.ChatbotSettings);
+  console.log('data', data);
+
+  const settings = data ? data[0] : null;
+  useEffect(() => {}, [shop]);
 
   const [name, setName] = useState('');
   const [introductionMessage, setIntroductionMessage] = useState('');
 
   useEffect(() => {
-    if (data) {
-      setIntroductionMessage(data?.introductionMessage || '');
-      setName(data?.name || '');
-      setSelectedPersonality(data?.personality || 'FRIENDLY');
-      setSelectedRole(data?.role || 'ADVISOR');
-      setSelectedTalkativeness(data?.talkativeness || '1');
+    if (settings) {
+      setIntroductionMessage(settings?.introductionMessage || '');
+      setName(settings?.name || '');
+      setSelectedPersonality(settings?.personality || 'FRIENDLY');
+      setSelectedRole(settings?.role || 'ADVISOR');
+      setSelectedTalkativeness(settings?.talkativeness || '1');
     }
-  }, [data]);
+  }, [settings]);
 
   const handleNameChange = useCallback((newValue) => setName(newValue), []);
   const handleIntroductionMessageChange = useCallback(
@@ -102,7 +107,7 @@ const SettingsPage = () => {
   const handleSave = async () => {
     try {
       const newTask = await updateChatbotSettings({
-        id: data?.id,
+        id: settings?.id,
         name: name,
         introductionMessage: introductionMessage,
         personality: selectedPersonality,

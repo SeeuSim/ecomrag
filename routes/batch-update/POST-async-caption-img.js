@@ -42,7 +42,8 @@ export default async function route({ request, reply, api, logger, connections }
     res = await res.nextPage();
     res.forEach((v) => aggr.push(v));
   }
-
+  logger.info(`Total jobs: ${aggr.length}`);
+  
   for (let i = 0; i < aggr.length; i = i + 10) {
     let pl = aggr.slice(i, i + 10);
     const captionResult = await client.send(
@@ -72,16 +73,19 @@ export default async function route({ request, reply, api, logger, connections }
     if (!id.matchAll(/^\d+$/g)) {
       continue;
     }
-    const shop = await api.shopifyShop.findOne(id);
-    await api.internal.shopifyShop.update(id, {
-      productImageSyncCount: Number(shop.productImageSyncCount) + Number(count),
-    });
-    logger.info({}, `Updated shopId ${id} with ${count / 0.5} product image captions`);
+    try {  
+      const shop = await api.shopifyShop.findOne(id);
+      await api.internal.shopifyShop.update(id, {
+        productImageSyncCount: Number(shop.productImageSyncCount) + Number(count),
+      });
+      logger.info({}, `Updated shopId ${id} with ${count / 0.5} product image captions`);
+    } catch (error) {
+      logger.error({}, `Error occurred when updating shop cound with ${id}: ${error}`);
+    }
   }
-  logger.info('Total jobs: ' + `${aggr.length}`);
 
   await reply
     .code(200)
     .type('text/plain')
-    .send(`Sent: ${aggr.length * 2} Jobs`);
+    .send(`Sent: ${aggr.length} Jobs`);
 }
