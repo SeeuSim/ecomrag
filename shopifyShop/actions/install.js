@@ -79,7 +79,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
         shop: {
           _link: record.id,
         },
-        models: ['shopifyProduct'],
+        models: ['shopifyProduct', 'shopifyProductImage'],
         // limit: productSyncLimit, // Use the limit parameter to control the number of products
       },
     });
