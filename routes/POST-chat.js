@@ -78,6 +78,33 @@ const getBaseSystemPrompt = (products, talkativeness, personality) => {
   );
 };
 
+const getImageBaseSystemPrompt = (products, talkativeness, personality) => {
+  return (
+    `You will be given` +
+    `some JSON objects with the id, title, handle, and description (body) ` +
+    `of products available for sale that roughly match the customer's ` +
+    `question, as well as the store domain. Respond in HTML markup, with an ` +
+    `anchor tag at the end with images that link to the product pages and ` +
+    `<br /> tags between your text response and product recommendations. ` +
+    `The anchor should be of the format: <a href="https://{domain}/products/{handle}" target="_blank">{title}<img src={product.images.edges[0].node.source} /></a> ` +
+    `but with the domain, handle, and title replaced with passed-in ` +
+    `variables. If you have recommended products, end your response with ` +
+    `"Click on a product to learn more!" Here are the JSON products you can use to generate a ` +
+    `response: ${stringify(
+      // To reduce OpenAI token usage
+      products.map((product) => ({
+        handle: product.handle,
+        domain: product.shop.domain,
+        title: product.title,
+        images: product.images,
+      }))
+    )} ` +
+    `I will provide you with a talkativeness level. From a scale of 1 - 5 . with 1 being the least talkative and 5 being the most talkative: ` +
+    `Talkativeness: ${talkativeness}` +
+    `Personality: ${personality}`
+  );
+};
+
 /**@type {(gadgetApi: typeof api, products: any[], content: any, isImageRecommended: boolean) => void} */
 const handleLLMOnComplete = (gadgetApi, products, content, isImageRecommended) => {
   const productMapFunc = (record) => (product) => ({
@@ -192,7 +219,6 @@ export default async function route({ request, reply, api, logger, connections }
       const error = 'Shopify not installed on current shop.';
       logger.error(error);
       await reply.code(500).type('text/plain').send(error);
-      ge;
       return;
     }
 
@@ -376,7 +402,12 @@ export default async function route({ request, reply, api, logger, connections }
 
   const talkativeness = setting.talkativeness;
   const personality = setting.personality;
-  const systemPrompt = getBaseSystemPrompt(products, talkativeness, personality);
+  let systemPrompt;
+  if (imageUrl) {
+    systemPrompt = getImageBaseSystemPrompt(products, talkativeness, personality);
+  } else {
+    systemPrompt = getBaseSystemPrompt(products, talkativeness, personality);
+  }
 
   // capture products in Gadget's Logs
   logger.info({ products, message: userMessage }, 'Found products most similar to user input');
