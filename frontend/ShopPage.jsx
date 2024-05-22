@@ -58,6 +58,14 @@ const ShopPage = () => {
             </Text>
             <Box paddingBlock='400'>
               <BlockStack gap='200'>
+                <Text as='p' variant='bodyLg'>
+                  To turn on your chatbot, simply go to 'Online Store', 'Themes', 'Customize' and
+                  toggle 'AskShop.ai' under App Embeds.
+                </Text>
+              </BlockStack>
+            </Box>
+            <Box paddingBlock='400'>
+              <BlockStack gap='200'>
                 <Text as='h3' variant='headingMd' fontWeight='medium'>
                   <Link to={'/settings'}>Settings</Link>
                 </Text>
