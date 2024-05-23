@@ -41,6 +41,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
       `${JSON.stringify(isCaptionEmbed)} | ${record.changed('source')}} | Failed check for productImg | update`
     );
   }
+  logger.debug(record, 'Triggering productImage update onSuccess');
   await postProductImageUpdateResult(record, logger);
 }
 

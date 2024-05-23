@@ -82,7 +82,7 @@ export default async function route({ request, reply, api, logger, connections }
       continue;
     }
     const shop = await api.shopifyShop.findOne(id);
-    await api.internal.shopifyShop.update(id, {
+    await api.shopifyShop.update(id, {
       productSyncCount: Number(shop.productSyncCount) + Number(count),
     });
     logger.info({}, `Updated shopId ${id} with ${count / 0.5} product embeds`);

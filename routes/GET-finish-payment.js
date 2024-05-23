@@ -40,7 +40,7 @@ export default async function route({ request, reply }) {
   logger.info(planName, 'planName here!');
 
   // example: mark the shop as paid by setting a `plan` attribute with the retrieved plan name
-  await api.internal.shopifyShop.update(request.query.shop_id, { Plan: planName });
+  await api.shopifyShop.update(request.query.shop_id, { Plan: planName });
 
   // send the user back to the embedded app
 

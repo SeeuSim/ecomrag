@@ -55,7 +55,7 @@ export default async function route({ request, reply, api, logger, connections }
 
       await Promise.all(
         productImageRecords.map((record) =>
-          api.internal.shopifyProductImage.update(record.id, {
+          api.shopifyProductImage.update(record.id, {
             imageDescriptionEmbedding: null,
             imageDescription: null,
           })
@@ -66,7 +66,7 @@ export default async function route({ request, reply, api, logger, connections }
         productImageRecords = await productImageRecords.nextPage();
         await Promise.all(
           productImageRecords.map((record) =>
-            api.internal.shopifyProductImage.update(record.id, {
+            api.shopifyProductImage.update(record.id, {
               imageDescriptionEmbedding: null,
               imageDescription: null,
             })

@@ -12,7 +12,7 @@ export default async function route({ request, reply, api, logger, connections }
   let shopDeleted = false;
   if (data.shopId) {
     try {
-      await api.internal.shopifyShop.delete(data.shopId);
+      await api.shopifyShop.delete(data.shopId);
     } catch (error) {
       // /**@type { Error } */
       // let err = error;
@@ -27,7 +27,7 @@ export default async function route({ request, reply, api, logger, connections }
     }
 
     try {
-      await api.internal.shopifyProduct.deleteMany({
+      await api.shopifyProduct.deleteMany({
         filter: {
           shop: {
             equals: data.shopId,
@@ -46,7 +46,7 @@ export default async function route({ request, reply, api, logger, connections }
       return;
     }
     try {
-      await api.internal.shopifyProductImage.deleteMany({
+      await api.shopifyProductImage.deleteMany({
         filter: {
           shop: {
             equals: data.shopId,

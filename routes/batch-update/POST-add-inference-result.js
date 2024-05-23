@@ -31,14 +31,14 @@ export default async function route({ request, reply, api, logger, connections }
         case 'shopifyProduct':
           await Promise.all(
             data.payload.data.map((record) =>
-              api.internal.shopifyProduct.update(record.id, { [record.field]: record.value })
+              api.shopifyProduct.update(record.id, { [record.field]: record.value })
             )
           );
           break;
         case 'shopifyProductImage':
           await Promise.all(
             data.payload.data.map((record) =>
-              api.internal.shopifyProductImage.update(record.id, { [record.field]: record.value })
+              api.shopifyProductImage.update(record.id, { [record.field]: record.value })
             )
           );
           break;
@@ -46,7 +46,7 @@ export default async function route({ request, reply, api, logger, connections }
     } else {
       switch (data.payload.model) {
         case 'shopifyProduct':
-          await api.internal.shopifyProduct.update(data.payload.id, {
+          await api.shopifyProduct.update(data.payload.id, {
             [data.payload.field]: data.payload.value,
           });
           console.log(
@@ -54,7 +54,7 @@ export default async function route({ request, reply, api, logger, connections }
           );
           break;
         case 'shopifyProductImage':
-          await api.internal.shopifyProductImage.update(data.payload.id, {
+          await api.shopifyProductImage.update(data.payload.id, {
             [data.payload.field]: data.payload.value,
           });
           console.log(
@@ -65,7 +65,15 @@ export default async function route({ request, reply, api, logger, connections }
     }
     await reply.code(200).send();
   } catch (error) {
-    logger.error('Update failed: ' + JSON.stringify(error));
-    await reply.code(500).send(JSON.stringify(error));
+    /**@type { Error } */
+    const err = error;
+    const outputErr = {
+      message: err.message,
+      name: err.name,
+      stack: err.stack,
+      cause: err.cause,
+    };
+    logger.error(outputErr, 'Update failed');
+    await reply.code(500).send(JSON.stringify(outputErr));
   }
 }

@@ -34,7 +34,7 @@ export const tryIncrShopSyncCount = async ({ params, record, api, logger, connec
       // use the internal API to store vector embedding in Gadget database, on shopifyProduct model
       const shop = await api.shopifyShop.findOne(record.shopId);
       if (shop) {
-        await api.internal.shopifyShop.update(shop.id, {
+        await api.shopifyShop.update(shop.id, {
           shopifyShop: {
             productImageSyncCount: shop.productImageSyncCount ?? 0 + 1,
           },

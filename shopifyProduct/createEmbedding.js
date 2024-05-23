@@ -64,14 +64,14 @@ export const createProductEmbedding = async ({ params, record, api, logger, conn
       // use the internal API to store vector embedding in Gadget database, on shopifyProduct model
       const shop = await api.shopifyShop.findOne(record.shopId);
       if (shop) {
-        await api.internal.shopifyShop.update(shop.id, {
+        await api.shopifyShop.update(shop.id, {
           shopifyShop: {
             productSyncCount: shop.productSyncCount + 1,
           },
         });
         logger.info({ id: shop.id }, 'Incremented productSyncCount');
       }
-      await api.internal.shopifyProduct.update(record.id, {
+      await api.shopifyProduct.update(record.id, {
         shopifyProduct: { descriptionEmbedding: embedding },
       });
     } catch (error) {

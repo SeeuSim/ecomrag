@@ -20,7 +20,7 @@ export async function run({ params, record, logger, api, connections }) {
 
   logger.info('deleting shop');
   logger.info(record.id, 'record id');
-  api.internal.shopifyShop
+  void api.shopifyShop
     .delete(record.id)
     .then(() => {
       console.log('Shop deleted successfully');

@@ -75,7 +75,7 @@ export default async function route({ request, reply, api, logger, connections }
     }
     try {  
       const shop = await api.shopifyShop.findOne(id);
-      await api.internal.shopifyShop.update(id, {
+      await api.shopifyShop.update(id, {
         productImageSyncCount: Number(shop.productImageSyncCount) + Number(count),
       });
       logger.info({}, `Updated shopId ${id} with ${count / 0.5} product image captions`);
