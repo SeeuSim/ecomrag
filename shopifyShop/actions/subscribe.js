@@ -39,7 +39,7 @@ export async function run({ api, record, params, connections, logger }) {
     mutation CreateSubscription($name: String!, $price: Decimal!) {
       appSubscriptionCreate(
         name: $name,
-        test: true,
+        test: null,
         returnUrl: "http://ecomrag.gadget.app/finish-payment?shop_id=${connections.shopify.currentShopId}",
         lineItems: [{
           plan: {
