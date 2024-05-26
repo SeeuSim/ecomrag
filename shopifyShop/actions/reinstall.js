@@ -24,7 +24,30 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
-  await postShopCreateResult(record, logger);
+  try {
+    const [_postExternalResult, runSyncResult] = await Promise.all([
+      postShopCreateResult(record, logger),
+      api.shopifySync.run({
+        domain: record.domain,
+        shopifyShop: {
+          _link: record.id,
+        },
+      }),
+    ]);
+    logger.info(runSyncResult, '[shopifyShop:reinstall] Ran Sync');
+  } catch (error) {
+    /**@type { Error } */
+    const err = error;
+    logger.error(
+      {
+        name: err.name,
+        message: err.message,
+        stack: err.stack,
+        cause: err.cause,
+      },
+      '[shopifyShop:reinstall] An error occurred'
+    );
+  }
 }
 
 /** @type { ActionOptions } */

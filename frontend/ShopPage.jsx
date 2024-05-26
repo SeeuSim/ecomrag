@@ -3,18 +3,9 @@ import { Link } from 'react-router-dom';
 
 import { Banner, BlockStack, Box, Card, Layout, Page, Spinner, Text } from '@shopify/polaris';
 import { api } from './api';
-import { useGadgetMeta } from './utils';
 
 const ShopPage = () => {
-  const [
-    {
-      // data: _data,
-      fetching,
-      error,
-    },
-  ] = useFindFirst(api.shopifyShop);
-
-  const { metaData, fetchingGadgetMeta } = useGadgetMeta();
+  const [{ data: _data, fetching, error }] = useFindFirst(api.shopifyShop);
 
   if (error) {
     return (
@@ -26,7 +17,7 @@ const ShopPage = () => {
     );
   }
 
-  if (fetching || fetchingGadgetMeta) {
+  if (fetching) {
     return (
       <div
         style={{
@@ -47,7 +38,7 @@ const ShopPage = () => {
       <Layout>
         <Layout.Section>
           <Banner
-            title={`${metaData.gadgetMeta.slug} is successfully connected to askshop.ai`}
+            title={`${_data.name ?? '[SHOP NAME]'} is successfully connected to askshop.ai`}
             tone='success'
           />
         </Layout.Section>
