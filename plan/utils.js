@@ -11,15 +11,17 @@ import { Client } from '@gadget-client/ecomrag';
 
 export const PLAN_TYPES = /** @type {const} */ (['Free', 'Growth', 'Premium', 'Enterprise']);
 export const LIMIT_FIELDS = /**@type {const} */ ([
-  'imageUploadCount',
-  'productSyncCount',
+  'imageUploadCount', // image embed + caption
+  'productSyncCount', // product embeds
 ]);
 
 /**
  * @typedef { (NonNullableFields<Pick<Plan, typeof LIMIT_FIELDS[number]>>) } PlanLimit
  */
 
-const unknownLimit = 100_000_000;
+const unknownLimit = 10_000_000_000;
+
+export const IMAGE_PER_PRODUCT = 2;
 
 /**@type { Record<PLAN_TYPES[number], PlanLimit> } */
 export const PLAN_LIMITS = {

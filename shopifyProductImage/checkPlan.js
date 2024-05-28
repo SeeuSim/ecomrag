@@ -11,7 +11,7 @@ import { PLAN_LIMITS } from '../plan/utils';
  */
 
 /** @type { ({ record, api, logger, isUpdate }: { record: ShopifyProductImage, api: typeof Client.prototype, logger: typeof gadgetLogger, isUpdate?: boolean }) => Promise<boolean>} */
-export const tryIncrShopSyncCount = async ({ record, api, logger, isUpdate }) => {
+export const tryIncrImageSyncCount = async ({ record, api, logger, isUpdate }) => {
   const plan = await api.plan.findByShop(record.shopId);
   const { tier } = /**@type { Plan } */ (plan);
   const limit = PLAN_LIMITS[tier].imageUploadCount;
