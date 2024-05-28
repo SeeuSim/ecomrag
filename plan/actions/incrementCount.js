@@ -51,7 +51,12 @@ const PLAN_LIMITS = {
  */
 export async function run({ params, record, logger, api, connections }) {
   logger.info(params, '[model:plan | action:incrementCount]');
-
+  if (!params.field || !ALLOWED_FIELDS.includes(params.field)) {
+    throw new Error('Invalid parameters passed.');
+  }
+  /**@type { Plan } */
+  const { tier } = record;
+  const limit = PLAN_LIMITS[record.tier]
   await save(record);
 }
 

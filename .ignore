@@ -5,3 +5,4 @@ aws-backend
 /.gadget
 /.husky
 /.dist
+/scripts
