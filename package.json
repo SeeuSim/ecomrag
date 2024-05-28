@@ -8,7 +8,8 @@
     "vite:build": "NODE_ENV=production vite build",
     "fmt": "prettier --config ./.prettierrc \"**/*.{js,jsx}\" --write",
     "prepare": "husky install",
-    "sync": "pnpm dlx ggt@latest sync . --app=ecomrag"
+    "sync": "pnpm dlx ggt@latest sync . --app=ecomrag",
+    "update-client": "./scripts/update-client.sh"
   },
   "lint-staged": {
     "frontend/**/*.{js,jsx}": [

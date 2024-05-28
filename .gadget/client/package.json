@@ -1,9 +1,10 @@
 {
   "name": "@gadget-client/ecomrag",
-  "version": "1.1.0-development.6",
+  "version": "1.157.0-development.6517",
   "files": [
     "dist-*/",
     "types",
+    "types-esm",
     "bin/"
   ],
   "source": "src/index.ts",
@@ -12,16 +13,22 @@
   "module": "dist-esm/index.js",
   "exports": {
     ".": {
-      "import": "./dist-esm/index.js",
-      "require": "./dist-cjs/index.js"
+      "import": {
+        "types": "./types-esm/index.d.ts",
+        "default": "./dist-esm/index.js"
+      },
+      "require": {
+        "types": "./types/index.d.ts",
+        "default": "./dist-cjs/index.js"
+      }
     }
   },
   "private": true,
   "dependencies": {
-    "@gadgetinc/api-client-core": "0.15.14"
+    "@gadgetinc/api-client-core": "0.15.24"
   },
   "devDependencies": {
-    "typescript": "^5.2.2",
+    "typescript": "^5.4.5",
     "@types/node": "^20.8.4"
   },
   "scripts": {
@@ -30,6 +37,6 @@
   "gadget": {
     "applicationName": "ecomrag",
     "environmentName": "Development",
-    "environmentVersion": "6"
+    "environmentVersion": "6517"
   }
 }
