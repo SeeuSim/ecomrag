@@ -6,3 +6,5 @@ aws-backend
 /.husky
 /.dist
 /scripts
+**/tests
+/sandbox

@@ -21,14 +21,18 @@ export async function run({ params, record, logger, api, connections }) {
 /**
  * @param { UpdateShopifyProductImageActionContext } context
  */
-export async function onSuccess({ params, record, logger, api, connections }) {
+export async function onSuccess({ record, logger, api, params: _p, connections: _c }) {
   const isCaptionEmbed = {
     Embed: !record.getField('imageDescriptionEmbedding') || record.changed('source'),
     Caption: !record.getField('imageDescription') || record.changed('source'),
   };
   if (
-    tryIncrShopSyncCount({ params, record, api, logger, connections }) &&
-    (isCaptionEmbed.Caption || isCaptionEmbed.Embed)
+    tryIncrShopSyncCount({
+      record,
+      api,
+      logger,
+      isUpdate: isCaptionEmbed.Caption || isCaptionEmbed.Embed,
+    })
   ) {
     await postProductImgEmbedCaption(
       { Id: record.id, Source: record.source },
@@ -38,10 +42,11 @@ export async function onSuccess({ params, record, logger, api, connections }) {
     );
   } else {
     logger.info(
-      `${JSON.stringify(isCaptionEmbed)} | ${record.changed('source')}} | Failed check for productImg | update`
+      { isCaptionEmbed, sourceChanged: record.changed('source') },
+      `Failed check for productImg | update`
     );
   }
-  logger.debug(record, 'Triggering productImage update onSuccess');
+  logger.info(record, 'Triggering productImage update onSuccess');
   await postProductImageUpdateResult(record, logger);
 }
 

@@ -1,6 +1,7 @@
 const { ActionOptions, SubscribeShopifyShopActionContext } = require('gadget-server');
 
 // shopifyShop/subscribe.js
+
 const PLANS = {
   free: {
     price: 1.0,
@@ -22,7 +23,7 @@ const PLANS = {
   */
 export async function run({ api, record, params, connections, logger }) {
   // get the plan object from the list of available plans
-  const name = params.plan;
+  const name = /**@type { keyof typeof PLANS } */ (params.plan);
   const plan = PLANS[name];
 
   if (!plan) throw new Error(`unknown plan name ${name}`);
@@ -74,6 +75,11 @@ export async function run({ api, record, params, connections, logger }) {
   await api.internal.shopifyShop.update(record.id, {
     confirmationUrl: confirmationUrl,
     subscriptionId: appSubscription?.id,
+  });
+
+  const planRecord = await api.plan.findByShop(record.id);
+  await api.plan.update(planRecord.id, {
+    tier: name.replace(/^\w/, (c) => c.toUpperCase()),
   });
 
   logger.info({ appSubscriptionId: appSubscription?.id }, 'created subscription');

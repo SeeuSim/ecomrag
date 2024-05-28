@@ -12,6 +12,20 @@ import { postProductImageCreateResult } from '../../routes/main-backend/utils';
  * @param { CreateShopifyProductImageActionContext } context
  */
 export async function run({ params, record, logger, api, connections }) {
+  const [imageCount, plan] = await Promise.all([
+    api.shopifyProduct
+      .findOne(record.productId, {
+        select: {
+          imageCount: true,
+        },
+      })
+      .then((res) => res.imageCount),
+    api.plan.findByShop(record.shopId),
+  ]);
+  if (imageCount >= 2 && plan.tier !== 'Enterprise') {
+    logger.error('Exceeded plan limit for this product. Skipping image creation.');
+    return;
+  }
   applyParams(params, record);
   await preventCrossShopDataAccess(params, record);
   await save(record);

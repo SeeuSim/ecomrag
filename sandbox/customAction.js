@@ -11,7 +11,7 @@ import { save, ActionOptions, IncrementCountPlanActionContext } from 'gadget-ser
  */
 
 const PLAN_TYPES = /** @type {const} */ (['Free', 'Growth', 'Premium']);
-const ALLOWED_FIELDS = /**@type {const} */ ([
+const LIMIT_FIELDS = /**@type {const} */ ([
   'imageUploadCount',
   'productSyncCount',
   'productEmbedCount',
@@ -19,7 +19,7 @@ const ALLOWED_FIELDS = /**@type {const} */ ([
 ]);
 
 /**
- * @typedef { (NonNullableFields<Pick<Plan, typeof ALLOWED_FIELDS[number]>>) } PlanLimit
+ * @typedef { (NonNullableFields<Pick<Plan, typeof LIMIT_FIELDS[number]>>) } PlanLimit
  */
 
 const unknownLimit = 100_000_000;
@@ -51,23 +51,49 @@ const PLAN_LIMITS = {
  */
 export async function run({ params, record, logger, api, connections }) {
   logger.info(params, '[model:plan | action:incrementCount]');
-  if (!params.field || !ALLOWED_FIELDS.includes(params.field)) {
-    throw new Error('Invalid parameters passed.');
+  if (!params.field || !LIMIT_FIELDS.includes(params.field)) {
+    return {
+      error: 'Invalid Parameters',
+      success: false,
+    };
   }
-  
-  const { tier } = /**@type { Plan } */(record);
-  const field = /**@type { typeof ALLOWED_FIELDS[number]} */(params.field);
 
-  const limit = PLAN_LIMITS[tier][field]
+  const { tier } = /**@type { Plan } */ (record);
+  const field = /**@type { typeof LIMIT_FIELDS[number]} */ (params.field);
+
+  const limit = PLAN_LIMITS[tier][field];
   const newVal = /**@type { !Plan[typeof field]}*/ (record[field] ?? 0) + 1;
 
   if (newVal > limit) {
     const shop = await api.shopifyShop.findOne(record.shop);
-    throw new Error(`Plan allowance for \`${field}\` exceeded for shop: ${shop.name}`);
+    return {
+      error: `Plan allowance for \`${field}\` exceeded for shop: ${shop.name}`,
+      success: false,
+    };
   }
 
-  record[field] = newVal;
-  await save(record);
+  try {
+    await api.internal.plan.update(record.id, {
+      _atomics: {
+        [field]: {
+          increment: 1,
+        },
+      },
+    });
+    return {
+      success: true,
+    };
+  } catch (error) {
+    const { name, cause, message, stack } = /** @type { Error } */ (error);
+    logger.error(
+      { name, message, stack, cause },
+      '[actions:plan/incrementCount] An error occurred.'
+    );
+    return {
+      error: message,
+      success: false,
+    };
+  }
 }
 
 /**
@@ -80,6 +106,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
 /** @type { ActionOptions } */
 export const options = {
   actionType: 'custom',
+  returnType: true,
 };
 
 export const params = {

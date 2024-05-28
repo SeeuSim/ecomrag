@@ -26,8 +26,14 @@ export async function run({ params, record, logger, api, connections }) {
 /**
  * @param { CreateShopifyProductActionContext } context
  */
-export async function onSuccess({ params, record, logger, api, connections }) {
-  if (tryIncrShopSyncCount({ params, record, logger, api, connections })) {
+export async function onSuccess({
+  record,
+  logger,
+  api,
+  params: _params,
+  connections: _connections,
+}) {
+  if (tryIncrShopSyncCount({ record, logger, api })) {
     await postProductDescEmbedding(
       { Id: record.id, Description: `${record.title}: ${record.body}` },
       record.shopId ?? 'DUMMYMSGGRPID',
