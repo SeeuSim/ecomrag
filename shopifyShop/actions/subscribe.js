@@ -1,4 +1,4 @@
-const { ActionOptions, SubscribeShopifyShopActionContext } = require('gadget-server');
+import { ActionOptions, SubscribeShopifyShopActionContext } from 'gadget-server';
 
 // shopifyShop/subscribe.js
 
@@ -18,10 +18,12 @@ const PLANS = {
 };
 
 /**
-- run function code for subscribe on Shopify Shop
-- @param { import("gadget-server").SubscribeShopifyShopActionContext } context
-  */
-export async function run({ api, record, params, connections, logger }) {
+ * run function code for subscribe on Shopify Shop
+ * @param { SubscribeShopifyShopActionContext } context
+ */
+export async function run({ api: gadgetApi, record, params, connections, logger }) {
+  const api = /** @type { import ('@gadget-client/ecomrag').Client } */ (gadgetApi);
+
   // get the plan object from the list of available plans
   const name = /**@type { keyof typeof PLANS } */ (params.plan);
   const plan = PLANS[name];
@@ -77,9 +79,16 @@ export async function run({ api, record, params, connections, logger }) {
     subscriptionId: appSubscription?.id,
   });
 
-  const planRecord = await api.plan.findByShop(record.id);
-  await api.plan.update(planRecord.id, {
-    tier: name.replace(/^\w/, (c) => c.toUpperCase()),
+  // Plan Logic
+  const existingPlanRecord = await api.plan.findByShop(record.id);
+  const newPlanTier = name.replace(/^\w/, (c) => c.toUpperCase());
+
+  // TODO: Add sync if upgraded from lower tier. Else, if changed to free, delete all images.
+  if (existingPlanRecord.tier) {
+  }
+
+  await api.plan.update(existingPlanRecord.id, {
+    tier: newPlanTier,
   });
 
   logger.info({ appSubscriptionId: appSubscription?.id }, 'created subscription');

@@ -28,7 +28,7 @@ export async function onSuccess({ record, logger, api, params: _p, connections: 
       logger,
       api,
       isUpdate:
-        !!record.getField('descriptionEmbedding') ||
+        !record.getField('descriptionEmbedding') ||
         record.changed('title') ||
         record.changed('body'),
     })
