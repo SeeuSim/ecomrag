@@ -54,9 +54,19 @@ export async function run({ params, record, logger, api, connections }) {
   if (!params.field || !ALLOWED_FIELDS.includes(params.field)) {
     throw new Error('Invalid parameters passed.');
   }
-  /**@type { Plan } */
-  const { tier } = record;
-  const limit = PLAN_LIMITS[record.tier]
+  
+  const { tier } = /**@type { Plan } */(record);
+  const field = /**@type { typeof ALLOWED_FIELDS[number]} */(params.field);
+
+  const limit = PLAN_LIMITS[tier][field]
+  const newVal = /**@type { !Plan[typeof field]}*/ (record[field] ?? 0) + 1;
+
+  if (newVal > limit) {
+    const shop = await api.shopifyShop.findOne(record.shop);
+    throw new Error(`Plan allowance for \`${field}\` exceeded for shop: ${shop.name}`);
+  }
+
+  record[field] = newVal;
   await save(record);
 }
 
