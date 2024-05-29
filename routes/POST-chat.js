@@ -260,16 +260,15 @@ export default async function route({ request, reply, api, logger, connections }
     }
 
     // Access control for each plan
-    const shop = await api.shopifyShop.findOne(shopId);
+    const plan = await api.plan.findByShop(shopId);
 
     // Ensure the shop and plan data is available
-    if (!shop?.Plan) {
+    if (!plan) {
       logger.error('Shop or plan information is not available');
       throw new Error('Unable to access shop plan information');
     }
 
-    const plan = shop.Plan;
-    logger.info(`Shop plan: ${plan}`);
+    logger.info(`Shop plan: ${plan.tier}`);
 
     // If an image is uploaded, only consider the image as RAG retrieval.
     embedding = [
@@ -475,4 +474,17 @@ export default async function route({ request, reply, api, logger, connections }
   responseStream.push(null);
 
   void handleLLMOnComplete(api, products, output, imageSearchProducts.length > 0);
+
+  // Conversion data
+  if (chatHistory.length === 0) {
+    await api.internal.shopifyShop.update(ShopId, {
+      _atomics: {
+        conversationCount: {
+          increment: 1,
+        },
+      },
+    });
+
+    // TODO: push timeseries
+  }
 }
