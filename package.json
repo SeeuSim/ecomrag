@@ -19,7 +19,7 @@
     "shopify*/**/*.js": [
       "prettier --write"
     ],
-    "{routes,ChatbotSettings,chatLog,imageRecommendedProduct,plan,recommendedProduct}/**/*.js": [
+    "{chatbotSettings,chatLog,imageRecommendedProduct,plan,recommendedProduct,routes}/**/*.js": [
       "prettier --write"
     ]
   },
