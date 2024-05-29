@@ -1,22 +1,8 @@
-import { SQSClient, SendMessageBatchCommand } from '@aws-sdk/client-sqs';
 import { ActionOptions, SubscribeShopifyShopActionContext } from 'gadget-server';
 
 import { PLAN_LIMITS } from '../../plan/utils';
-import { getMessagePayload, stripHTMLTags } from '../../routes/batch-update/utils';
 
 // shopifyShop/subscribe.js
-
-const TEST_PLAN_LIMIT_ENFORCEMENT = process.env.NODE_ENV === 'development';
-
-const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBED_QUEUE_URL, CAPTION_QUEUE_URL } = process.env;
-
-const client = new SQSClient({
-  credentials: {
-    accessKeyId: ACCESS_KEY_ID,
-    secretAccessKey: SECRET_ACCESS_KEY,
-  },
-  region: 'us-east-1',
-});
 
 const PLANS = {
   free: {
@@ -34,8 +20,154 @@ const PLANS = {
 };
 
 /**
+ * @typedef { import ('@gadget-client/ecomrag').Client } Client
+ */
+
+/**
+ * @typedef { import ('gadget-server').Logger } Logger
+ */
+
+/**
+ * @typedef { Awaited<ReturnType<Client['shopifyShop']['findOne']>> } ShopifyShop
+ */
+
+/**
+ *
+ * @param { { api: Client, record: ShopifyShop, logger: Logger, planName: string } } context
+ */
+async function validatePlanUsage({ api, record, logger, planName: name }) {
+  const existingPlanRecord = await api.plan.findByShop(record.id);
+  const newPlanTier = /** @type { import('../../plan/utils').Plan['tier'] } */ (
+    name.replace(/^\w/, (c) => c.toUpperCase())
+  );
+
+  logger.info(
+    {},
+    `[validatePlanUsage] Subscription: Changing from ${existingPlanRecord.tier} to ${newPlanTier}`
+  );
+
+  if (existingPlanRecord.tier) {
+    const { tier: oldTier } = existingPlanRecord;
+    let isUpgrade = false;
+    switch (oldTier) {
+      case 'Free':
+        if (newPlanTier !== 'Free') {
+          isUpgrade = true;
+        }
+        break;
+      case 'Growth':
+        if (['Premium', 'Enterprise'].includes(newPlanTier)) {
+          isUpgrade = true;
+        }
+        break;
+      case 'Premium':
+        if (newPlanTier === 'Enterprise') {
+          isUpgrade = true;
+        }
+        break;
+      default: // Enterprise -> lower tier
+        break;
+    }
+
+    // 1. If upgrade, sync to limit
+    if (isUpgrade) {
+      logger.info({}, 'Upgrade - running sync');
+      await api.shopifySync.run({
+        domain: record.domain,
+        shop: {
+          _link: record.id,
+        },
+      });
+    } else {
+      logger.info({}, 'Downgrade - removing excessive resources');
+      // 2. Else, downgrade to limit or even delete images if Free (or bill for use until they manually delete?)
+      const downgradeImages = async () => {
+        if (newPlanTier === 'Free') {
+          // Delete all images
+          logger.info({}, 'Free Tier - Deleting all images');
+          const imageRecords = await api.shopifyProductImage.findMany({
+            where: {
+              shopId: record.id,
+            },
+          });
+          let imagesToDelete = [...imageRecords];
+          while (imageRecords.hasNextPage) {
+            imageRecords = await imageRecords.nextPage();
+            imagesToDelete = [...imagesToDelete, ...imageRecords];
+          }
+          await api.shopifyProductImage.bulkDelete(imagesToDelete.map((v) => v.id));
+        } else {
+          logger.info({}, `${newPlanTier} Tier - Removing excessive image embeddings`);
+          // Downgrade images to limit
+          const exceeded =
+            existingPlanRecord.imageUploadCount ?? 0 - PLAN_LIMITS[newPlanTier].imageUploadCount;
+          if (exceeded > 0) {
+            let imagePage = await api.shopifyProductImage.findMany({
+              filter: {
+                imageDescriptionEmbedding: {
+                  isSet: true,
+                },
+              },
+            });
+            let imagesToUpdate = [...imagePage];
+            while (imagePage.hasNextPage() && imagesToUpdate.length < exceeded) {
+              imagePage = await imagePage.nextPage();
+              imagesToUpdate = [...imagesToUpdate, ...imagePage];
+            }
+            await api.shopifyProductImage.bulkUpdate(
+              imagesToUpdate.slice(0, exceeded).map((v) => ({
+                id: v.id,
+                imageDescriptionEmbedding: null,
+              }))
+            );
+            await api.plan.update(existingPlanRecord.id, {
+              imageUploadCount: PLAN_LIMITS[newPlanTier].imageUploadCount,
+            });
+          }
+        }
+      };
+
+      const downgradeProducts = async () => {
+        const exceeded =
+          existingPlanRecord.productSyncCount ?? 0 - PLAN_LIMITS[newPlanTier].productSyncCount;
+        if (exceeded > 0) {
+          logger.info('Downgrade - Removing excessive product embeddings');
+          let productPage = await api.shopifyProduct.findMany({
+            where: {
+              productDescriptionEmbedding: {
+                isSet: true,
+              },
+            },
+          });
+          let productsToStrip = [...productPage];
+          while (productPage.hasNextPage() && productsToStrip.length < exceeded) {
+            productPage = await productPage.nextPage();
+            productsToStrip = [...productsToStrip, ...productPage];
+          }
+          await api.shopifyProduct.bulkUpdate(
+            productsToStrip.map((v) => ({
+              id: v.id,
+              descriptionEmbedding: null,
+            }))
+          );
+          await api.plan.update(existingPlanRecord.id, {
+            productSyncCount: PLAN_LIMITS[newPlanTier].productSyncCount,
+          });
+        }
+      };
+
+      await Promise.all([downgradeImages(), downgradeProducts()]);
+    }
+  }
+
+  await api.plan.update(existingPlanRecord.id, {
+    tier: newPlanTier,
+  });
+}
+
+/**
  * run function code for subscribe on Shopify Shop
- * @param { SubscribeShopifyShopActionContext } context
+ * @param { { api: Client, record: ShopifyShop, params: {}, connections: unknown, logger: Logger } } context
  */
 export async function run({ api: gadgetApi, record, params, connections, logger }) {
   const api = /** @type { import ('@gadget-client/ecomrag').Client } */ (gadgetApi);
@@ -96,276 +228,7 @@ export async function run({ api: gadgetApi, record, params, connections, logger 
   });
 
   // Plan Logic
-  const existingPlanRecord = await api.plan.findByShop(record.id);
-  const newPlanTier = /** @type { import('../../plan/utils').Plan['tier'] } */ (
-    name.replace(/^\w/, (c) => c.toUpperCase())
-  );
-
-  if (existingPlanRecord.tier && TEST_PLAN_LIMIT_ENFORCEMENT) {
-    const { tier: oldTier } = existingPlanRecord;
-    let isUpgrade = false;
-    switch (oldTier) {
-      case 'Free':
-        if (newPlanTier !== 'Free') {
-          isUpgrade = true;
-        }
-        break;
-      case 'Growth':
-        if (['Premium', 'Enterprise'].includes(newPlanTier)) {
-          isUpgrade = true;
-        }
-        break;
-      case 'Premium':
-        if (newPlanTier === 'Enterprise') {
-          isUpgrade = true;
-        }
-        break;
-      default: // Enterprise - new sub was made
-        break;
-    }
-
-    // TODO: 1. If upgrade, sync to limit
-    if (isUpgrade) {
-      const imageEmbedQuota =
-        PLAN_LIMITS[newPlanTier].imageUploadCount - (existingPlanRecord.imageUploadCount ?? 0);
-      const productEmbedQuota =
-        PLAN_LIMITS[newPlanTier].productSyncCount - (existingPlanRecord.productSyncCount ?? 0);
-
-      const embedProducts = async () => {
-        let successfulCount = 0;
-        let failedEmbeds = [];
-        let productPage = await api.shopifyProduct.findMany({
-          filter: {
-            descriptionEmbedding: {
-              isSet: false,
-            },
-          },
-          select: {
-            id: true,
-            title: true,
-            body: true,
-            shopId: true,
-          },
-        });
-        let productsToEmbed = [...productPage];
-        while (productPage.hasNextPage() && productsToEmbed.length < productEmbedQuota) {
-          productPage = await productPage.nextPage();
-          productsToEmbed = [...productsToEmbed, ...productPage];
-        }
-        productsToEmbed = productsToEmbed.slice(0, productEmbedQuota);
-
-        for (let i = 0; i < productsToEmbed.length; i = i + 10) {
-          let batch = productsToEmbed.slice(i, i + 10);
-          const embedResult = await client.send(
-            new SendMessageBatchCommand({
-              QueueUrl: EMBED_QUEUE_URL,
-              Entries: batch.map((v) => ({
-                Id: v.id,
-                MessageBody: 'Embed',
-                MessageAttributes: getMessagePayload({
-                  ...v,
-                  model: 'shopifyProduct',
-
-                  // TODO: change the body to a summary.
-                  description: `${v.title}: ${stripHTMLTags(v.body)}`.slice(0, 77),
-                }),
-              })),
-            })
-          );
-          successfulCount += embedResult.Successful.length;
-          failedEmbeds = [...failedEmbeds, ...embedResult.Failed];
-        }
-        await api.internal.plan.update(existingPlanRecord.id, {
-          _atomics: {
-            productSyncCount: {
-              increment: successfulCount,
-            },
-          },
-        });
-        return failedEmbeds;
-      };
-      const embedImages = async () => {
-        let successfulCount = 0;
-        let failedEmbeds = [];
-        let imagePage = await api.shopifyProductImage.findMany({
-          filter: {
-            imageDescriptionEmbedding: {
-              isSet: false,
-            },
-          },
-          select: {
-            id: true,
-            source: true,
-            shopId: true,
-          },
-        });
-        let imagesToEmbed = [...imagePage];
-        while (imagePage.hasNextPage() && imagesToEmbed.length < imageEmbedQuota) {
-          imagePage = await imagePage.nextPage();
-          imagesToEmbed = [...imagesToEmbed, ...imagePage];
-        }
-        imagesToEmbed = imagesToEmbed.slice(0, imageEmbedQuota);
-
-        for (let i = 0; i < imagesToEmbed.length; i = i + 10) {
-          let batch = imagesToEmbed.slice(i, i + 10);
-          const embedResult = await client.send(
-            new SendMessageBatchCommand({
-              QueueUrl: EMBED_QUEUE_URL,
-              Entries: batch.map((v) => ({
-                Id: v.id,
-                MessageBody: 'Embed',
-                MessageAttributes: getMessagePayload({
-                  ...v,
-                  model: 'shopifyProductImage',
-                }),
-              })),
-            })
-          );
-          successfulCount += embedResult.Successful.length;
-          failedEmbeds = [...failedEmbeds, ...embedResult.Failed];
-        }
-        await api.internal.plan.update(existingPlanRecord.id, {
-          _atomics: {
-            imageUploadCount: {
-              increment: successfulCount / 2,
-            },
-          },
-        });
-        return failedEmbeds;
-      };
-      const captionImages = async () => {
-        let successfulCount = 0;
-        let failedCaptions = [];
-        let imagePage = await api.shopifyProductImage.findMany({
-          filter: {
-            imageDescription: {
-              isSet: false,
-            },
-          },
-          select: {
-            id: true,
-            source: true,
-            shopId: true,
-          },
-        });
-        let imagesToCaption = [...imagePage];
-        while (imagePage.hasNextPage() && imagesToCaption.length < imageEmbedQuota) {
-          imagePage = await imagePage.nextPage();
-          imagesToCaption = [...imagesToCaption, ...imagePage];
-        }
-        imagesToCaption = imagesToCaption.slice(0, imageEmbedQuota);
-
-        for (let i = 0; i < imagesToCaption.length; i = i + 10) {
-          let batch = imagesToCaption.slice(i, i + 10);
-          const captionResult = await client.send(
-            new SendMessageBatchCommand({
-              QueueUrl: CAPTION_QUEUE_URL,
-              Entries: batch.map((v) => ({
-                Id: v.id,
-                MessageBody: 'Caption',
-                MessageAttributes: getMessagePayload({
-                  ...v,
-                  model: 'shopifyProductImage',
-                }),
-              })),
-            })
-          );
-          successfulCount += captionResult.Successful.length;
-          failedCaptions = [...failedCaptions, ...captionResult.Failed];
-        }
-        await api.internal.plan.update(existingPlanRecord.id, {
-          _atomics: {
-            imageUploadCount: {
-              increment: successfulCount / 2,
-            },
-          },
-        });
-        return failedCaptions;
-      };
-
-      // TODO: redrive
-      const [failedProductEmbeds, failedImageEmbeds, failedImageCaptions] = await Promise.all([
-        embedProducts(),
-        embedImages(),
-        captionImages(),
-      ]);
-    } else {
-      // TODO: 2. Else, downgrade to limit or even delete images if Free (or bill for use until they manually delete?)
-      if (newPlanTier === 'Free') {
-        // Delete all images
-        const imageRecords = await api.shopifyProductImage.findMany({
-          where: {
-            shopId: record.id,
-          },
-        });
-        let imagesToDelete = [...imageRecords];
-        while (imageRecords.hasNextPage) {
-          imageRecords = await imageRecords.nextPage();
-          imagesToDelete = [...imagesToDelete, ...imageRecords];
-        }
-        await api.shopifyProductImage.bulkDelete(imagesToDelete.map((v) => v.id));
-      } else {
-        // Downgrade images to limit
-        const exceeded =
-          existingPlanRecord.imageUploadCount ?? 0 - PLAN_LIMITS[newPlanTier].imageUploadCount;
-        if (exceeded > 0) {
-          let imagePage = await api.shopifyProductImage.findMany({
-            filter: {
-              imageDescriptionEmbedding: {
-                isSet: true,
-              },
-            },
-          });
-          let imagesToUpdate = [...imagePage];
-          while (imagePage.hasNextPage() && imagesToUpdate.length < exceeded) {
-            imagePage = await imagePage.nextPage();
-            imagesToUpdate = [...imagesToUpdate, ...imagePage];
-          }
-          await api.shopifyProductImage.bulkUpdate(
-            imagesToUpdate.slice(0, exceeded).map((v) => ({
-              id: v.id,
-              imageDescription: null,
-              imageDescriptionEmbedding: null,
-            }))
-          );
-          await api.plan.update(existingPlanRecord.id, {
-            imageUploadCount: PLAN_LIMITS[newPlanTier].imageUploadCount,
-          });
-        }
-      }
-
-      // Downgrade products to limit
-      const exceeded =
-        existingPlanRecord.productSyncCount ?? 0 - PLAN_LIMITS[newPlanTier].productSyncCount;
-      if (exceeded > 0) {
-        let productPage = await api.shopifyProduct.findMany({
-          where: {
-            productDescriptionEmbedding: {
-              isSet: true,
-            },
-          },
-        });
-        let productsToStrip = [...productPage];
-        while (productPage.hasNextPage() && productsToStrip.length < exceeded) {
-          productPage = await productPage.nextPage();
-          productsToStrip = [...productsToStrip, ...productPage];
-        }
-        await api.shopifyProduct.bulkUpdate(
-          productsToStrip.map((v) => ({
-            id: v.id,
-            descriptionEmbedding: null,
-          }))
-        );
-        await api.plan.update(existingPlanRecord.id, {
-          productSyncCount: PLAN_LIMITS[newPlanTier].productSyncCount,
-        });
-      }
-    }
-  }
-
-  await api.plan.update(existingPlanRecord.id, {
-    tier: newPlanTier,
-  });
+  void validatePlanUsage({ api, record, planName: name });
 
   logger.info({ appSubscriptionId: appSubscription?.id }, 'created subscription');
 }
