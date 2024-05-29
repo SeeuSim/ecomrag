@@ -6,7 +6,7 @@ import { PLAN_LIMITS } from '../../plan/utils';
 
 const PLANS = {
   free: {
-    price: 1.0,
+    price: 0.0,
   },
   growth: {
     price: 9.0,
@@ -228,7 +228,7 @@ export async function run({ api: gadgetApi, record, params, connections, logger 
   });
 
   // Plan Logic
-  void validatePlanUsage({ api, record, planName: name });
+  await validatePlanUsage({ api, record, planName: name });
 
   logger.info({ appSubscriptionId: appSubscription?.id }, 'created subscription');
 }

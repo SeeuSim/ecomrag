@@ -81,9 +81,12 @@ export default async function route({ request, reply, api, logger, connections }
     if (!id.matchAll(/^\d+$/g)) {
       continue;
     }
-    const shop = await api.shopifyShop.findOne(id);
-    await api.shopifyShop.update(id, {
-      productSyncCount: Number(shop.productSyncCount) + Number(count),
+    await api.internal.shopifyShop.update(id, {
+      _atomics: {
+        productSyncCount: {
+          increment: Number(count),
+        },
+      },
     });
     logger.info({}, `Updated shopId ${id} with ${count / 0.5} product embeds`);
   }
