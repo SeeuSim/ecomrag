@@ -43,7 +43,7 @@ export default async function route({ request, reply, api, logger, connections }
     res.forEach((v) => aggr.push(v));
   }
   logger.info(`Total jobs: ${aggr.length}`);
-  
+
   for (let i = 0; i < aggr.length; i = i + 10) {
     let pl = aggr.slice(i, i + 10);
     const captionResult = await client.send(
@@ -53,7 +53,6 @@ export default async function route({ request, reply, api, logger, connections }
           Id: `${v.shopId}${index}`,
           MessageBody: 'Caption',
           MessageAttributes: getMessagePayload({ ...v, model: 'shopifyProductImage' }),
-          // MessageGroupId: `${record.shopId}`
         })),
       })
     );
@@ -73,7 +72,7 @@ export default async function route({ request, reply, api, logger, connections }
     if (!id.matchAll(/^\d+$/g)) {
       continue;
     }
-    try {  
+    try {
       const shop = await api.shopifyShop.findOne(id);
       await api.shopifyShop.update(id, {
         productImageSyncCount: Number(shop.productImageSyncCount) + Number(count),
@@ -84,8 +83,5 @@ export default async function route({ request, reply, api, logger, connections }
     }
   }
 
-  await reply
-    .code(200)
-    .type('text/plain')
-    .send(`Sent: ${aggr.length} Jobs`);
+  await reply.code(200).type('text/plain').send(`Sent: ${aggr.length} Jobs`);
 }

@@ -43,7 +43,7 @@ export default async function route({ request, reply, api, logger, connections }
     res.forEach((v) => aggr.push(v));
   }
   logger.info(`Total jobs: ${aggr.length}`);
-  
+
   for (let i = 0; i < aggr.length; i = i + 10) {
     let pl = aggr.slice(i, i + 10);
     const embedResult = await client.send(
@@ -53,7 +53,6 @@ export default async function route({ request, reply, api, logger, connections }
           Id: `${v.shopId}${index}`,
           MessageBody: 'Embed',
           MessageAttributes: getMessagePayload({ ...v, model: 'shopifyProductImage' }),
-          // MessageGroupId: `${record.shopId}`
         })),
       })
     );
