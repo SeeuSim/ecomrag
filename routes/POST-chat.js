@@ -412,7 +412,7 @@ export default async function route({ request, reply, api, logger, connections }
         })
       : imageSearchProducts;
 
-  const chatbotSettings = await api.ChatbotSettings.findMany({
+  const chatbotSettings = await api.chatbotSettings.findMany({
     filter: {
       shop: {
         equals: ShopId,

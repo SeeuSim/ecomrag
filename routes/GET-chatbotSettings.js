@@ -1,7 +1,7 @@
 /**
  * Route handler for GET hello
  *
- * @param { RouteContext } route context - see: https://docs.gadget.dev/guides/http-routes/route-configuration#route-context
+ * @param { import('gadget-server').RouteContext } context - see: https://docs.gadget.dev/guides/http-routes/route-configuration#route-context
  *
  */
 export default async function route({ request, reply, api, logger, connections }) {
@@ -9,7 +9,7 @@ export default async function route({ request, reply, api, logger, connections }
   // For more information on HTTP routes in Gadget applications, see https://docs.gadget.dev/guides/http-routes
   try {
     const shopId = request.query.shopId;
-    const chatBotSetting = await api.ChatbotSettings.findFirst({
+    const chatBotSetting = await api.chatbotSettings.findFirst({
       filter: {
         shopId: {
           equals: shopId,

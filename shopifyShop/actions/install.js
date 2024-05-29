@@ -61,7 +61,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
   record.subscriptionId = '';
 
   // Create Settings
-  api.ChatbotSettings.create({
+  api.chatbotSettings.create({
     shop: {
       _link: record.id,
     },
