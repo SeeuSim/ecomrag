@@ -18,6 +18,9 @@
     ],
     "shopify*/**/*.js": [
       "prettier --write"
+    ],
+    "{routes,ChatbotSettings,chatLog,imageRecommendedProduct,plan,recommendedProduct}/**/*.js": [
+      "prettier --write"
     ]
   },
   "dependencies": {

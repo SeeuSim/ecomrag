@@ -5,5 +5,7 @@
   "jsxSingleQuote": true,
   "quoteProps": "as-needed",
   "trailingComma": "es5",
-  "printWidth": 100
+  "printWidth": 100,
+  "bracketSpacing": true,
+  "embeddedLanguageFormatting": "auto"
 }
