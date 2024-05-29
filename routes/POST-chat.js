@@ -42,6 +42,30 @@ function getCurrentDateString() {
   return new Date(Date.now()).toISOString();
 }
 
+/**
+ * @typedef { Awaited<ReturnType<typeof api.shopifyProduct.findOne>> } Product
+ */
+
+/**
+ * @param { Product } product
+ * @returns {{ handle: Product['handle'], domain: Product['shop']['domain'], title: Product['title'], images: Product['images'] }} The formatted product for reduced token usage.
+ */
+const productMapFunc = ({ handle, shop, title, images }) => {
+  return {
+    handle,
+    domain: shop.domain,
+    title,
+    images,
+  };
+};
+
+/**
+ *
+ * @param { Array<Product> } products
+ * @param { string | undefined } talkativeness
+ * @param { string | undefined } personality
+ * @returns { string } The formatted prompt.
+ */
 const getBaseSystemPrompt = (products, talkativeness, personality) => {
   return (
     `You are a helpful shopping assistant trying to match customers with the ` +
@@ -65,12 +89,7 @@ const getBaseSystemPrompt = (products, talkativeness, personality) => {
     `needs. Here are the JSON products you can use to generate a ` +
     `response: ${stringify(
       // To reduce OpenAI token usage
-      products.map((product) => ({
-        handle: product.handle,
-        domain: product.shop.domain,
-        title: product.title,
-        images: product.images,
-      }))
+      products.map(productMapFunc)
     )} ` +
     `I will provide you with a talkativeness level. From a scale of 1 - 5 . with 1 being the least talkative and 5 being the most talkative: ` +
     `Talkativeness: ${talkativeness}` +
@@ -78,6 +97,13 @@ const getBaseSystemPrompt = (products, talkativeness, personality) => {
   );
 };
 
+/**
+ *
+ * @param { Array<Product> } products
+ * @param { string | undefined } talkativeness
+ * @param { string | undefined } personality
+ * @returns { string } The formatted prompt.
+ */
 const getImageBaseSystemPrompt = (products, talkativeness, personality) => {
   return (
     `You will be given` +
@@ -92,12 +118,7 @@ const getImageBaseSystemPrompt = (products, talkativeness, personality) => {
     `"Click on a product to learn more!" Here are the JSON products you can use to generate a ` +
     `response: ${stringify(
       // To reduce OpenAI token usage
-      products.map((product) => ({
-        handle: product.handle,
-        domain: product.shop.domain,
-        title: product.title,
-        images: product.images,
-      }))
+      products.map(productMapFunc)
     )} ` +
     `I will provide you with a talkativeness level. From a scale of 1 - 5 . with 1 being the least talkative and 5 being the most talkative: ` +
     `Talkativeness: ${talkativeness}` +
@@ -105,7 +126,13 @@ const getImageBaseSystemPrompt = (products, talkativeness, personality) => {
   );
 };
 
-/**@type {(gadgetApi: typeof api, products: any[], content: any, isImageRecommended: boolean) => void} */
+/**
+ *
+ * @param { import('gadget-server').api } gadgetApi
+ * @param { Array<Product> } products
+ * @param { string | undefined } content
+ * @param { boolean | undefined } isImageRecommended
+ */
 const handleLLMOnComplete = (gadgetApi, products, content, isImageRecommended) => {
   const productMapFunc = (record) => (product) => ({
     chatLog: {
@@ -134,6 +161,14 @@ const handleLLMOnComplete = (gadgetApi, products, content, isImageRecommended) =
   }
 };
 
+/**
+ *
+ * @param { string } imageBase64
+ * @param { string } fileName
+ * @param { string } fileType
+ * @param { typeof logger} logger
+ * @returns { string | void } The URL if successful, else nothing.
+ */
 async function uploadImage(imageBase64, fileName, fileType, logger) {
   const key = `${BUCKET_PATH}${getCurrentDateString()}_${fileName}`;
 
@@ -157,8 +192,10 @@ async function uploadImage(imageBase64, fileName, fileType, logger) {
 }
 
 /**
- * @type { (params: { request: Request, reply: Reply, api: typeof api, logger: typeof logger }) => Promise<void> }
- **/
+ * The main route handler for the chat route.
+ *
+ * @param { import('gadget-server').RouteContext} context
+ */
 export default async function route({ request, reply, api, logger, connections }) {
   let payload = request.body;
 
