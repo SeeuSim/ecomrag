@@ -52,6 +52,37 @@ export async function run({ params, record, logger, api, connections }) {
   // }
 
   // applyParams(params, record);
+
+  const deleteChatbotSettings = async () => {
+    try {
+      const chatBotSettings = await api.chatbotSettings.findMany({
+        where: {
+          shopId: record.id,
+        },
+      });
+      await api.chatbotSettings.bulkDelete(chatBotSettings.map((v) => v.id));
+    } catch (error) {
+      const { name, message, stack, cause } = /**@type { Error } */ (error);
+      logger.error(
+        { name, message, stack, cause },
+        '[shopifyShop:uninstall] An error occurred deleting chatbot Settings'
+      );
+    }
+  };
+
+  const deletePlan = async () => {
+    try {
+      const plan = await api.plan.findByShop(record.id);
+      await api.chatbotSettings.delete(plan.id);
+    } catch (error) {
+      const { name, message, stack, cause } = /**@type { Error } */ (error);
+      logger.error(
+        { name, message, stack, cause },
+        '[shopifyShop:uninstall] An error occurred deleting plan'
+      );
+    }
+  };
+
   const deleteProducts = async () => {
     try {
       const products = await api.shopifyProduct.findMany({
@@ -98,7 +129,12 @@ export async function run({ params, record, logger, api, connections }) {
       );
     }
   };
-  await Promise.all([deleteProducts(), deleteProductImages()]);
+  await Promise.all([
+    deleteChatbotSettings(),
+    deletePlan(),
+    deleteProducts(),
+    deleteProductImages(),
+  ]);
   await deleteRecord(record);
 }
 

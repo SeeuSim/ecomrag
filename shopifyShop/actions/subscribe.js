@@ -1,4 +1,5 @@
 import { ActionOptions, SubscribeShopifyShopActionContext } from 'gadget-server';
+import { PLAN_LIMITS } from '../../plan/utils';
 
 // shopifyShop/subscribe.js
 
@@ -81,10 +82,58 @@ export async function run({ api: gadgetApi, record, params, connections, logger 
 
   // Plan Logic
   const existingPlanRecord = await api.plan.findByShop(record.id);
-  const newPlanTier = name.replace(/^\w/, (c) => c.toUpperCase());
+  const newPlanTier = /** @type { import('../../plan/utils').Plan['tier'] } */ (
+    name.replace(/^\w/, (c) => c.toUpperCase())
+  );
 
-  // TODO: Add sync if upgraded from lower tier. Else, if changed to free, delete all images.
   if (existingPlanRecord.tier) {
+    const { tier: oldTier } = existingPlanRecord;
+    let isUpgrade = false;
+    switch (oldTier) {
+      case 'Free':
+        if (newPlanTier !== 'Free') {
+          isUpgrade = true;
+        }
+        break;
+      case 'Growth':
+        if (!['Free', 'Growth'].includes(newPlanTier)) {
+          isUpgrade = true;
+        }
+        break;
+      case 'Premium':
+        if (newPlanTier === 'Enterprise') {
+          isUpgrade = true;
+        }
+        break;
+    }
+
+    // TODO: 1. If upgrade, sync to limit
+    if (isUpgrade) {
+      const imageEmbeds =
+        PLAN_LIMITS[newPlanTier].imageUploadCount - (existingPlanRecord.imageUploadCount ?? 0);
+      const productEmbeds =
+        PLAN_LIMITS[newPlanTier].productSyncCount - (existingPlanRecord.productSyncCount ?? 0);
+
+      // TODO: Embed Products, Embed + Caption Images (which aren't embedded yet)
+    } else {
+      // TODO: 2. Else, downgrade to limit or even delete images if Free (or bill for use until they manually delete?)
+      if (newPlanTier === 'Free') {
+        // Delete all images
+        const imageRecords = await api.shopifyProductImage.findMany({
+          where: {
+            shopId: record.id,
+          },
+        });
+        let imagesToDelete = [...imageRecords];
+        while (imageRecords.hasNextPage) {
+          imageRecords = await imageRecords.nextPage();
+          imagesToDelete = [...imagesToDelete, ...imageRecords];
+        }
+        await api.shopifyProductImage.bulkDelete(imagesToDelete.map((v) => v.id));
+      }
+
+      // TODO: Downgrade to limit
+    }
   }
 
   await api.plan.update(existingPlanRecord.id, {
