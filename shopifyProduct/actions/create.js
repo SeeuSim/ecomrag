@@ -5,7 +5,7 @@ import {
   ActionOptions,
   CreateShopifyProductActionContext,
 } from 'gadget-server';
-import { tryIncrShopSyncCount } from '../checkPlan';
+import { tryIncrProductSyncCount } from '../checkPlan';
 import { postProductDescEmbedding } from '../postSqs';
 import { postProductCreateResult } from '../../routes/main-backend/utils';
 
@@ -33,7 +33,7 @@ export async function onSuccess({
   params: _params,
   connections: _connections,
 }) {
-  if (tryIncrShopSyncCount({ record, logger, api })) {
+  if (tryIncrProductSyncCount({ record, logger, api })) {
     await postProductDescEmbedding(
       { Id: record.id, Description: `${record.title}: ${record.body}` },
       record.shopId ?? 'DUMMYMSGGRPID',

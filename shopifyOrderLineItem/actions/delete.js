@@ -1,30 +1,26 @@
 import {
-  ActionOptions,
-  UpdateShopifyShopActionContext,
-  applyParams,
   preventCrossShopDataAccess,
-  save,
+  deleteRecord,
+  ActionOptions,
+  DeleteShopifyOrderLineItemActionContext,
 } from 'gadget-server';
-import { postShopUpdateResult } from '../../routes/main-backend/utils';
 
 /**
- * @param { UpdateShopifyShopActionContext } context
+ * @param { DeleteShopifyOrderLineItemActionContext } context
  */
 export async function run({ params, record, logger, api, connections }) {
-  applyParams(params, record);
   await preventCrossShopDataAccess(params, record);
-  await save(record);
+  await deleteRecord(record);
 }
 
 /**
- * @param { UpdateShopifyShopActionContext } context
+ * @param { DeleteShopifyOrderLineItemActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
-  await postShopUpdateResult(record, logger);
 }
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: 'update',
+  actionType: 'delete',
 };

@@ -1,13 +1,13 @@
 import {
+  ActionOptions,
+  UpdateShopifyProductImageActionContext,
   applyParams,
   preventCrossShopDataAccess,
   save,
-  ActionOptions,
-  UpdateShopifyProductImageActionContext,
 } from 'gadget-server';
-import { postProductImgEmbedCaption } from '../postSqs';
-import { tryIncrShopSyncCount } from '../checkPlan';
 import { postProductImageUpdateResult } from '../../routes/main-backend/utils';
+import { tryIncrImageSyncCount } from '../checkPlan';
+import { postProductImgEmbedCaption } from '../postSqs';
 
 /**
  * @param { UpdateShopifyProductImageActionContext } context
@@ -27,7 +27,7 @@ export async function onSuccess({ record, logger, api, params: _p, connections: 
     Caption: !record.getField('imageDescription') || record.changed('source'),
   };
   if (
-    tryIncrShopSyncCount({
+    tryIncrImageSyncCount({
       record,
       api,
       logger,

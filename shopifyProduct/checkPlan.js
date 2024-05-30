@@ -13,6 +13,10 @@ import { PLAN_LIMITS } from '../plan/utils';
 /** @type { ({ record, api, logger, isUpdate }: { record: ShopifyProduct, api: typeof Client.prototype, logger: typeof gadgetLogger, isUpdate?: boolean }) => Promise<boolean>} */
 export const tryIncrProductSyncCount = async ({ record, api, logger, isUpdate }) => {
   const plan = await api.plan.findByShop(record.shopId);
+  if (!plan) {
+    logger.error('Data migration not present - create a Plan first.');
+    return false;
+  }
   const { tier } = /**@type { Plan } */ (plan);
   const limit = PLAN_LIMITS[tier].productSyncCount;
   const withinLimit = plan.productSyncCount < limit;

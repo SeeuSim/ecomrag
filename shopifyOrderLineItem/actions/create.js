@@ -1,14 +1,13 @@
 import {
-  ActionOptions,
-  UpdateShopifyShopActionContext,
   applyParams,
   preventCrossShopDataAccess,
   save,
+  ActionOptions,
+  CreateShopifyOrderLineItemActionContext,
 } from 'gadget-server';
-import { postShopUpdateResult } from '../../routes/main-backend/utils';
 
 /**
- * @param { UpdateShopifyShopActionContext } context
+ * @param { CreateShopifyOrderLineItemActionContext } context
  */
 export async function run({ params, record, logger, api, connections }) {
   applyParams(params, record);
@@ -17,14 +16,13 @@ export async function run({ params, record, logger, api, connections }) {
 }
 
 /**
- * @param { UpdateShopifyShopActionContext } context
+ * @param { CreateShopifyOrderLineItemActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
-  await postShopUpdateResult(record, logger);
 }
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: 'update',
+  actionType: 'create',
 };

@@ -1,13 +1,13 @@
 import {
+  ActionOptions,
+  UpdateShopifyProductActionContext,
   applyParams,
   preventCrossShopDataAccess,
   save,
-  ActionOptions,
-  UpdateShopifyProductActionContext,
 } from 'gadget-server';
-import { tryIncrShopSyncCount } from '../checkPlan';
-import { postProductDescEmbedding } from '../postSqs';
 import { postProductUpdateResult } from '../../routes/main-backend/utils';
+import { tryIncrProductSyncCount } from '../checkPlan';
+import { postProductDescEmbedding } from '../postSqs';
 
 /**
  * @param { UpdateShopifyProductActionContext } context
@@ -23,7 +23,7 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ record, logger, api, params: _p, connections: _c }) {
   if (
-    tryIncrShopSyncCount({
+    tryIncrProductSyncCount({
       record,
       logger,
       api,
