@@ -15,8 +15,9 @@ import { postShopDeleteResult } from '../../routes/main-backend/utils';
  */
 export async function run({ params, record, logger, api, connections }) {
   await preventCrossShopDataAccess(params, record);
-  transitionState(record, { from: ShopifyShopState.Installed, to: ShopifyShopState.Uninstalled });
-
+  if (!(record.state instanceof Object && record.state['created'] === 'uninstalled')) {
+    transitionState(record, { from: ShopifyShopState.Installed, to: ShopifyShopState.Uninstalled });
+  }
   // const _CANCEL_SUBSCRIPTION_QUERY = `
   // 	mutation AppSubscriptionCancel($id: ID!) {
   // 		appSubscriptionCancel(id: $id) {

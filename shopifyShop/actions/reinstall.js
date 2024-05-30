@@ -32,6 +32,13 @@ export async function onSuccess({ params, record, logger, api, connections }) {
         shopifyShop: {
           _link: record.id,
         },
+        models: [
+          'shopifyShop',
+          'shopifyProduct',
+          'shopifyProductImage',
+          // "shopifyOrder",
+          // "shopifyOrderLineItem"
+        ],
       }),
     ]);
     logger.info(runSyncResult, '[shopifyShop:reinstall] Ran Sync');
