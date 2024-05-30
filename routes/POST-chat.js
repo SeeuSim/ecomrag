@@ -53,7 +53,7 @@ function getCurrentDateString() {
 const productMapFunc = ({ handle, shop, title, images }) => {
   return {
     handle,
-    domain: shop.domain,
+    domain: shop?.domain ?? '',
     title,
     images,
   };
