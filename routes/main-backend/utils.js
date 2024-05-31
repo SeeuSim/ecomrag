@@ -183,8 +183,10 @@ export const getProductUpdateRow = (row) => {
     status: row.changed('status') ? row.status : undefined,
     tags: row.changed('tags') ? row.tags : undefined,
     embedding:
-      row.changed('descriptionEmbedding') && row.descriptionEmbedding.length === EMBEDDING_DIM
-        ? row.embedding
+      row.changed('descriptionEmbedding') &&
+      row.descriptionEmbedding &&
+      row.descriptionEmbedding.length === EMBEDDING_DIM
+        ? row.descriptionEmbedding
         : undefined,
   };
 };
@@ -410,4 +412,3 @@ export async function postProductImageDeleteResult(record, logger) {
     );
   }
 }
-

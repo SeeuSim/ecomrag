@@ -95,7 +95,12 @@ async function validatePlanUsage({ api, record, logger, planName: name }) {
             imagePage = await imagePage.nextPage();
             imagesToDelete = [...imagesToDelete, ...imagePage];
           }
-          await api.shopifyProductImage.bulkDelete(imagesToDelete.map((v) => v.id));
+          if (imagesToDelete && imagesToDelete.length > 0) {
+            await api.shopifyProductImage.bulkDelete(imagesToDelete.map((v) => v.id));
+            await api.plan.update(existingPlanRecord.id, {
+              imageUploadCount: PLAN_LIMITS[newPlanTier].imageUploadCount,
+            });
+          }
         } else {
           logger.info({}, `${newPlanTier} Tier - Removing excessive image embeddings`);
           // Downgrade images to limit
@@ -110,19 +115,21 @@ async function validatePlanUsage({ api, record, logger, planName: name }) {
               },
             });
             let imagesToUpdate = [...imagePage];
-            while (imagePage.hasNextPage() && imagesToUpdate.length < exceeded) {
+            while (imagePage.hasNextPage && imagesToUpdate.length < exceeded) {
               imagePage = await imagePage.nextPage();
               imagesToUpdate = [...imagesToUpdate, ...imagePage];
             }
-            await api.shopifyProductImage.bulkUpdate(
-              imagesToUpdate.slice(0, exceeded).map((v) => ({
-                id: v.id,
-                imageDescriptionEmbedding: null,
-              }))
-            );
-            await api.plan.update(existingPlanRecord.id, {
-              imageUploadCount: PLAN_LIMITS[newPlanTier].imageUploadCount,
-            });
+            if (imagesToUpdate && imagesToUpdate.length > 0) {
+              await api.shopifyProductImage.bulkUpdate(
+                imagesToUpdate.slice(0, exceeded).map((v) => ({
+                  id: v.id,
+                  imageDescriptionEmbedding: null,
+                }))
+              );
+              await api.plan.update(existingPlanRecord.id, {
+                imageUploadCount: PLAN_LIMITS[newPlanTier].imageUploadCount,
+              });
+            }
           }
         }
       };
@@ -140,19 +147,21 @@ async function validatePlanUsage({ api, record, logger, planName: name }) {
             },
           });
           let productsToStrip = [...productPage];
-          while (productPage.hasNextPage() && productsToStrip.length < exceeded) {
+          while (productPage.hasNextPage && productsToStrip.length < exceeded) {
             productPage = await productPage.nextPage();
             productsToStrip = [...productsToStrip, ...productPage];
           }
-          await api.shopifyProduct.bulkUpdate(
-            productsToStrip.map((v) => ({
-              id: v.id,
-              descriptionEmbedding: null,
-            }))
-          );
-          await api.plan.update(existingPlanRecord.id, {
-            productSyncCount: PLAN_LIMITS[newPlanTier].productSyncCount,
-          });
+          if (productsToStrip && productsToStrip.length > 0) {
+            await api.shopifyProduct.bulkUpdate(
+              productsToStrip.map((v) => ({
+                id: v.id,
+                descriptionEmbedding: null,
+              }))
+            );
+            await api.plan.update(existingPlanRecord.id, {
+              productSyncCount: PLAN_LIMITS[newPlanTier].productSyncCount,
+            });
+          }
         }
       };
 
@@ -180,11 +189,6 @@ export async function run({ api: gadgetApi, record, params, connections, logger 
 
   // get an instance of the shopify-api-node API client for this shop
   const shopify = connections.shopify.current;
-
-  logger.info(api, 'api');
-  logger.info(connections, 'connections');
-
-  logger.info(record, 'record');
 
   const CREATE_SUBSCRIPTION_QUERY = `
     mutation CreateSubscription($name: String!, $price: Decimal!) {
@@ -227,16 +231,15 @@ export async function run({ api: gadgetApi, record, params, connections, logger 
     subscriptionId: appSubscription?.id,
   });
 
-  // Plan Logic
-  await validatePlanUsage({ api, record, planName: name });
-
   logger.info({ appSubscriptionId: appSubscription?.id }, 'created subscription');
 }
 
 /**
  * @param { SubscribeShopifyShopActionContext } context
  */
-export async function onSuccess({ params, record, logger, api, connections }) {}
+export async function onSuccess({ params, record, logger, api, connections }) {
+  await validatePlanUsage({ api, record, logger, planName: params.plan ?? 'free' });
+}
 
 /** @type { ActionOptions } */
 export const options = {

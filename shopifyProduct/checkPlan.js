@@ -14,7 +14,7 @@ import { PLAN_LIMITS } from '../plan/utils';
 export const tryIncrProductSyncCount = async ({ record, api, logger, isUpdate }) => {
   const plan = await api.plan.findByShop(record.shopId);
   if (!plan) {
-    logger.error('Data migration not present - create a Plan first.');
+    logger.error({ shopId: record.shopId }, 'Data migration not present - create a Plan first.');
     return false;
   }
   const { tier } = /**@type { Plan } */ (plan);
