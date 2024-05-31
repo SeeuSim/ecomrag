@@ -27,7 +27,7 @@ export async function onSuccess({ record, logger, api, params: _p, connections: 
     Caption: !record.getField('imageDescription') || record.changed('source'),
   };
   if (
-    tryIncrImageSyncCount({
+    await tryIncrImageSyncCount({
       record,
       api,
       logger,

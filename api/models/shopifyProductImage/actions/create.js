@@ -44,7 +44,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
   if (
     !!record.source &&
     record.source.length > 0 &&
-    tryIncrImageSyncCount({ params, record, logger, api, connections })
+    (await tryIncrImageSyncCount({ params, record, logger, api, connections }))
   ) {
     await postProductImgEmbedCaption(
       { Id: record.id, Source: record.source },

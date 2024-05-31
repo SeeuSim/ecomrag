@@ -23,7 +23,7 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ record, logger, api, params: _p, connections: _c }) {
   if (
-    tryIncrProductSyncCount({
+    await tryIncrProductSyncCount({
       record,
       logger,
       api,

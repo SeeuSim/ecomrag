@@ -28,7 +28,7 @@ export async function onSuccess({
   params: _params,
   connections: _connections,
 }) {
-  if (tryIncrProductSyncCount({ record, logger, api })) {
+  if (await tryIncrProductSyncCount({ record, logger, api })) {
     await postProductDescEmbedding(
       { Id: record.id, Description: `${record.title}: ${record.body}` },
       record.shopId ?? 'DUMMYMSGGRPID',
