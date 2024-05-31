@@ -62,9 +62,9 @@ export default async function route({ request, reply, api, logger, connections }
     });
     successfulEmbeds.forEach((v) => {
       if (counts[v]) {
-        counts[v] += 0.5;
+        counts[v] += 1;
       } else {
-        counts[v] = 0.5;
+        counts[v] = 1;
       }
     });
   }
@@ -73,14 +73,21 @@ export default async function route({ request, reply, api, logger, connections }
     if (!id.matchAll(/^\d+$/g)) {
       continue;
     }
-    await api.internal.shopifyShop.update(id, {
-      _atomics: {
-        productImageSyncCount: {
-          increment: Number(count),
+    try {
+      await api.internal.shopifyShop.update(id, {
+        _atomics: {
+          productImageSyncCount: {
+            increment: Number(count),
+          },
         },
-      },
-    });
-    logger.info({}, `Updated shopId ${id} with ${count / 0.5} product image embeds`);
+      });
+      logger.info({}, `Updated shopId ${id} with ${count / 1} product image embeds`);
+    } catch (error) {
+      logger.error(
+        { name: error.name, message: error.message, stack: error.stack },
+        'Error occurred incrementing count'
+      );
+    }
   }
   logger.info('Total jobs: ' + `${aggr.length}`);
 

@@ -61,9 +61,9 @@ export default async function route({ request, reply, api, logger, connections }
     });
     successfulCaptions.forEach((v) => {
       if (counts[v]) {
-        counts[v] += 0.5;
+        counts[v] += 1;
       } else {
-        counts[v] = 0.5;
+        counts[v] = 1;
       }
     });
   }
@@ -72,18 +72,7 @@ export default async function route({ request, reply, api, logger, connections }
     if (!id.matchAll(/^\d+$/g)) {
       continue;
     }
-    try {
-      await api.internal.shopifyShop.update(id, {
-        _atomics: {
-          productImageSyncCount: {
-            increment: Number(count),
-          },
-        },
-      });
-      logger.info({}, `Updated shopId ${id} with ${count / 0.5} product image captions`);
-    } catch (error) {
-      logger.error({}, `Error occurred when updating shop cound with ${id}: ${error}`);
-    }
+    logger.info({}, `Updated shopId ${id} with ${count} product image captions`);
   }
 
   await reply.code(200).type('text/plain').send(`Sent: ${aggr.length} Jobs`);

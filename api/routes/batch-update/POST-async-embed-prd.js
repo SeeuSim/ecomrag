@@ -81,14 +81,21 @@ export default async function route({ request, reply, api, logger, connections }
     if (!id.matchAll(/^\d+$/g)) {
       continue;
     }
-    await api.internal.shopifyShop.update(id, {
-      _atomics: {
-        productSyncCount: {
-          increment: Number(count),
+    try {
+      await api.internal.shopifyShop.update(id, {
+        _atomics: {
+          productSyncCount: {
+            increment: Number(count),
+          },
         },
-      },
-    });
-    logger.info({}, `Updated shopId ${id} with ${count / 0.5} product embeds`);
+      });
+      logger.info({}, `Updated shopId ${id} with ${count} product embeds`);
+    } catch (error) {
+      logger.error(
+        { name: error.name, message: error.message, stack: error.stack },
+        'Error occurred updating shop sync count'
+      );
+    }
   }
   logger.info('Total jobs: ' + `${aggr.length}`);
 
