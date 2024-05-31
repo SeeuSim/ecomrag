@@ -12,9 +12,17 @@ import { PLAN_LIMITS } from '../plan/utils';
 
 /** @type { ({ record, api, logger, isUpdate }: { record: ShopifyProductImage, api: typeof Client.prototype, logger: typeof gadgetLogger, isUpdate?: boolean }) => Promise<boolean>} */
 export const tryIncrImageSyncCount = async ({ record, api, logger, isUpdate }) => {
-  const plan = await api.plan.findByShop(record.shopId);
-  if (!plan) {
+  let plan;
+  try {
+    plan = await api.plan.findByShop(record.shopId);
+    if (!plan) {
+      logger.error({ shopId: record.shopId }, 'Data migration not present - create a Plan first.');
+      return false;
+    }
+  } catch (error) {
+    const { name, message, stack, cause } = /**@type { Error } */ (error);
     logger.error({ shopId: record.shopId }, 'Data migration not present - create a Plan first.');
+    logger.error({ name, message, stack, cause }, 'An error occurred.');
     return false;
   }
   const { tier } = /**@type { Plan } */ (plan);
