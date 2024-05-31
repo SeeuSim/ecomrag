@@ -1,5 +1,4 @@
-import { api, logger } from 'gadget-server';
-import { Request, Reply } from 'gadget-server';
+import { Reply, Request } from 'gadget-server';
 
 /**
  * Sends a singular embed update. You may post the request to /embed-update/embed with the following JSON fields:
@@ -65,15 +64,16 @@ export default async function route({ request, reply, api, logger, connections }
     }
     await reply.code(200).send();
   } catch (error) {
-    /**@type { Error } */
-    const err = error;
-    const outputErr = {
-      message: err.message,
-      name: err.name,
-      stack: err.stack,
-      cause: err.cause,
-    };
-    logger.error(outputErr, 'Update failed');
+    const { name, message, stack, cause } = /**@type { Error } */ (error);
+    logger.error(
+      {
+        message,
+        name,
+        stack,
+        cause,
+      },
+      'Update failed'
+    );
     await reply.code(500).send(JSON.stringify(outputErr));
   }
 }

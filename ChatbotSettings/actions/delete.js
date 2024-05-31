@@ -1,4 +1,9 @@
-import { deleteRecord, ActionOptions, DeleteChatbotSettingsActionContext,preventCrossShopDataAccess  } from 'gadget-server';
+import {
+  deleteRecord,
+  ActionOptions,
+  DeleteChatbotSettingsActionContext,
+  preventCrossShopDataAccess,
+} from 'gadget-server';
 
 /**
  * @param { DeleteChatbotSettingsActionContext } context
