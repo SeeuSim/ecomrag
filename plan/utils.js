@@ -11,7 +11,7 @@ import { Client } from '@gadget-client/ecomrag';
 
 export const PLAN_TYPES = /** @type { const } */ (['Free', 'Growth', 'Premium', 'Enterprise']);
 export const LIMIT_FIELDS = /**@type { const } */ ([
-  'chatSessionsLimit', // count of chat sessions
+  'chatSessionsCount', // count of chat sessions
   'imageUploadCount', // image embed + caption
   'productSyncCount', // product embeds
 ]);
@@ -27,22 +27,22 @@ export const IMAGE_PER_PRODUCT = 2;
 /**@type { Record<PLAN_TYPES[number], PlanLimit> } */
 export const PLAN_LIMITS = {
   Free: {
-    chatSessionsLimit: 600,
+    chatSessionsCount: 600,
     imageUploadCount: 100,
     productSyncCount: 100,
   },
   Growth: {
-    chatSessionsLimit: 3000,
+    chatSessionsCount: 3000,
     imageUploadCount: 1000,
     productSyncCount: 1000,
   },
   Premium: {
-    chatSessionsLimit: 15_000,
+    chatSessionsCount: 15_000,
     imageUploadCount: 4000,
     productSyncCount: 2000,
   },
   Enterprise: {
-    chatSessionsLimit: unknownLimit,
+    chatSessionsCount: unknownLimit,
     imageUploadCount: unknownLimit,
     productSyncCount: unknownLimit,
   },

@@ -61,7 +61,9 @@ export async function run({ params, record, logger, api, connections }) {
           shopId: record.id,
         },
       });
-      await api.chatbotSettings.bulkDelete(chatBotSettings.map((v) => v.id));
+      if (chatBotSettings) {
+        await api.chatbotSettings.bulkDelete(chatBotSettings.map((v) => v.id));
+      }
     } catch (error) {
       const { name, message, stack, cause } = /**@type { Error } */ (error);
       logger.error(
@@ -74,7 +76,9 @@ export async function run({ params, record, logger, api, connections }) {
   const deletePlan = async () => {
     try {
       const plan = await api.plan.findByShop(record.id);
-      await api.chatbotSettings.delete(plan.id);
+      if (plan) {
+        await api.chatbotSettings.delete(plan.id);
+      }
     } catch (error) {
       const { name, message, stack, cause } = /**@type { Error } */ (error);
       logger.error(
@@ -91,8 +95,10 @@ export async function run({ params, record, logger, api, connections }) {
           shopId: record.id,
         },
       });
-      const res = await api.shopifyProduct.bulkDelete(products.map((r) => r.id));
-      logger.info(res, '[shopifyShop:uninstall] Deleted Related Products');
+      if (products) {
+        const res = await api.shopifyProduct.bulkDelete(products.map((r) => r.id));
+        logger.info(res, '[shopifyShop:uninstall] Deleted Related Products');
+      }
     } catch (error) {
       /**@type { Error } */
       const err = error;
@@ -114,8 +120,10 @@ export async function run({ params, record, logger, api, connections }) {
           shopId: record.id,
         },
       });
-      const res = await api.shopifyProductImage.bulkDelete(productImages.map((r) => r.id));
-      logger.info(res, '[shopifyShop:uninstall] Deleted Related ProductImages');
+      if (productImages) {
+        const res = await api.shopifyProductImage.bulkDelete(productImages.map((r) => r.id));
+        logger.info(res, '[shopifyShop:uninstall] Deleted Related ProductImages');
+      }
     } catch (error) {
       /**@type { Error } */
       const err = error;
