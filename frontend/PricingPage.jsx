@@ -34,7 +34,7 @@ const PricingPage = () => {
       id: shop?.id,
       plan: plan,
     });
-
+    console.log(currShop, 'curr shop1');
     console.log(currShop?.data?.confirmationUrl, 'curr shop');
 
     // redirect the merchant to accept the charge within Shopify's interface

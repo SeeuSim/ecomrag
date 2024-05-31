@@ -24,13 +24,13 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Logic to determine the plan and set limits accordingly
-  const plan = /**@type { string }*/ (record.plan);
+  const plan = /**@type { string | undefined }*/ (record.plan);
   // Create Plan
   api.plan.create({
     shop: {
       _link: record.id,
     },
-    tier: plan.replace(/^\w/, (c) => c.toUpperCase()),
+    tier: plan ? plan.replace(/^\w/, (c) => c.toUpperCase()) : 'Free',
   });
 
   // TODO: Deprecate these lines in favor of separate Plan Model
@@ -41,18 +41,23 @@ export async function onSuccess({ params, record, logger, api, connections }) {
     case 'growth':
       productSyncLimit = PLAN_LIMITS.Growth.productSyncCount; // Limit to 500 products for growth plan
       productImageSyncLimit = PLAN_LIMITS.Growth.imageUploadCount;
-      chatSessionsLimit = 3000; // Limit to 500 chats per day for growth plan
+      chatSessionsLimit = PLAN_LIMITS.Growth.chatSessionsLimit; // Limit to 500 chats per day for growth plan
       break;
     case 'premium':
       productSyncLimit = PLAN_LIMITS.Premium.productSyncCount; // Limit to 2000 products for premium plan
       productImageSyncLimit = PLAN_LIMITS.Premium.imageUploadCount;
-      chatSessionsLimit = 15000; // Limit to 1000 chats per day for premium plan
+      chatSessionsLimit = PLAN_LIMITS.Premium.chatSessionsLimit; // Limit to 1000 chats per day for premium plan
+      break;
+    case 'enterprise':
+      productSyncLimit = PLAN_LIMITS.Enterprise.productSyncCount; // Limit to 2000 products for premium plan
+      productImageSyncLimit = PLAN_LIMITS.Enterprise.imageUploadCount;
+      chatSessionsLimit = PLAN_LIMITS.Enterprise.chatSessionsLimit; // Limit to 1000 chats per day for premium plan
       break;
     default:
       // Default is Free plan
       productSyncLimit = PLAN_LIMITS.Free.productSyncCount; // Limit to 100 products for free plan      | No limits for enterprise
       productImageSyncLimit = PLAN_LIMITS.Free.imageUploadCount;
-      chatSessionsLimit = 600; // Limit to 30 chats per day for free plan | No limits for enterprise
+      chatSessionsLimit = PLAN_LIMITS.Free.chatSessionsLimit; // Limit to 30 chats per day for free plan | No limits for enterprise
   }
   // Update the record with the new limits
   record.productSyncLimit = productSyncLimit;
@@ -76,18 +81,16 @@ export async function onSuccess({ params, record, logger, api, connections }) {
 
   await postShopCreateResult(record, logger);
 
-  // Sync a limited number of products based on the plan
-  if (productSyncLimit) {
-    await api.shopifySync.run({
-      shopifySync: {
-        domain: record.domain,
-        shop: {
-          _link: record.id,
-        },
-        models: ['shopifyProduct', 'shopifyProductImage'],
+  // Sync logic will tie together with plan, as will image creation
+  // See shopifyProduct:create/update, shopifyProductImage:create/update
+  await api.shopifySync.run({
+    shopifySync: {
+      domain: record.domain,
+      shop: {
+        _link: record.id,
       },
-    });
-  }
+    },
+  });
 }
 
 /** @type { ActionOptions } */

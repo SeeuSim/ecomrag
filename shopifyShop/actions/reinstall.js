@@ -1,11 +1,11 @@
 import {
-  transitionState,
+  ActionOptions,
+  ReinstallShopifyShopActionContext,
+  ShopifyShopState,
   applyParams,
   preventCrossShopDataAccess,
   save,
-  ActionOptions,
-  ShopifyShopState,
-  ReinstallShopifyShopActionContext,
+  transitionState,
 } from 'gadget-server';
 import { postShopCreateResult } from '../../routes/main-backend/utils';
 
@@ -13,7 +13,9 @@ import { postShopCreateResult } from '../../routes/main-backend/utils';
  * @param { ReinstallShopifyShopActionContext } context
  */
 export async function run({ params, record, logger, api, connections }) {
-  transitionState(record, { from: ShopifyShopState.Uninstalled, to: ShopifyShopState.Installed });
+  if (!(record instanceof Object && record.state['created'] === 'uninstalled')) {
+    transitionState(record, { from: ShopifyShopState.Uninstalled, to: ShopifyShopState.Installed });
+  }
   applyParams(params, record);
   await preventCrossShopDataAccess(params, record);
   await save(record);
@@ -32,13 +34,6 @@ export async function onSuccess({ params, record, logger, api, connections }) {
         shopifyShop: {
           _link: record.id,
         },
-        models: [
-          'shopifyShop',
-          'shopifyProduct',
-          'shopifyProductImage',
-          // "shopifyOrder",
-          // "shopifyOrderLineItem"
-        ],
       }),
     ]);
     logger.info(runSyncResult, '[shopifyShop:reinstall] Ran Sync');
