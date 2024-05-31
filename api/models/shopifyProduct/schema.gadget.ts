@@ -31,6 +31,11 @@ export const schema: GadgetModel = {
       sourceFile: "api/models/shopifyProduct/imageCount.gelly",
       storageKey: "Yts3VgeLC8QK::M9jo_bfhX67S",
     },
+    price: {
+      type: "number",
+      decimals: 2,
+      storageKey: "_8Hsk2jbT6Xi",
+    },
   },
   shopify: {
     fields: [
