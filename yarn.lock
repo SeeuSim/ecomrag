@@ -1116,7 +1116,7 @@
     tslib "^2.6.2"
     ws "^8.13.0"
 
-"@gadgetinc/api-client-core@0.15.24":
+"@gadgetinc/api-client-core@0.15.24", "@gadgetinc/api-client-core@^0.15.24":
   version "0.15.24"
   resolved "https://registry.yarnpkg.com/@gadgetinc/api-client-core/-/api-client-core-0.15.24.tgz#73fd53e0a1ce8a8a98bc1a68d685ac0e20aa56c5"
   integrity sha512-w1glp2SypeJrG3YPwZfzcDRFynfZNb64k17PvkuijVd3uPHwkwSOmX0E2GIlaMNt7khixHM4MOzDxThTFyW/Lg==
@@ -1146,14 +1146,16 @@
     "@shopify/app-bridge-utils" "^3.1.1"
     crypto-js "^4.1.1"
 
-"@gadgetinc/react@^0.15.0":
-  version "0.15.0"
-  resolved "https://registry.yarnpkg.com/@gadgetinc/react/-/react-0.15.0.tgz#12cc76098a6c040aed5ac7e0c58a441e4157882b"
-  integrity sha512-2/CEJ4ixGlT+aVmOXgh/M6GZgMoGY23DcqUof2n2CGAlf9OyhTASZsjMEM+IB+7ksfmFzFojS5H90U3mguFr+g==
+"@gadgetinc/react@^0.15.9":
+  version "0.15.10"
+  resolved "https://registry.yarnpkg.com/@gadgetinc/react/-/react-0.15.10.tgz#2e913b0ae7963f4d9826bbb4d83ffba543185a4b"
+  integrity sha512-H/GtMU065amkaYCqMXOn6Lt0LEpMGW6kDndM4MHy/r96LfZf9JAJyyuhYVZUVd8dYwg/gq66K6xiqGUHt6QpJQ==
   dependencies:
-    "@gadgetinc/api-client-core" "^0.15.13"
+    "@0no-co/graphql.web" "^1.0.4"
+    "@gadgetinc/api-client-core" "^0.15.24"
     react-fast-compare "^3.2.2"
     react-hook-form "~7.48.2"
+    tslib "^2.6.2"
     urql "^4.0.4"
 
 "@humanwhocodes/config-array@^0.11.13":

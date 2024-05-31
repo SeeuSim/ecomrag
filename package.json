@@ -31,7 +31,7 @@
     "@fastify/cors": "^8.5.0",
     "@fastify/multipart": "^8.1.0",
     "@gadget-client/ecomrag": "link:.gadget/client",
-    "@gadgetinc/react": "^0.15.0",
+    "@gadgetinc/react": "^0.15.9",
     "@gadgetinc/react-shopify-app-bridge": "^0.13.4",
     "@langchain/openai": "^0.0.18",
     "@mui/material": "^5.15.11",
@@ -45,7 +45,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "6.15.0",
-    "shopify-api-node": "^3.12.6"
+    "shopify-api-node": "^3.12.6",
+    "fastify": "^4.24.2"
   },
   "devDependencies": {
     "@types/node": "^20.8.4",
