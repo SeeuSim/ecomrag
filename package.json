@@ -12,14 +12,11 @@
     "update-client": "./scripts/update-client.sh"
   },
   "lint-staged": {
-    "frontend/**/*.{js,jsx}": [
+    "web/**/*.{js,jsx}": [
       "prettier --write",
       "eslint --fix"
     ],
-    "shopify*/**/*.js": [
-      "prettier --write"
-    ],
-    "{chatbotSettings,chatLog,imageRecommendedProduct,plan,recommendedProduct,routes}/**/*.js": [
+    "api/**/*.js": [
       "prettier --write"
     ]
   },
