@@ -85,15 +85,15 @@ async function validatePlanUsage({ api, record, logger, planName: name }) {
         if (newPlanTier === 'Free') {
           // Delete all images
           logger.info({}, 'Free Tier - Deleting all images');
-          const imageRecords = await api.shopifyProductImage.findMany({
+          let imagePage = await api.shopifyProductImage.findMany({
             where: {
               shopId: record.id,
             },
           });
-          let imagesToDelete = [...imageRecords];
-          while (imageRecords.hasNextPage) {
-            imageRecords = await imageRecords.nextPage();
-            imagesToDelete = [...imagesToDelete, ...imageRecords];
+          let imagesToDelete = [...imagePage];
+          while (imagePage.hasNextPage) {
+            imagePage = await imagePage.nextPage();
+            imagesToDelete = [...imagesToDelete, ...imagePage];
           }
           await api.shopifyProductImage.bulkDelete(imagesToDelete.map((v) => v.id));
         } else {
