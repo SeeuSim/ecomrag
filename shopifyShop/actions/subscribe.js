@@ -6,7 +6,7 @@ import { PLAN_LIMITS } from '../../plan/utils';
 
 const PLANS = {
   free: {
-    price: 0.0,
+    price: 0.01,
   },
   growth: {
     price: 9.0,
@@ -96,7 +96,11 @@ async function validatePlanUsage({ api, record, logger, planName: name }) {
             imagesToDelete = [...imagesToDelete, ...imagePage];
           }
           if (imagesToDelete && imagesToDelete.length > 0) {
-            await api.shopifyProductImage.bulkDelete(imagesToDelete.map((v) => v.id));
+            for (let i = 0; i < imagesToDelete.length; i = i + 10) {
+              await api.shopifyProductImage.bulkDelete(
+                imagesToDelete.slice(i, i + 10).map((v) => v.id)
+              );
+            }
             await api.plan.update(existingPlanRecord.id, {
               imageUploadCount: PLAN_LIMITS[newPlanTier].imageUploadCount,
             });
@@ -120,12 +124,14 @@ async function validatePlanUsage({ api, record, logger, planName: name }) {
               imagesToUpdate = [...imagesToUpdate, ...imagePage];
             }
             if (imagesToUpdate && imagesToUpdate.length > 0) {
-              await api.shopifyProductImage.bulkUpdate(
-                imagesToUpdate.slice(0, exceeded).map((v) => ({
-                  id: v.id,
-                  imageDescriptionEmbedding: null,
-                }))
-              );
+              for (let i = 0; i < exceeded; i = i + 10) {
+                await api.shopifyProductImage.bulkUpdate(
+                  imagesToUpdate.slice(i, i + 10).map((v) => ({
+                    id: v.id,
+                    imageDescriptionEmbedding: null,
+                  }))
+                );
+              }
               await api.plan.update(existingPlanRecord.id, {
                 imageUploadCount: PLAN_LIMITS[newPlanTier].imageUploadCount,
               });
@@ -152,12 +158,14 @@ async function validatePlanUsage({ api, record, logger, planName: name }) {
             productsToStrip = [...productsToStrip, ...productPage];
           }
           if (productsToStrip && productsToStrip.length > 0) {
-            await api.shopifyProduct.bulkUpdate(
-              productsToStrip.map((v) => ({
-                id: v.id,
-                descriptionEmbedding: null,
-              }))
-            );
+            for (let i = 0; i < productsToStrip.length; i = i + 10) {
+              await api.shopifyProduct.bulkUpdate(
+                productsToStrip.slice(i, i + 10).map((v) => ({
+                  id: v.id,
+                  descriptionEmbedding: null,
+                }))
+              );
+            }
             await api.plan.update(existingPlanRecord.id, {
               productSyncCount: PLAN_LIMITS[newPlanTier].productSyncCount,
             });
@@ -232,14 +240,13 @@ export async function run({ api: gadgetApi, record, params, connections, logger 
   });
 
   logger.info({ appSubscriptionId: appSubscription?.id }, 'created subscription');
+  await api.enqueue(validatePlanUsage, { api, record, logger, planName: name });
 }
 
 /**
  * @param { SubscribeShopifyShopActionContext } context
  */
-export async function onSuccess({ params, record, logger, api, connections }) {
-  await validatePlanUsage({ api, record, logger, planName: params.plan ?? 'free' });
-}
+export async function onSuccess({ params, record, logger, api, connections }) {}
 
 /** @type { ActionOptions } */
 export const options = {
