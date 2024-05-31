@@ -72,6 +72,10 @@ async function validatePlanUsage({ api, record, logger, planName: name }) {
     // 1. If upgrade, sync to limit
     if (isUpgrade) {
       logger.info({}, 'Upgrade - running sync');
+      await api.shop.update(existingPlanRecord.id, {
+        productSyncLimit: PLAN_LIMITS[newPlanTier].productSyncCount,
+        productImageSyncLimit: PLAN_LIMITS[newPlanTier].imageUploadCount,
+      });
       await api.shopifySync.run({
         domain: record.domain,
         shop: {
@@ -250,7 +254,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {}
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: "update",
+  actionType: 'update',
   triggers: { api: true },
 };
 
