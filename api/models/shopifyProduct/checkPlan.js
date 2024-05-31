@@ -49,7 +49,7 @@ export const tryIncrProductSyncCount = async ({ record, api, logger, isUpdate })
   } else {
     if (!withinLimit) {
       logger.info('Product limit reached for the current plan. Skipping embedding creation.');
+      return false;
     }
-    return false;
   }
 };
