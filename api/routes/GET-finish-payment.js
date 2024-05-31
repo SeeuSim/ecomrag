@@ -1,19 +1,14 @@
-import { logger } from 'gadget-server';
-
-export default async function route({ request, reply }) {
-  const { api, connections } = request;
-
-  logger.info(request.query.shop_id, 'shop_id');
-  logger.info(request.query.charge_id, 'charge_id');
-  logger.info('hiiiiii charge_id');
-  // get an instance of the shopify-api-node API client for this shop
+/**
+ * @param {import('gadget-server').RouteContext}
+ */
+export default async function route({ request, reply, api, connections, logger }) {
+  const { shop_id, charge_id } = request.query ?? { shop_id: '', charge_id: '' };
+  logger.info({ shop_id, charge_id }, 'Query Params');
   const shopify = await connections.shopify.forShopId(request.query.shop_id);
-
-	logger.info(shopify, "shopify");
-	logger.info(shopify.current, "shopify.current");
-
-	logger.info(shopify.baseUrl, "shopify.baseUrl");
-
+  // get an instance of the shopify-api-node API client for this shop
+  logger.info(shopify, 'shopify');
+  logger.info(shopify.current, 'shopify.current');
+  logger.info(shopify.baseUrl, 'shopify.baseUrl');
 
   // make an API call to Shopify to validate that the charge object for this shop is active
   const result = await shopify.graphql(`
@@ -36,20 +31,19 @@ export default async function route({ request, reply }) {
 
   // the merchant has accepted the charge, so we can grant them access to our application
   // retrieve the plan name from the AppSubscription query result
-  const planName = result.node.name;
+  const planName = /**@type {string}*/ (result.node.name);
   logger.info(planName, 'planName here!');
 
-  // example: mark the shop as paid by setting a `plan` attribute with the retrieved plan name
-  await api.shopifyShop.update(request.query.shop_id, { Plan: planName });
+  // Mark the shop as paid by setting a `plan` attribute with the retrieved plan name
+  await api.enqueue(api.validatePlan, {
+    newPlanName: planName.replace(/^\w/, (c) => c.toUpperCase()),
+    shopId: shop_id,
+  });
 
   // send the user back to the embedded app
 
-	
-
-	const shopName = shopify.baseUrl.hostname.split('.')[0];
-	logger.info(shopName, "shopName");
-
-	
+  const shopName = shopify.baseUrl.hostname.split('.')[0];
+  logger.info(shopName, 'shopName');
 
   await reply.redirect(`https://admin.shopify.com/store/${shopName}/apps/askshop-ai`);
 }
