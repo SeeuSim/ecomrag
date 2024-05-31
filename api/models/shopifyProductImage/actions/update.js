@@ -26,14 +26,13 @@ export async function onSuccess({ record, logger, api, params: _p, connections: 
     Embed: !record.getField('imageDescriptionEmbedding') || record.changed('source'),
     Caption: !record.getField('imageDescription') || record.changed('source'),
   };
-  if (
-    await tryIncrImageSyncCount({
-      record,
-      api,
-      logger,
-      isUpdate: isCaptionEmbed.Caption || isCaptionEmbed.Embed,
-    })
-  ) {
+  const isEmbed = await tryIncrImageSyncCount({
+    record,
+    api,
+    logger,
+    isUpdate: isCaptionEmbed.Caption || isCaptionEmbed.Embed,
+  });
+  if (isEmbed) {
     await postProductImgEmbedCaption(
       { Id: record.id, Source: record.source },
       isCaptionEmbed,

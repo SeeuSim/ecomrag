@@ -4,8 +4,8 @@ import {
   preventCrossShopDataAccess,
   save,
 } from 'gadget-server';
-import { IMAGE_PER_PRODUCT } from '../../plan/utils';
 import { postProductImageCreateResult } from '../../../routes/main-backend/utils';
+import { IMAGE_PER_PRODUCT } from '../../plan/utils';
 import { tryIncrImageSyncCount } from '../checkPlan';
 import { postProductImgEmbedCaption } from '../postSqs';
 
@@ -41,11 +41,10 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { CreateShopifyProductImageActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
-  if (
-    !!record.source &&
-    record.source.length > 0 &&
-    (await tryIncrImageSyncCount({ params, record, logger, api, connections }))
-  ) {
+  const isSrcValid = !!record.source && record.source.length > 0;
+  const isEmbed =
+    isSrcValid && (await tryIncrImageSyncCount({ params, record, logger, api, connections }));
+  if (isEmbed) {
     await postProductImgEmbedCaption(
       { Id: record.id, Source: record.source },
       { Caption: true, Embed: true },

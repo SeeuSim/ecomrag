@@ -1,13 +1,13 @@
 import {
+  ActionOptions,
+  CreateShopifyProductActionContext,
   applyParams,
   preventCrossShopDataAccess,
   save,
-  ActionOptions,
-  CreateShopifyProductActionContext,
 } from 'gadget-server';
+import { postProductCreateResult } from '../../../routes/main-backend/utils';
 import { tryIncrProductSyncCount } from '../checkPlan';
 import { postProductDescEmbedding } from '../postSqs';
-import { postProductCreateResult } from '../../../routes/main-backend/utils';
 
 /**
  * @param { CreateShopifyProductActionContext } context
@@ -28,7 +28,8 @@ export async function onSuccess({
   params: _params,
   connections: _connections,
 }) {
-  if (await tryIncrProductSyncCount({ record, logger, api })) {
+  const isEmbed = await tryIncrProductSyncCount({ record, logger, api });
+  if (isEmbed) {
     await postProductDescEmbedding(
       { Id: record.id, Description: `${record.title}: ${record.body}` },
       record.shopId ?? 'DUMMYMSGGRPID',
