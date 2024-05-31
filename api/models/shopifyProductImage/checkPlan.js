@@ -35,7 +35,7 @@ export const tryIncrImageSyncCount = async ({ record, api, logger, isUpdate }) =
         await api.internal.plan.update(plan.id, {
           _atomics: {
             imageUploadCount: {
-              increment: 0.5,
+              increment: 1,
             },
           },
         });
@@ -50,6 +50,6 @@ export const tryIncrImageSyncCount = async ({ record, api, logger, isUpdate }) =
     if (!withinLimit) {
       logger.info('Product limit reached for the current plan. Skipping embedding creation.');
     }
-    return false;
+    return withinLimit;
   }
 };
