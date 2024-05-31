@@ -149,6 +149,6 @@ async function redactShopData(shopDomain) {
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: "create",
+  actionType: 'create',
   triggers: { api: false },
 };

@@ -44,6 +44,6 @@ export async function onSuccess({ params, record, logger, api, connections }) {
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: "delete",
+  actionType: 'delete',
   triggers: { api: true },
 };

@@ -71,4 +71,4 @@ export const params = {
   plan: { type: 'string' },
 };
 
-export const options = { triggers: { api: true } }
+export const options = { triggers: { api: true } };

@@ -14,7 +14,7 @@ export default async function route({ request, reply, api, logger, connections }
   let data = request.body;
 
   let aggr = [];
-  
+
   switch (data.Model) {
     case 'shopifyProductImage':
       let iRes = await api.shopifyProductImage.findMany({
@@ -33,7 +33,10 @@ export default async function route({ request, reply, api, logger, connections }
         iRes = await iRes.nextPage();
         iRes.forEach((v) => aggr.push(v));
       }
-      await reply.code(200).type('application/json').send({ count: aggr.length, model:'shopifyProductImage' });
+      await reply
+        .code(200)
+        .type('application/json')
+        .send({ count: aggr.length, model: 'shopifyProductImage' });
       return;
     case 'shopifyProduct':
       console.log('Starting...');
@@ -53,6 +56,9 @@ export default async function route({ request, reply, api, logger, connections }
         pRes = await pRes.nextPage();
         pRes.forEach((v) => aggr.push(v));
       }
-      await reply.code(200).type('application/json').send({ count: aggr.length, model:'shopifyProduct' });
+      await reply
+        .code(200)
+        .type('application/json')
+        .send({ count: aggr.length, model: 'shopifyProduct' });
   }
 }

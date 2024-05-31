@@ -61,6 +61,6 @@ export async function onSuccess({ params, record, logger, api, connections }) {
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: "create",
+  actionType: 'create',
   triggers: { api: true },
 };

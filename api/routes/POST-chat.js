@@ -4,7 +4,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { ChatOpenAI } from '@langchain/openai';
 
-import { Reply, Request, api, logger } from 'gadget-server';
+import { logger } from 'gadget-server';
 import { Readable } from 'stream';
 
 import { createProductImageEmbedding } from '../models/shopifyProductImage/createImageEmbedding';
@@ -43,7 +43,7 @@ function getCurrentDateString() {
 }
 
 /**
- * @typedef { Awaited<ReturnType<typeof api.shopifyProduct.findOne>> } Product
+ * @typedef { import('@gadget-client/ecomrag').ShopifyProduct } Product
  */
 
 /**
@@ -353,8 +353,6 @@ export default async function route({ request, reply, api, logger, connections }
           })
         : userMessage;
 
-    // TODO: migrate to image embeddings endpoint since it uses OpenAI CLIP
-    // embed the incoming message from the user
     /** @type { { data: { embedding: number[] }[] } } */
     const embedResponse = await fetch(EMBEDDING_ENDPOINT, {
       method: 'POST',
@@ -477,14 +475,30 @@ export default async function route({ request, reply, api, logger, connections }
 
   // Conversion data
   if (chatHistory.length === 0) {
-    await api.internal.shopifyShop.update(ShopId, {
-      _atomics: {
-        conversationCount: {
-          increment: 1,
+    try {
+      await api.internal.shopifyShop.update(ShopId, {
+        _atomics: {
+          conversationCount: {
+            increment: 1,
+          },
         },
-      },
-    });
-
+      });
+      const plan = await api.plan.findByShop(ShopId);
+      if (plan) {
+        await api.internal.plan.update(plan.id, {
+          _atomics: {
+            chatSessionsCount: {
+              increment: 1,
+            },
+          },
+        });
+      }
+    } catch (error) {
+      logger.error(
+        { name: error.name, message: error.message, stack: error.stack, cause: error.cause },
+        'An error occurred syncing the plan data.'
+      );
+    }
     // TODO: push timeseries
   }
 }

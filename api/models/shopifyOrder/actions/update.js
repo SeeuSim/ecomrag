@@ -29,4 +29,4 @@ export async function onSuccess({ params, record, logger, api, connections }) {
   }
 }
 
-export const options = { triggers: { api: false } }
+export const options = { triggers: { api: false } };

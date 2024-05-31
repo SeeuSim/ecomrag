@@ -14,11 +14,6 @@ import { postProductCreateResult } from '../../../routes/main-backend/utils';
  */
 export async function run({ params, record, logger, api, connections }) {
   applyParams(params, record);
-  // const shop = await api.shopifyShop.findOne({
-  //   where: { id: connections.shopify.current.id }
-  // });
-  // const productSyncLimit = shop.productSyncLimit;
-
   await preventCrossShopDataAccess(params, record);
   await save(record);
 }
@@ -45,6 +40,6 @@ export async function onSuccess({
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: "create",
+  actionType: 'create',
   triggers: { api: true },
 };

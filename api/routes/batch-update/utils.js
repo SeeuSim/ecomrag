@@ -3,10 +3,10 @@ const { NODE_ENV } = process.env;
 /**@type { (v?: string | null) => string } */
 export const stripHTMLTags = (rawStr) => {
   if (!rawStr) {
-    return "";
+    return '';
   }
-  return rawStr.replace(/(<([^>]+)>)/gi, "");
-}
+  return rawStr.replace(/(<([^>]+)>)/gi, '');
+};
 
 /**@type {(record: { id: string, model: string, source?: string, description?: string}) => {}} */
 export const getMessagePayload = (record) => {
@@ -26,10 +26,10 @@ export const getMessagePayload = (record) => {
             DataType: 'String',
             StringValue: `${record.description}`,
           },
-      }),
+        }),
     Environment: {
       DataType: 'String',
-      StringValue: `${NODE_ENV}`
-    }
+      StringValue: `${NODE_ENV}`,
+    },
   };
 };

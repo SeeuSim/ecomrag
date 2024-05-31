@@ -52,6 +52,6 @@ export async function onSuccess({ record, logger, api, params: _p, connections: 
 
 /** @type { ActionOptions } */
 export const options = {
-  actionType: "update",
+  actionType: 'update',
   triggers: { api: true },
 };
