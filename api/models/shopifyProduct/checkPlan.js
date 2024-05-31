@@ -31,7 +31,7 @@ export const tryIncrProductSyncCount = async ({ record, api, logger, isUpdate })
 
   if (withinLimit || isUpdate) {
     try {
-      if (withinLimit) {
+      if (!isUpdate) {
         await api.internal.plan.update(plan.id, {
           _atomics: {
             productSyncCount: {
@@ -40,16 +40,13 @@ export const tryIncrProductSyncCount = async ({ record, api, logger, isUpdate })
           },
         });
       }
-      return true;
     } catch (error) {
       const { name, message, stack, cause } = /**@type { Error } */ (error);
       logger.error({ name, message, stack, cause }, 'Error incrementing Sync Count');
       return false;
     }
-  } else {
-    if (!withinLimit) {
-      logger.info('Product limit reached for the current plan. Skipping embedding creation.');
-    }
-    return withinLimit;
+    return true;
   }
+  logger.info('Product limit reached for the current plan. Skipping embedding creation.');
+  return false;
 };
