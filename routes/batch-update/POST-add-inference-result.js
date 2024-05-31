@@ -74,6 +74,6 @@ export default async function route({ request, reply, api, logger, connections }
       },
       'Update failed'
     );
-    await reply.code(500).send(JSON.stringify(outputErr));
+    await reply.code(500).send('Internal Server Error');
   }
 }
