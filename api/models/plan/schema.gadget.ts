@@ -17,7 +17,7 @@ export const schema: GadgetModel = {
     imageUploadCount: {
       type: "number",
       default: 0,
-      decimals: 1,
+      decimals: 0,
       validations: { numberRange: { min: 0, max: null } },
       storageKey: "7cqSeiLDCYyb::EFkwESO5bBZE",
     },
