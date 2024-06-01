@@ -7,6 +7,19 @@ export const schema: GadgetModel = {
   type: "gadget/model-schema/v1",
   storageKey: "DataModel-Shopify-Product",
   fields: {
+    analyticsEntry: {
+      type: "hasManyThrough",
+      sibling: {
+        model: "analyticsTimeSeries",
+        relatedField: "convertedProducts",
+      },
+      join: {
+        model: "analyticsProductEntry",
+        belongsToSelfField: null,
+        belongsToSiblingField: null,
+      },
+      storageKey: "q-WI93Se6jBd",
+    },
     chatRecommendations: {
       type: "hasManyThrough",
       sibling: { model: "chatLog", relatedField: null },
