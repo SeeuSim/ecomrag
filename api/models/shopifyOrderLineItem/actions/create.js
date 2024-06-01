@@ -1,12 +1,13 @@
 import {
-  applyParams,
-  preventCrossShopDataAccess,
-  save,
   ActionOptions,
   CreateShopifyOrderLineItemActionContext,
+  applyParams,
+  deleteRecord,
+  preventCrossShopDataAccess,
+  save,
 } from 'gadget-server';
-import { getOrCreateTimeseriesEntry } from '../../analyticsTimeSeries/utils';
 import { getOrCreateAnalyticsProductEntry } from '../../analyticsProductEntry/utils';
+import { getOrCreateTimeseriesEntry } from '../../analyticsTimeSeries/utils';
 
 /**
  * @param { CreateShopifyOrderLineItemActionContext } context
@@ -49,6 +50,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
     },
   });
   if (recommendedProduct) {
+    // Create timeseries and join model record
     const timeSeries = await getOrCreateTimeseriesEntry({
       api,
       logger,
@@ -74,6 +76,8 @@ export async function onSuccess({ params, record, logger, api, connections }) {
         _link: timeSeries.id,
       },
     });
+
+    // Update plan count
     const plan = await gadgetApi.plan.maybeFindFirst({
       filter: {
         shop: {
@@ -91,6 +95,9 @@ export async function onSuccess({ params, record, logger, api, connections }) {
       });
     }
   }
+
+  // Remove for GDPR purposes
+  await deleteRecord(record);
 }
 
 /** @type { ActionOptions } */
