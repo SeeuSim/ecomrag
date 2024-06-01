@@ -5,19 +5,28 @@ import type { GadgetModel } from "gadget-server";
 
 export const schema: GadgetModel = {
   type: "gadget/model-schema/v1",
-  storageKey: "DataModel-_L12bvdMjwEN",
+  storageKey: "O01VSJuPTbtN",
   fields: {
     chatLog: {
       type: "belongsTo",
       parent: { model: "chatLog" },
-      storageKey:
-        "ModelField-AAYnMKLVCb5B::FieldStorageEpoch-0b6vSsUxRKqD",
+      storageKey: "nJ7tAd0x13E0",
     },
     product: {
       type: "belongsTo",
       parent: { model: "shopifyProduct" },
-      storageKey:
-        "ModelField-VyIZBFCxXLWz::FieldStorageEpoch-kyWHI7s2ppXo",
+      storageKey: "1pCr83Pk7RF0",
+    },
+    recommendationSource: {
+      type: "enum",
+      acceptMultipleSelections: false,
+      acceptUnlistedOptions: false,
+      options: [
+        "ProductDescriptionEmbedding",
+        "ProductImageDescriptionEmbedding",
+      ],
+      validations: { required: true },
+      storageKey: "g5TYNoIyNcyd",
     },
   },
 };

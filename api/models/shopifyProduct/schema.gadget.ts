@@ -9,14 +9,11 @@ export const schema: GadgetModel = {
   fields: {
     chatRecommendations: {
       type: "hasManyThrough",
-      sibling: {
-        model: "chatLog",
-        relatedField: "recommendedProducts",
-      },
+      sibling: { model: "chatLog", relatedField: null },
       join: {
-        model: "recommendedProduct",
-        belongsToSelfField: "product",
-        belongsToSiblingField: "chatLog",
+        model: null,
+        belongsToSelfField: null,
+        belongsToSiblingField: null,
       },
       storageKey:
         "ModelField-c0mBPShqadO_::FieldStorageEpoch-CVkJwYpGP7pc",

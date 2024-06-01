@@ -2,11 +2,11 @@ import {
   applyParams,
   save,
   ActionOptions,
-  CreateRecommendedProductActionContext,
+  CreateChatRecommendedProductActionContext,
 } from 'gadget-server';
 
 /**
- * @param { CreateRecommendedProductActionContext } context
+ * @param { CreateChatRecommendedProductActionContext } context
  */
 export async function run({ params, record, logger, api, connections }) {
   applyParams(params, record);
@@ -14,7 +14,7 @@ export async function run({ params, record, logger, api, connections }) {
 }
 
 /**
- * @param { CreateRecommendedProductActionContext } context
+ * @param { CreateChatRecommendedProductActionContext } context
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
@@ -23,5 +23,4 @@ export async function onSuccess({ params, record, logger, api, connections }) {
 /** @type { ActionOptions } */
 export const options = {
   actionType: 'create',
-  triggers: { api: true },
 };

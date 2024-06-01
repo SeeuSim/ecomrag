@@ -52,7 +52,12 @@ export async function onSuccess({ params, record, logger, api, connections }) {
       logger
     );
   } else {
-    logger.info({ source: record.source }, `Invalid source for product Image. Skipping embedding`);
+    if (!isSrcValid) {
+      logger.info(
+        { source: record.source },
+        `Invalid source for product Image. Skipping embedding`
+      );
+    }
   }
   await postProductImageCreateResult(record, logger);
   return;

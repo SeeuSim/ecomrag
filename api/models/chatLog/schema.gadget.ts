@@ -7,19 +7,6 @@ export const schema: GadgetModel = {
   type: "gadget/model-schema/v1",
   storageKey: "DataModel-E6iynx5hHbWC",
   fields: {
-    imageRecommendedProducts: {
-      type: "hasManyThrough",
-      sibling: {
-        model: "shopifyProduct",
-        relatedField: "chatRecommendations",
-      },
-      join: {
-        model: "imageRecommendedProduct",
-        belongsToSelfField: "chatLog",
-        belongsToSiblingField: "product",
-      },
-      storageKey: "4NAcztj9Sg_R::AobZK9ws9naN",
-    },
     recommendedProducts: {
       type: "hasManyThrough",
       sibling: {
@@ -31,8 +18,7 @@ export const schema: GadgetModel = {
         belongsToSelfField: "chatLog",
         belongsToSiblingField: "product",
       },
-      storageKey:
-        "ModelField-YSN1_saLLsDa::FieldStorageEpoch-XVLg6ln_rkiw",
+      storageKey: "2kegUiK7-rT_",
     },
     response: {
       type: "string",

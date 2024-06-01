@@ -134,6 +134,10 @@ const getImageBaseSystemPrompt = (products, talkativeness, personality) => {
  * @param { boolean | undefined } isImageRecommended
  */
 const handleLLMOnComplete = (gadgetApi, products, content, isImageRecommended) => {
+  /**@type { import('@gadget-client/ecomrag').RecommendedProduct['recommendationSource'] } */
+  const recommendationSource = isImageRecommended
+    ? 'ProductImageDescriptionEmbedding'
+    : 'ProductDescriptionEmbedding';
   const productMapFunc = (record) => (product) => ({
     chatLog: {
       _link: record.id,
@@ -141,6 +145,7 @@ const handleLLMOnComplete = (gadgetApi, products, content, isImageRecommended) =
     product: {
       _link: product.id,
     },
+    recommendationSource,
   });
 
   try {
@@ -150,11 +155,7 @@ const handleLLMOnComplete = (gadgetApi, products, content, isImageRecommended) =
         response: content,
       })
       .then((record) => {
-        if (isImageRecommended) {
-          void gadgetApi.imageRecommendedProduct.bulkCreate(products.map(productMapFunc(record)));
-        } else {
-          void gadgetApi.recommendedProduct.bulkCreate(products.map(productMapFunc(record)));
-        }
+        void gadgetApi.recommendedProduct.bulkCreate(products.map(productMapFunc(record)));
       });
   } catch (error) {
     logger.error(error?.message?.slice(0, 50) ?? 'An error occurred creating the chatlog.');
