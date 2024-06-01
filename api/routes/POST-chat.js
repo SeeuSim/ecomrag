@@ -209,7 +209,7 @@ export default async function route({ request, reply, api, logger, connections }
 
   const model = new ChatOpenAI({
     openAIApiKey: connections.openai.configuration.apiKey,
-    modelName: 'gpt-4-turbo-preview',
+    modelName: 'gpt-4o',
     streaming: true,
   });
 
