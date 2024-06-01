@@ -29,8 +29,8 @@ Example:
 }
 ```
  */
-type GadgetAccessControl = {
-  type: "gadget/access-control/v1";
+type GadgetPermissions = {
+  type: "gadget/permissions/v1";
   roles: {
     [x: string]: {
       storageKey: string;
@@ -74,19 +74,21 @@ type GadgetAccessControl = {
 
 type GadgetSettings = {
   type: "gadget/settings/v1";
+  frameworkVersion: "v0.1" | "v0.2" | "v0.3" | "v0.3.1" | "v1.0.0" | "v1.1.0";
   plugins: {
     connections?:
       | {
           shopify?:
             | (
                 | {
-                    apiVersion: "2022-01" | "2022-04" | "2022-07" | "2022-10" | "2023-01" | "2023-04" | "2023-07" | "2023-10" | "2024-01";
+                    apiVersion: "2022-01" | "2022-04" | "2022-07" | "2022-10" | "2023-01" | "2023-04" | "2023-07" | "2023-10" | "2024-01" | "2024-04";
                     enabledModels: string[];
                     type: "partner";
                     scopes: string[];
+                    customerAuthenticationEnabled?: boolean | undefined;
                   }
                 | {
-                    apiVersion: "2022-01" | "2022-04" | "2022-07" | "2022-10" | "2023-01" | "2023-04" | "2023-07" | "2023-10" | "2024-01";
+                    apiVersion: "2022-01" | "2022-04" | "2022-07" | "2022-10" | "2023-01" | "2023-04" | "2023-07" | "2023-10" | "2024-01" | "2024-04";
                     enabledModels: string[];
                     type: "admin";
                   }
@@ -101,8 +103,9 @@ type GadgetSettings = {
           settings: {
             redirectOnSignIn: string;
             signInPath: string;
-            unauthorizedUserRedirect: "redirect" | "show-403-error";
-            accessControlForSignedInUsers: string[];
+            unauthorizedUserRedirect: "redirect" | "signInPath" | "show-403-error" | "403Error";
+            accessControlForSignedInUsers?: string[] | undefined;
+            defaultSignedInRoles?: string[] | undefined;
           };
           methods: {
             googleOAuth?:
@@ -127,11 +130,11 @@ type GadgetModel = {
           type: "number";
           shopifyMetafield?:
             | {
-                privateMetafield: boolean;
-                namespace: string;
-                key: string;
-                metafieldType: string;
-                allowMultipleEntries: boolean;
+                privateMetafield?: boolean | undefined;
+                namespace?: string | undefined;
+                key?: string | undefined;
+                metafieldType?: string | undefined;
+                allowMultipleEntries?: boolean | undefined;
               }
             | undefined;
           default?: number | undefined;
@@ -162,11 +165,11 @@ type GadgetModel = {
           type: "string";
           shopifyMetafield?:
             | {
-                privateMetafield: boolean;
-                namespace: string;
-                key: string;
-                metafieldType: string;
-                allowMultipleEntries: boolean;
+                privateMetafield?: boolean | undefined;
+                namespace?: string | undefined;
+                key?: string | undefined;
+                metafieldType?: string | undefined;
+                allowMultipleEntries?: boolean | undefined;
               }
             | undefined;
           default?: string | undefined;
@@ -229,18 +232,17 @@ type GadgetModel = {
           type: "email";
           shopifyMetafield?:
             | {
-                privateMetafield: boolean;
-                namespace: string;
-                key: string;
-                metafieldType: string;
-                allowMultipleEntries: boolean;
+                privateMetafield?: boolean | undefined;
+                namespace?: string | undefined;
+                key?: string | undefined;
+                metafieldType?: string | undefined;
+                allowMultipleEntries?: boolean | undefined;
               }
             | undefined;
           default?: string | undefined;
           validations?:
             | {
                 required?: boolean | undefined;
-                email?: boolean | undefined;
                 stringLength?:
                   | {
                       min: number | null;
@@ -266,18 +268,17 @@ type GadgetModel = {
           type: "url";
           shopifyMetafield?:
             | {
-                privateMetafield: boolean;
-                namespace: string;
-                key: string;
-                metafieldType: string;
-                allowMultipleEntries: boolean;
+                privateMetafield?: boolean | undefined;
+                namespace?: string | undefined;
+                key?: string | undefined;
+                metafieldType?: string | undefined;
+                allowMultipleEntries?: boolean | undefined;
               }
             | undefined;
           default?: string | undefined;
           validations?:
             | {
                 required?: boolean | undefined;
-                url?: boolean | undefined;
                 stringLength?:
                   | {
                       min: number | null;
@@ -303,11 +304,11 @@ type GadgetModel = {
           type: "color";
           shopifyMetafield?:
             | {
-                privateMetafield: boolean;
-                namespace: string;
-                key: string;
-                metafieldType: string;
-                allowMultipleEntries: boolean;
+                privateMetafield?: boolean | undefined;
+                namespace?: string | undefined;
+                key?: string | undefined;
+                metafieldType?: string | undefined;
+                allowMultipleEntries?: boolean | undefined;
               }
             | undefined;
           default?: string | undefined;
@@ -331,14 +332,15 @@ type GadgetModel = {
           type: "json";
           shopifyMetafield?:
             | {
-                privateMetafield: boolean;
-                namespace: string;
-                key: string;
-                metafieldType: string;
-                allowMultipleEntries: boolean;
+                privateMetafield?: boolean | undefined;
+                namespace?: string | undefined;
+                key?: string | undefined;
+                metafieldType?: string | undefined;
+                allowMultipleEntries?: boolean | undefined;
               }
             | undefined;
           default?: any | undefined;
+          defaultAsString?: string | undefined;
           validations?:
             | {
                 required?: boolean | undefined;
@@ -359,11 +361,11 @@ type GadgetModel = {
           type: "enum";
           shopifyMetafield?:
             | {
-                privateMetafield: boolean;
-                namespace: string;
-                key: string;
-                metafieldType: string;
-                allowMultipleEntries: boolean;
+                privateMetafield?: boolean | undefined;
+                namespace?: string | undefined;
+                key?: string | undefined;
+                metafieldType?: string | undefined;
+                allowMultipleEntries?: boolean | undefined;
               }
             | undefined;
           default?: (string | string[]) | undefined;
@@ -390,11 +392,11 @@ type GadgetModel = {
           type: "boolean";
           shopifyMetafield?:
             | {
-                privateMetafield: boolean;
-                namespace: string;
-                key: string;
-                metafieldType: string;
-                allowMultipleEntries: boolean;
+                privateMetafield?: boolean | undefined;
+                namespace?: string | undefined;
+                key?: string | undefined;
+                metafieldType?: string | undefined;
+                allowMultipleEntries?: boolean | undefined;
               }
             | undefined;
           default?: boolean | undefined;
@@ -410,11 +412,11 @@ type GadgetModel = {
           type: "dateTime";
           shopifyMetafield?:
             | {
-                privateMetafield: boolean;
-                namespace: string;
-                key: string;
-                metafieldType: string;
-                allowMultipleEntries: boolean;
+                privateMetafield?: boolean | undefined;
+                namespace?: string | undefined;
+                key?: string | undefined;
+                metafieldType?: string | undefined;
+                allowMultipleEntries?: boolean | undefined;
               }
             | undefined;
           includeTime?: boolean | undefined;
@@ -509,11 +511,11 @@ type GadgetModel = {
             | undefined;
           shopifyMetafield?:
             | {
-                privateMetafield: boolean;
-                namespace: string;
-                key: string;
-                metafieldType: string;
-                allowMultipleEntries: boolean;
+                privateMetafield?: boolean | undefined;
+                namespace?: string | undefined;
+                key?: string | undefined;
+                metafieldType?: string | undefined;
+                allowMultipleEntries?: boolean | undefined;
               }
             | undefined;
           storageKey: string;
@@ -594,4 +596,4 @@ type GadgetModel = {
     | undefined;
 };
 
-export type { GadgetAccessControl, GadgetSettings, GadgetModel };
+export type { GadgetPermissions, GadgetSettings, GadgetModel };

@@ -61,6 +61,7 @@ const Globals = {
    * @internal
    */ platformModules: {
         lodash: platformModuleRequirer("lodash"),
-        bcrypt: platformModuleRequirer("bcrypt")
+        bcrypt: platformModuleRequirer("bcrypt"),
+        compareVersions: platformModuleRequirer("compare-versions")
     }
 };

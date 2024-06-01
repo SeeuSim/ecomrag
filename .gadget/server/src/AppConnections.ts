@@ -1,4 +1,5 @@
     import Shopify from "shopify-api-node";
+    import type { GadgetRecord } from "@gadgetinc/api-client-core";
     import OpenAI from "openai";
 
 
@@ -26,11 +27,10 @@
         configuration: ShopifyConnectionConfiguration;
 
         /**
-        * @deprecated Use forShopId or forShopDomain instead
-        * @param {string} remoteIdentifier The Shopify domain
-        * @returns {Shopify} Shopify Client
+        * @param {GadgetRecord<{ myshopifyDomain: string; accessToken: string; }>} shop - A shopify shop record
+        * @returns {Shopify} Shopify Client for the given shop
         */
-        forShop: (remoteIdentifier: string) => Shopify;
+        forShop: (shop: GadgetRecord<{ myshopifyDomain: string; accessToken: string; }>) => Shopify;
         /**
         * @param {bigint} shopId Shop ID from the Shop model
         * @returns {Promise<Shopify>} Promise which resolves to a Shopify Client
@@ -45,7 +45,7 @@
         * @param {bigint} shopId to set for the current context
         * @returns {Promise<void>} Resolves when the shop context has been updated
         **/
-        setCurrentShop: (shopId: bigint) => Promise<void>;
+        setCurrentShop: (shopId: bigint | string) => Promise<void>;
         /**
         * API keys (also known as Client keys) for all connected Shopify apps
         */

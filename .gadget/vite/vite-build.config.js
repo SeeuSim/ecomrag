@@ -16,6 +16,9 @@ const newConfig = async () => {
     manifest: true,
   };
 
+  config.plugins = config.plugins ? config.plugins : [];
+  
+
   return config;
 };
 

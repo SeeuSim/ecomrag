@@ -1,6 +1,6 @@
 {
   "name": "@gadget-client/ecomrag",
-  "version": "1.211.0-development.8980",
+  "version": "1.211.0-development.9003",
   "files": [
     "dist-*/",
     "types",
@@ -37,6 +37,6 @@
   "gadget": {
     "applicationName": "ecomrag",
     "environmentName": "Development",
-    "environmentVersion": "8980"
+    "environmentVersion": "9003"
   }
 }

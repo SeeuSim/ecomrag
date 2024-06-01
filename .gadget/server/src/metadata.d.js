@@ -9,6 +9,9 @@ function _export(target, all) {
     });
 }
 _export(exports, {
+    frameworkVersion: function() {
+        return frameworkVersion;
+    },
     modelListIndex: function() {
         return modelListIndex;
     },
@@ -16,5 +19,6 @@ _export(exports, {
         return modelsMap;
     }
 });
+const frameworkVersion;
 const modelsMap;
 const modelListIndex;

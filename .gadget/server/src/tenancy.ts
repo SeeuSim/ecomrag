@@ -1,7 +1,7 @@
 export const AppTenancyKey = Symbol.for("gadget/appTenancy");
 
 export type AppTenant = Partial<{
-  shopify: Pick<ShopifyTenant, "shopId">;
+  shopify: Pick<ShopifyTenant, "shopId" | "customerId">;
 }>;
 
 export type AppTenancy = Partial<{
@@ -13,4 +13,5 @@ type ShopifyTenant = {
   domain: string;
   accessToken: string;
   apiVersion: string;
+  customerId?: string;
 };

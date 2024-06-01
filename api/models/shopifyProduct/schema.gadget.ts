@@ -15,18 +15,21 @@ export const schema: GadgetModel = {
       },
       join: {
         model: "analyticsProductEntry",
-        belongsToSelfField: null,
-        belongsToSiblingField: null,
+        belongsToSelfField: "product",
+        belongsToSiblingField: "timeseries",
       },
       storageKey: "q-WI93Se6jBd",
     },
     chatRecommendations: {
       type: "hasManyThrough",
-      sibling: { model: "chatLog", relatedField: null },
+      sibling: {
+        model: "chatLog",
+        relatedField: "recommendedProducts",
+      },
       join: {
-        model: null,
-        belongsToSelfField: null,
-        belongsToSiblingField: null,
+        model: "recommendedProduct",
+        belongsToSelfField: "product",
+        belongsToSiblingField: "chatLog",
       },
       storageKey:
         "ModelField-c0mBPShqadO_::FieldStorageEpoch-CVkJwYpGP7pc",

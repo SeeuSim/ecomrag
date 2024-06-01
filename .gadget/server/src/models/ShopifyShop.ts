@@ -73,137 +73,209 @@ export type DefaultShopifyShopServerSelection = {
       readonly shopifyUpdatedAt: true;
       readonly weightUnit: true;
       readonly zipCode: true;
+      readonly ChatbotSettings: false;
+      readonly Plan: true;
+      readonly productSyncLimit: true;
+      readonly productSyncCount: true;
+      readonly productImageSyncLimit: true;
+      readonly productImageSyncCount: true;
+      readonly chatSessionsLimit: true;
+      readonly confirmationUrl: true;
+      readonly subscriptionId: true;
+      readonly plan: false;
+      readonly orders: false;
+      readonly orderLineItems: false;
   };
 
   
-/** All the data passed to an effect or precondition within the `update` action on the `shopifyShop` model. */
+/** Context of the `update` action on the `shopifyShop` model. */
 export interface UpdateShopifyShopActionContext extends AmbientContext {
   /**
-  * The model of the record this action is operating on
+  * The model this action is operating on
   */
   model: NotYetTyped;
   /**
-  * The `shopifyShop` record this action is operating on.
+  * An object specifying the `shopifyShop` record this action is operating on.
   */
   record: GadgetRecord<Select<ShopifyShop, DefaultShopifyShopServerSelection>>;
   /**
-  * An object passed between all preconditions and effects of an action execution at the `scope` property.
-  * Useful for transferring data between effects.
+  * @deprecated Use 'return' instead.
   */
   scope: ActionExecutionScope;
   /**
-  * An object describing what started this action execution.
+  * An object specifying the trigger to this action (e.g. API call, webhook events etc.).
   */
   trigger: ActionTrigger;
   /**
-  * An object containing all the incoming params that have been defined for this action. Includes params added by any triggers, as well as custom params defined in the action.
+  * An object containing the incoming data(this models fields) passed by triggers or user inputs.
   */
   params: {
 
 };
   /**
-  * The context of this action. This context does not have a defined inner context.
+  * @private The context of this action.
   */
   context: UpdateShopifyShopActionContext;
 };
 
 
     
-/** All the data passed to an effect or precondition within the `install` action on the `shopifyShop` model. */
-export interface InstallShopifyShopActionContext extends AmbientContext {
+/** Context of the `createAppCharge` action on the `shopifyShop` model. */
+export interface CreateAppChargeShopifyShopActionContext extends AmbientContext {
   /**
-  * The model of the record this action is operating on
+  * The model this action is operating on
   */
   model: NotYetTyped;
   /**
-  * The `shopifyShop` record this action is operating on.
+  * An object specifying the `shopifyShop` record this action is operating on.
   */
   record: GadgetRecord<Select<ShopifyShop, DefaultShopifyShopServerSelection>>;
   /**
-  * An object passed between all preconditions and effects of an action execution at the `scope` property.
-  * Useful for transferring data between effects.
+  * @deprecated Use 'return' instead.
   */
   scope: ActionExecutionScope;
   /**
-  * An object describing what started this action execution.
+  * An object specifying the trigger to this action (e.g. API call, webhook events etc.).
   */
   trigger: ActionTrigger;
   /**
-  * An object containing all the incoming params that have been defined for this action. Includes params added by any triggers, as well as custom params defined in the action.
+  * An object containing the incoming data(this models fields) passed by triggers or user inputs.
+  */
+  params: {
+plan?: string;
+};
+  /**
+  * @private The context of this action.
+  */
+  context: CreateAppChargeShopifyShopActionContext;
+};
+
+
+    
+/** Context of the `install` action on the `shopifyShop` model. */
+export interface InstallShopifyShopActionContext extends AmbientContext {
+  /**
+  * The model this action is operating on
+  */
+  model: NotYetTyped;
+  /**
+  * An object specifying the `shopifyShop` record this action is operating on.
+  */
+  record: GadgetRecord<Select<ShopifyShop, DefaultShopifyShopServerSelection>>;
+  /**
+  * @deprecated Use 'return' instead.
+  */
+  scope: ActionExecutionScope;
+  /**
+  * An object specifying the trigger to this action (e.g. API call, webhook events etc.).
+  */
+  trigger: ActionTrigger;
+  /**
+  * An object containing the incoming data(this models fields) passed by triggers or user inputs.
   */
   params: {
 
 };
   /**
-  * The context of this action. This context does not have a defined inner context.
+  * @private The context of this action.
   */
   context: InstallShopifyShopActionContext;
 };
 
 
     
-/** All the data passed to an effect or precondition within the `uninstall` action on the `shopifyShop` model. */
-export interface UninstallShopifyShopActionContext extends AmbientContext {
+/** Context of the `reinstall` action on the `shopifyShop` model. */
+export interface ReinstallShopifyShopActionContext extends AmbientContext {
   /**
-  * The model of the record this action is operating on
+  * The model this action is operating on
   */
   model: NotYetTyped;
   /**
-  * The `shopifyShop` record this action is operating on.
+  * An object specifying the `shopifyShop` record this action is operating on.
   */
   record: GadgetRecord<Select<ShopifyShop, DefaultShopifyShopServerSelection>>;
   /**
-  * An object passed between all preconditions and effects of an action execution at the `scope` property.
-  * Useful for transferring data between effects.
+  * @deprecated Use 'return' instead.
   */
   scope: ActionExecutionScope;
   /**
-  * An object describing what started this action execution.
+  * An object specifying the trigger to this action (e.g. API call, webhook events etc.).
   */
   trigger: ActionTrigger;
   /**
-  * An object containing all the incoming params that have been defined for this action. Includes params added by any triggers, as well as custom params defined in the action.
+  * An object containing the incoming data(this models fields) passed by triggers or user inputs.
   */
   params: {
 
 };
   /**
-  * The context of this action. This context does not have a defined inner context.
+  * @private The context of this action.
   */
-  context: UninstallShopifyShopActionContext;
+  context: ReinstallShopifyShopActionContext;
 };
 
 
     
-/** All the data passed to an effect or precondition within the `reinstall` action on the `shopifyShop` model. */
-export interface ReinstallShopifyShopActionContext extends AmbientContext {
+/** Context of the `subscribe` action on the `shopifyShop` model. */
+export interface SubscribeShopifyShopActionContext extends AmbientContext {
   /**
-  * The model of the record this action is operating on
+  * The model this action is operating on
   */
   model: NotYetTyped;
   /**
-  * The `shopifyShop` record this action is operating on.
+  * An object specifying the `shopifyShop` record this action is operating on.
   */
   record: GadgetRecord<Select<ShopifyShop, DefaultShopifyShopServerSelection>>;
   /**
-  * An object passed between all preconditions and effects of an action execution at the `scope` property.
-  * Useful for transferring data between effects.
+  * @deprecated Use 'return' instead.
   */
   scope: ActionExecutionScope;
   /**
-  * An object describing what started this action execution.
+  * An object specifying the trigger to this action (e.g. API call, webhook events etc.).
   */
   trigger: ActionTrigger;
   /**
-  * An object containing all the incoming params that have been defined for this action. Includes params added by any triggers, as well as custom params defined in the action.
+  * An object containing the incoming data(this models fields) passed by triggers or user inputs.
+  */
+  params: {
+plan?: string;
+};
+  /**
+  * @private The context of this action.
+  */
+  context: SubscribeShopifyShopActionContext;
+};
+
+
+    
+/** Context of the `uninstall` action on the `shopifyShop` model. */
+export interface UninstallShopifyShopActionContext extends AmbientContext {
+  /**
+  * The model this action is operating on
+  */
+  model: NotYetTyped;
+  /**
+  * An object specifying the `shopifyShop` record this action is operating on.
+  */
+  record: GadgetRecord<Select<ShopifyShop, DefaultShopifyShopServerSelection>>;
+  /**
+  * @deprecated Use 'return' instead.
+  */
+  scope: ActionExecutionScope;
+  /**
+  * An object specifying the trigger to this action (e.g. API call, webhook events etc.).
+  */
+  trigger: ActionTrigger;
+  /**
+  * An object containing the incoming data(this models fields) passed by triggers or user inputs.
   */
   params: {
 
 };
   /**
-  * The context of this action. This context does not have a defined inner context.
+  * @private The context of this action.
   */
-  context: ReinstallShopifyShopActionContext;
+  context: UninstallShopifyShopActionContext;
 };
 
 

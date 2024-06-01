@@ -22,7 +22,7 @@
   "gadget": {
     "applicationName": "ecomrag",
     "environmentName": "Development",
-    "environmentVersion": "8980"
+    "environmentVersion": "9003"
   },
   "name": "gadget-server",
   "peerDependencies": {
@@ -32,5 +32,5 @@
   "private": true,
   "scripts": {},
   "types": "types/index.d.ts",
-  "version": "1.211.0-development.8980"
+  "version": "1.211.0-development.9003"
 }

@@ -70,5 +70,6 @@ export const Globals = {
   platformModules: {
     lodash: platformModuleRequirer("lodash"),
     bcrypt: platformModuleRequirer("bcrypt"),
+    compareVersions: platformModuleRequirer("compare-versions"),
   },
 };

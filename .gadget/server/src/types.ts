@@ -100,6 +100,11 @@ export interface BackgroundActionTrigger extends Omit<APIActionTrigger, "type"> 
   finalAttempt: boolean;
   /** ID of the background action record */
   id: string;
+  priority: string;
+  queue?: {
+    name: string;
+    maxConcurrency: number;
+  };
 }
 
 /** Describes an action run by a Shopify merchant completing the OAuth process to install an application */
@@ -110,6 +115,11 @@ export interface ShopifyOAuthActionTrigger {
 /** Describes an action run by a Shopify Admin app being installed into Gadget */
 export interface ShopifyAdminActionTrigger {
   type: "shopify_admin";
+}
+
+/** Describes an action run by a Shopify customer who has logged in to a customer UI extension that has called this app */
+export interface ShopifyCustomerAccountLoginTrigger {
+  type: "shopify_customer_account_login";
 }
 
 /** Represents actions triggered by happenings inside the Gadget platform, like maintenance, or administrative actions taken inside the Gadget editor */
@@ -191,6 +201,7 @@ export type ActionTrigger =
   | BackgroundActionTrigger
   | ShopifyOAuthActionTrigger
   | ShopifyAdminActionTrigger
+  | ShopifyCustomerAccountLoginTrigger
   | PlatformTrigger
   | MockActionTrigger
   | GoogleOAuthSignInActionTrigger
@@ -206,7 +217,7 @@ export type ActionTrigger =
 
 export type ConfigurationVariablesBlob = Record<string, string | null>;
 
-/** @internal */
+/** @hidden */
 export type FindRecordCondition = Record<string, any>;
 
 /**
@@ -221,7 +232,7 @@ export interface BaseRecord {
 }
 
 export interface AnyBulkRecordLoader {
-  loadRecord(apiIdentifier: string, condition: FindRecordCondition): Promise<GadgetRecord<BaseRecord> | undefined>;
+  loadRecord(apiIdentifier: string, namespace: string[], condition: FindRecordCondition): Promise<GadgetRecord<BaseRecord> | undefined>;
 }
 
 /** Gadget's Error tracking object used in validation code effects for adding errors when a validation fails.*/
@@ -296,6 +307,10 @@ export interface AnyAmbientContext {
   config: ConfigurationVariablesBlob;
   /** A map of connection name to instantiated connection objects for <%- applicationName %> */
   connections: Record<string, unknown>;
+
+  /** A signal for if/when the request for processing this unit of work gets prematurely aborted. Useful for passing along to long running requests that should be interrupted when the client goes away. */
+  signal: AbortSignal;
+
   /** A high performance structured logger which writes logs to the Logs Viewer in the Gadget Editor. */
   logger: Logger;
   /**
@@ -347,6 +362,8 @@ export interface AnyRequestContext extends AnyAmbientContext {
   applicationSessionID?: string | null;
   /** @deprecated */
   applicationSession?: Session | null;
+  /** A signal for if/when the request for processing this unit of work gets prematurely aborted. Useful for passing along to long running requests that should be interrupted when the client goes away. */
+  signal: AbortSignal;
 }
 
 export interface BaseActionContext extends AnyAmbientContext {
@@ -475,7 +492,7 @@ export type ActionContextForBlob<T> = T extends { type: "Action" }
   : never;
 
 /**
- * @internal
+ * @hidden
  */
 export interface FieldMetadata {
   fieldType: string;
@@ -487,12 +504,13 @@ export interface FieldMetadata {
 }
 
 /**
- * @internal
+ * @hidden
  */
 export interface ModelMetadata {
   key: string;
   name: string;
   apiIdentifier: string;
+  namespace: string[];
   fields: {
     [key: string]: FieldMetadata;
   };
@@ -531,10 +549,6 @@ export interface AuthenticationConfigurationMethod {
           clientSecret?: string;
         };
         offlineMode: boolean;
-      }
-    | {
-        type: "AuthenticationMethodConfiguration";
-        values: Record<string, any>;
       }
     | {
         type: "EmailPasswordMethodConfiguration";
