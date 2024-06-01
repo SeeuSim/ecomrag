@@ -11,7 +11,7 @@ export const schema: GadgetModel = {
       type: "number",
       default: 0,
       decimals: 0,
-      validations: { numberRange: { min: -6, max: null } },
+      validations: { numberRange: { min: 0, max: null } },
       storageKey: "zFfELKXJYUcb",
     },
     product: {
