@@ -33,7 +33,7 @@ export const createProductEmbedding = async ({ params, record, api, logger, conn
       const embedResponse = await fetch(EMBEDDING_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain', Accept: 'application/json' },
-        body: `${record.title}: ${record.body}`,
+        body: `${record.title}: ${record.body}, Price: ${record.price}`,
       });
 
       if (!embedResponse.ok) {
