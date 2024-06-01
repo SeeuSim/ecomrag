@@ -48,6 +48,7 @@ exports.Globals = {
     platformModules: {
         lodash: platformModuleRequirer("lodash"),
         bcrypt: platformModuleRequirer("bcrypt"),
+        compareVersions: platformModuleRequirer("compare-versions"),
     },
 };
 //# sourceMappingURL=globals.js.map

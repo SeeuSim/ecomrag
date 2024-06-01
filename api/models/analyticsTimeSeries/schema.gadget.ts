@@ -7,7 +7,7 @@ export const schema: GadgetModel = {
   type: "gadget/model-schema/v1",
   storageKey: "9PA2FcW8nlTg",
   fields: {
-    chatSessionCount: {
+    chatSessionsCount: {
       type: "number",
       default: 0,
       decimals: 0,
@@ -31,6 +31,12 @@ export const schema: GadgetModel = {
       type: "dateTime",
       includeTime: true,
       storageKey: "h1NUtPWNNbZi",
+    },
+    numConvertedProducts: {
+      type: "computed",
+      sourceFile:
+        "api/models/analyticsTimeSeries/numConvertedProducts.gelly",
+      storageKey: "hcQWN8hHRVtf",
     },
     shop: {
       type: "belongsTo",

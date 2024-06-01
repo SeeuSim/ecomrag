@@ -30,45 +30,55 @@ function createGadgetRecord(apiIdentifier, data) {
 }
 exports.createGadgetRecord = createGadgetRecord;
 /**
- * Set incoming parameters onto a `record` object.
+ * Applies incoming API params (your model’s fields) to a record
  *
- * @param params - Parameters for setting, usually from an action context or a  to set on the record
- * @param record - Record to apply parameters to
+ * @param params - data passed from API calls, webhook events, or direct user inputs.
+ * @param record - object used to pass params to
  */
 function applyParams(params, record) {
     const model = getModelByTypename(record.__typename);
-    // override the record with any new params, including relationId params from any _link params on belongs to relationships
-    // Change the code snippet in `ApplyParamsDetailsPanel.tsx` when the code below updates
     Object.assign(record, params[model.apiIdentifier], getBelongsToRelationParams(model, params));
 }
 exports.applyParams = applyParams;
 /**
- * Validates the given record, then creates or updates the record in the database.
+ * Get the internal model manager for the model from its maybe-namespaced spot
+ */
+const internalModelManagerForModel = (api, apiIdentifier, namespace) => {
+    const modelPath = [...namespace, apiIdentifier];
+    const manager = globals_1.Globals.platformModules.lodash().get(api, ["internal", ...modelPath]);
+    if (!manager) {
+        throw new errors_1.InternalError(`Gadget needs but can't find an internal model manager for ${modelPath.join(".")} on the API client -- has it finished regenerating or was it recently removed?`);
+    }
+    return manager;
+};
+/**
+ * Get the internal model manager for the model from its maybe-namespaced spot
+ */
+const internalModelManagerForTypename = (api, typename) => {
+    const model = getModelByTypename(typename);
+    return internalModelManagerForModel(api, model.apiIdentifier, model.namespace);
+};
+/**
+ * Saves record to the database:
+ * 1. Checks field validations of a given record, then saves the record to the database.
+ * 2. Uses your apps Internal API to persist data. This API quickly interacts with data without running any business logic.
  *
- * If any validation errors are encountered, they'll be thrown as a GadgetValidationError.
- *
- * Uses the Internal API for your application to persist data.
- *
- * The record param must have a `__typename` parameter.
- *
- * @param record - Record to save to the database
+ * @param record - object saved to the database
  */
 async function save(record) {
     const context = maybeGetActionContextFromLocalStorage();
     const api = (0, utils_1.assert)(context ? context.api : getCurrentContext().api, "api client is missing from the current context");
     const model = getModelByTypename(record.__typename);
     await (await globals_1.Globals.modelValidator(model.key)).validate({ api, logger: globals_1.Globals.logger }, record);
-    if (!api.internal[model.apiIdentifier]) {
-        throw new errors_1.InternalError(`Gadget API client doesn't have an internal model manager for ${model.apiIdentifier} to run a Save Record function -- has it finished regenerating or was it recently removed?`);
-    }
+    const internalModelManager = internalModelManagerForTypename(api, record.__typename);
     let result;
     if ("createdAt" in record && record.createdAt) {
-        result = await api.internal[model.apiIdentifier].update(record.id, {
+        result = await internalModelManager.update(record.id, {
             [model.apiIdentifier]: changedAttributes(model, record),
         });
     }
     else {
-        result = await api.internal[model.apiIdentifier].create({
+        result = await internalModelManager.create({
             [model.apiIdentifier]: writableAttributes(model, record),
         });
     }
@@ -77,20 +87,17 @@ async function save(record) {
 }
 exports.save = save;
 /**
- * Deletes the given record from your database.
+ * Deletes record from the database.
  *
- * @param record - Record to delete from the database
+ * @param record - object deleted from the database
  */
 async function deleteRecord(record) {
     const context = maybeGetActionContextFromLocalStorage();
     const api = (0, utils_1.assert)(context ? context.api : getCurrentContext().api, "api client is missing from the current context");
     const scope = context ? context.scope : {};
-    const model = getModelByTypename(record.__typename);
     const id = (0, utils_1.assert)(record.id, `record.id not set on record in scope, has the record been persisted?`);
-    if (!api.internal[model.apiIdentifier]) {
-        throw new errors_1.InternalError(`Gadget API client doesn't have an internal model manager for ${model.apiIdentifier} to run a Delete Record effect -- has it finished regenerating or was it recently removed?`);
-    }
-    await api.internal[model.apiIdentifier].delete(id);
+    const internalModelManager = internalModelManagerForTypename(api, record.__typename);
+    await internalModelManager.delete(id);
     scope.recordDeleted = true;
 }
 exports.deleteRecord = deleteRecord;
@@ -122,6 +129,13 @@ exports.ShopifySellingPlanGroupProductState = {
     Deleted: "deleted",
 };
 function transitionState(record, transition) {
+    const model = getModelByTypename(record.__typename);
+    const isShopifyModel = model.apiIdentifier === "shopifyShop" || model.apiIdentifier === "shopifySync" || model.apiIdentifier === "shopifyBulkOperation";
+    if (isShopifyModel && doesVersionSupportSourceControl()) {
+        // In apps framework version 1.0.0+, we handle the state transition internally to Shopify models based on the above API identifiers.
+        // This function becomes a no-op for those models.
+        return;
+    }
     const stringRecordState = typeof record.state === "string" ? record.state : JSON.stringify(record.state);
     const stringTransitionFrom = typeof transition.from === "string" ? transition.from : JSON.stringify(transition.from);
     if (transition.from && stringRecordState !== stringTransitionFrom) {
@@ -133,12 +147,15 @@ function transitionState(record, transition) {
     record.state = transition.to;
 }
 exports.transitionState = transitionState;
+/**
+ * The following is used to power shopifySync model.
+ * Learn more about syncing visit our docs: https://docs.gadget.dev/guides/plugins/shopify/syncing-shopify-data#syncing
+ */
 async function shopifySync(params, record) {
     const context = getActionContextFromLocalStorage();
     const effectAPIs = context.effectAPIs;
     const syncRecord = (0, utils_1.assert)(record, "cannot start a shop sync from this action");
     const shopId = (0, utils_1.assert)(syncRecord.shopId, "a shop is required to start a sync");
-    // verify that models is an array of strings if defined
     if (!syncRecord.models || (Array.isArray(syncRecord.models) && syncRecord.models.every((m) => typeof m == "string"))) {
         try {
             await effectAPIs.sync(syncRecord.id.toString(), shopId, syncRecord.syncSince, syncRecord.models, syncRecord.force, params.startReason);
@@ -172,18 +189,22 @@ async function abortSync(params, record) {
 }
 exports.abortSync = abortSync;
 /**
- * Enforce that the given record is only accessible by the current shop. For multi-tenant Shopify applications, this is key for enforcing data can only be accessed by the shop that owns it.
+ * Applicable for multi-tenant Shopify apps(public apps), or Shopify Customer Extension apps
+ * Enforces that the given record is only accessible by the current shop or customer
  *
- * For existing records, this function verifies the record object has the same `shopId` as the shop in the current session, and throws if not
- * For new records, this function sets the record's `shopId` to the current session's `shopId`.
+ * For new records: sets the the current session's `shopId` to the record. If the tenant is a customer then will set the current sessions' customerId to the record.
+ * For existing records: Verifies the record objects `shopId` and/or `customerId` matches the one from the current session.
  *
- * The `shopBelongsToField` option is a required parameter if the model has more than one related shop field to specify which field to use.
- *
- * @param params - Incoming parameters, validated against the current `shopId`
- * @param record - Record to validate or set the `shopId` on
- * @param options - Options for the function
+ * *
+ * @param params - incoming data validated against the current `shopId`
+ * @param record - record used to validate or set the `shopId` on
+ * @param {Object} options - Additional options for cross-shop or cross-customer validation
+ * @param {string} options.shopBelongsToField - Specifies which related model is used for cross-shop validation.
+ * @param {string} options.customerBelongsToField - Specifies which related model is used for cross-customer validation.
+ * @param {boolean} options.enforceCustomerTenancy - Whether or not to enforce customer tenacy. Defaults to true.
  */
 async function preventCrossShopDataAccess(params, record, options) {
+    const enforceCustomerTenancy = options?.enforceCustomerTenancy ?? true;
     const context = getActionContextFromLocalStorage();
     if (context.type != "effect") {
         throw new Error("Can't prevent cross shop data access outside of an action effect");
@@ -197,6 +218,7 @@ async function preventCrossShopDataAccess(params, record, options) {
     const model = context.model;
     const appTenancy = context[tenancy_1.AppTenancyKey];
     const shopBelongsToField = options?.shopBelongsToField;
+    const customerBelongsToField = options?.customerBelongsToField;
     // if there's no tenancy let's continue
     if (appTenancy?.shopify?.shopId === undefined) {
         return;
@@ -206,52 +228,68 @@ async function preventCrossShopDataAccess(params, record, options) {
         return;
     }
     const shopId = String(appTenancy.shopify.shopId);
-    // If this effect is being added to the Shopify Shop model, simply compare the record's ID
-    if (model.key == ShopifyShopKey) {
-        if (record && String(record.id) !== shopId) {
+    const customerId = appTenancy.shopify.customerId ? String(appTenancy.shopify.customerId) : undefined;
+    const input = params[model.apiIdentifier];
+    validateBelongsToLink(input, record, params, shopId, model, ShopifyShopKey, shopBelongsToField, TenantType.Shop);
+    if (customerId && enforceCustomerTenancy) {
+        validateBelongsToLink(input, record, params, customerId, model, ShopifyCustomerKey, customerBelongsToField, TenantType.Customer);
+    }
+}
+exports.preventCrossShopDataAccess = preventCrossShopDataAccess;
+const validateBelongsToLink = (input, record, params, tenantId, model, relatedModelKey, tenantBelongsToField, tenantType) => {
+    if (relatedModelKey != ShopifyShopKey && relatedModelKey != ShopifyCustomerKey) {
+        throw new Error("Validation for tenancy can only be for Shopify Shop or Shopify Customer models");
+    }
+    // If this effect is being added to the related tenant model (Shopify Shop or Shopify Customer), simply compare the record's ID
+    if (model.key == relatedModelKey) {
+        if (record && String(record.id) !== tenantId) {
             throw new errors_1.PermissionDeniedError();
         }
         return;
     }
-    const fieldsIsBelongsToShopifyShop = Object.values(model.fields).filter((f) => f.fieldType === FieldType.BelongsTo && f.configuration.relatedModelKey === ShopifyShopKey);
-    if (fieldsIsBelongsToShopifyShop.length === 0) {
-        throw new errors_1.MisconfiguredActionError("This model is missing a related shop field.");
+    const fieldsIsBelongsToRelatedModel = Object.values(model.fields).filter((f) => f.fieldType === FieldType.BelongsTo && f.configuration.relatedModelKey === relatedModelKey);
+    if (fieldsIsBelongsToRelatedModel.length === 0) {
+        throw new errors_1.MisconfiguredActionError(`This model is missing a related ${tenantType} field.`);
     }
-    if (fieldsIsBelongsToShopifyShop.length > 1 && !shopBelongsToField) {
-        throw new errors_1.MisconfiguredActionError("This function is missing a related shop field option. `shopBelongsToField` is a required option parameter if the model has more than one related shop field.");
+    if (fieldsIsBelongsToRelatedModel.length > 1 && !tenantBelongsToField) {
+        throw new errors_1.MisconfiguredActionError(`This function is missing a related ${tenantType} field option. \`${tenantType}BelongsToField\` is a required option parameter if the model has more than one related ${tenantType} field.`);
     }
-    let relatedField = fieldsIsBelongsToShopifyShop[0];
-    if (shopBelongsToField) {
-        const selectedField = Object.values(model.fields).find((f) => f.apiIdentifier === shopBelongsToField);
+    let relatedTenantField = fieldsIsBelongsToRelatedModel[0];
+    if (tenantBelongsToField) {
+        const selectedField = Object.values(model.fields).find((f) => f.apiIdentifier === tenantBelongsToField);
         if (!selectedField) {
-            throw new errors_1.MisconfiguredActionError("The selected shop relation field does not exist.");
+            throw new errors_1.MisconfiguredActionError(`The selected ${tenantType} relation field does not exist.`);
         }
-        if (selectedField.fieldType !== FieldType.BelongsTo || selectedField.configuration.relatedModelKey !== ShopifyShopKey) {
-            throw new errors_1.MisconfiguredActionError("The selected shop relation field should be a `Belongs To` relationship to the `Shopify Shop` model.");
+        if (selectedField.fieldType !== FieldType.BelongsTo || selectedField.configuration.relatedModelKey !== relatedModelKey) {
+            throw new errors_1.MisconfiguredActionError(`The selected ${tenantType} relation field should be a \`Belongs To\` relationship to the \`Shopify ${globals_1.Globals.platformModules
+                .lodash()
+                .capitalize(tenantType)}\` model.`);
         }
         else {
-            relatedField = selectedField;
+            relatedTenantField = selectedField;
         }
     }
-    const input = params[model.apiIdentifier];
+    setBelongsToLink(input, record, params, model, relatedTenantField, tenantId);
+};
+const setBelongsToLink = (input, record, params, model, relatedField, tenantId) => {
     // if we're trying to set the params to a shop other than the tenant we should reject
     if (globals_1.Globals.platformModules.lodash().isObjectLike(input)) {
         const objectInput = input;
         if (objectInput[relatedField.apiIdentifier]) {
-            if (String(objectInput[relatedField.apiIdentifier][LINK_PARAM]) !== shopId) {
+            if (String(objectInput[relatedField.apiIdentifier][LINK_PARAM]) !== tenantId) {
                 throw new errors_1.PermissionDeniedError();
             }
         }
         else {
             objectInput[relatedField.apiIdentifier] = {
-                [LINK_PARAM]: shopId,
+                [LINK_PARAM]: tenantId,
             };
         }
     }
     else {
         params[model.apiIdentifier] = {
             [relatedField.apiIdentifier]: {
-                [LINK_PARAM]: shopId,
+                [LINK_PARAM]: tenantId,
             },
         };
     }
@@ -260,19 +298,23 @@ async function preventCrossShopDataAccess(params, record, options) {
         // if the record doesn't have a shop set then anyone can update it
         if (value) {
             const recordShopId = typeof value === "object" ? value[LINK_PARAM] : value;
-            if (String(recordShopId) !== shopId) {
+            if (String(recordShopId) !== tenantId) {
                 throw new errors_1.PermissionDeniedError();
             }
         }
         else {
-            // we have to re-apply the params to the record to ensure that this effect still works correctly if it occurs after "apply params"
+            // we have to re-apply the params to the record to ensure that this still works correctly if it occurs after "applyParams"
             record.setField(relatedField.apiIdentifier, {
-                [LINK_PARAM]: shopId,
+                [LINK_PARAM]: tenantId,
             });
         }
     }
-}
-exports.preventCrossShopDataAccess = preventCrossShopDataAccess;
+};
+/**
+ * Updates the state of a `bulkOperation` record from Shopify when the operation completes.
+ *
+ * @param record - the `bulkOperation` record updated
+ */
 async function finishBulkOperation(record) {
     if (!record?.id) {
         globals_1.Globals.logger.warn(`Expected bulk operation record to be present for action`);
@@ -312,19 +354,29 @@ async function finishBulkOperation(record) {
     });
 }
 exports.finishBulkOperation = finishBulkOperation;
+/**
+ * Syncs Shopify models across all models
+ *
+ * @param params - list of Shopify app credentials to sync data from
+ * @param syncSince - starting point for data sync (default: all time)
+ * @param models - list of model names to sync data from
+ * @param force - enforces syncswithout checking if they're up to date
+ * @param startReason - a string reason stored on the created 'shopifySync' records
+ */
 async function globalShopifySync(params) {
     const context = maybeGetActionContextFromLocalStorage();
     const effectAPIs = (0, utils_1.assert)(context ? context.effectAPIs : getCurrentContext().effectAPIs, "effect apis is missing from the current context");
     const api = (0, utils_1.assert)(context ? context.api : getCurrentContext().api, "api client is missing from the current context");
     const { apiKeys, syncSince, models, force, startReason } = params;
-    const { shopModelIdentifier, installedViaKeyFieldIdentifier, runShopSyncIdentifier, accessTokenIdentifier, forceFieldIdentifier } = await effectAPIs.getSyncIdentifiers();
+    const { shopModelIdentifier, installedViaKeyFieldIdentifier, shopifySyncModelApiIdentifier, runShopifySyncAction, accessTokenIdentifier, forceFieldIdentifier, } = await effectAPIs.getSyncIdentifiers();
+    const manager = internalModelManagerForModel(api, shopModelIdentifier, []);
     const pageSize = 250;
     let pageInfo = { first: pageSize, hasNextPage: true };
     const results = [];
     if (apiKeys && apiKeys.length > 0) {
         try {
             while (pageInfo.hasNextPage) {
-                const records = await api.internal[shopModelIdentifier].findMany({
+                const records = await manager.findMany({
                     filter: {
                         [installedViaKeyFieldIdentifier]: {
                             in: apiKeys,
@@ -354,35 +406,19 @@ async function globalShopifySync(params) {
                 continue;
             }
             try {
-                const response = await api.mutate(`
-            mutation runSync($shopId: GadgetID!, $domain: String!, $syncSince: DateTime, $models: JSON${forceFieldIdentifier ? ", $force: Boolean" : ""}, $startReason: String) {
-              ${runShopSyncIdentifier}(shopifySync:{
-                domain:$domain
-                syncSince:$syncSince
-                models:$models
-                ${forceFieldIdentifier ? `${forceFieldIdentifier}:$force` : ""}
-                shop:{
-                  _link:$shopId
-                }
-              }, startReason: $startReason) {
-                success
-                errors {
-                  message
-                }
-              }
-            }
-          `, {
-                    shopId: result.id,
-                    domain: result.domain,
-                    syncSince,
-                    models,
-                    ...(forceFieldIdentifier ? { force } : undefined),
+                const shopifySyncModelManager = globals_1.Globals.platformModules.lodash().get(api, runShopifySyncAction.dotNotationPath);
+                await shopifySyncModelManager[runShopifySyncAction.apiIdentifier]({
+                    [shopifySyncModelApiIdentifier]: {
+                        shop: {
+                            _link: result.id,
+                        },
+                        domain: result.domain,
+                        syncSince,
+                        models,
+                        ...(forceFieldIdentifier ? { force } : undefined),
+                    },
                     startReason,
                 });
-                // we might have some errors such as the desired models not being enabled for the connection
-                if (response[runShopSyncIdentifier] && !response[runShopSyncIdentifier].success) {
-                    globals_1.Globals.logger.warn({ userVisible: true, shop: result, error: response[runShopSyncIdentifier].errors }, "couldn't start sync for shop");
-                }
             }
             catch (error) {
                 // log that the sync could not be started for the shop but continue
@@ -417,7 +453,8 @@ exports.legacyUnsetUser = legacyUnsetUser;
 async function legacySuccessfulAuthentication(params) {
     const context = getActionContextFromLocalStorage();
     const { api, scope } = context;
-    const user = (await api.internal.user.findMany({ filter: { email: { equals: params.email } } }))[0];
+    const manager = api.internal.user;
+    const user = (await manager.findMany({ filter: { email: { equals: params.email } } }))[0];
     let result = false;
     if (user && params.password && user.password?.hash) {
         if (await globals_1.Globals.platformModules.bcrypt().compare(params.password, user.password.hash)) {
@@ -432,16 +469,19 @@ async function legacySuccessfulAuthentication(params) {
 }
 exports.legacySuccessfulAuthentication = legacySuccessfulAuthentication;
 /**
- * Internal helper functions and variables
+ * @private helper functions and variables
  */
+function doesVersionSupportSourceControl() {
+    return globals_1.Globals.platformModules.compareVersions().satisfies(metadata_1.frameworkVersion, ">=1.0.0");
+}
 /**
- * Get action context without `params` and `record` from async local storage.
+ * @private Get action context without `params` and `record` from async local storage.
  */
 function getActionContextFromLocalStorage() {
     return (0, utils_1.assert)(globals_1.actionContextLocalStorage.getStore(), "this effect function should only be called from within an action");
 }
 /**
- * Similar to `getActionContextFromLocalStorage` but returns `undefined` if there is no action context. (i.e. possibly called from a route)
+ * @private Similar to `getActionContextFromLocalStorage` but returns `undefined` if there is no action context. (i.e. possibly called from a route)
  */
 function maybeGetActionContextFromLocalStorage() {
     return globals_1.actionContextLocalStorage.getStore();
@@ -519,10 +559,16 @@ var FieldType;
     FieldType["RecordState"] = "RecordState";
     FieldType["RoleAssignments"] = "RoleAssignments";
 })(FieldType || (exports.FieldType = FieldType = {}));
+var TenantType;
+(function (TenantType) {
+    TenantType["Shop"] = "shop";
+    TenantType["Customer"] = "customer";
+})(TenantType || (TenantType = {}));
 const shopifyModelKey = (modelName) => {
     const modelKey = modelName.replaceAll(" ", "");
     return `DataModel-Shopify-${modelKey}`;
 };
 const ShopifyShopKey = shopifyModelKey("Shop");
+const ShopifyCustomerKey = shopifyModelKey("Customer");
 const ShopifyBulkOperationGIDForId = (id) => `gid://shopify/BulkOperation/${id}`;
 //# sourceMappingURL=effects.js.map

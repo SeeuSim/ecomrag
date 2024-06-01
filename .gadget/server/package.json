@@ -2,13 +2,19 @@
   "dependencies": {
     "@fastify/request-context": "^5.0.0",
     "@gadget-client/ecomrag": "link:../client",
-    "@gadgetinc/api-client-core": "0.15.14",
+    "@gadgetinc/api-client-core": "0.15.24",
     "@types/node": "^20.8.4",
     "fastify": "^4.24.2"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./ai": "./dist/ai/index.js"
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./types/index.d.ts"
+    },
+    "./ai": {
+      "require": "./dist/ai/index.js",
+      "types": "./types/ai/index.d.ts"
+    }
   },
   "files": [
     "dist/**/*"
@@ -16,9 +22,8 @@
   "gadget": {
     "applicationName": "ecomrag",
     "environmentName": "Development",
-    "environmentVersion": "6"
+    "environmentVersion": "8980"
   },
-  "main": "dist/index.js",
   "name": "gadget-server",
   "peerDependencies": {
     "openai": "*",
@@ -26,6 +31,6 @@
   },
   "private": true,
   "scripts": {},
-  "types": "dist/index.d.ts",
-  "version": "1.1.0-development.6"
+  "types": "types/index.d.ts",
+  "version": "1.211.0-development.8980"
 }

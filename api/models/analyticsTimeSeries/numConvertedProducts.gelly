@@ -1,0 +1,3 @@
+field on analyticsTimeSeries {
+  count(convertedProducts)
+}

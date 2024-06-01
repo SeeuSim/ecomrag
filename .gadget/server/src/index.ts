@@ -8,8 +8,8 @@
 *   \___|\___\___/|_| |_| |_|_|  \__,_|\__, |
 *                                      |___/ 
 *
-* Built for environment `Development` at version 6
-* Framework version: ^0.3.1
+* Built for environment `Development` at version 8980
+* Framework version: ^1.0.0
 * Edit this app here: https://ecomrag.gadget.dev/edit
 */
 import type { Client } from "@gadget-client/ecomrag";
@@ -41,7 +41,13 @@ export * from "./models/ShopifyProduct";
 export * from "./models/ShopifyProductImage";
 export * from "./models/ShopifyShop";
 export * from "./models/ShopifySync";
+export * from "./models/ChatbotSettings";
+export * from "./models/Plan";
+export * from "./models/ShopifyOrder";
+export * from "./models/ShopifyOrderLineItem";
 export * from "./models/RecommendedProduct";
+export * from "./models/AnalyticsTimeSeries";
+export * from "./models/AnalyticsProductEntry";
 
 /**
  * An instance of the Gadget logger

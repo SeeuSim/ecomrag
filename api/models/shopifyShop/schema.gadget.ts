@@ -26,13 +26,6 @@ export const schema: GadgetModel = {
       type: "url",
       storageKey: "z8OIVL7143m6::glJL4fho7fXp",
     },
-    conversationCount: {
-      type: "number",
-      default: 0,
-      decimals: 0,
-      validations: { numberRange: { min: 0, max: null } },
-      storageKey: "aSxOu-A_mELH::xwQ_Xwg8Wm4a",
-    },
     plan: {
       type: "hasOne",
       child: { model: "plan", belongsToField: "shop" },

@@ -8,6 +8,7 @@ import { logger } from 'gadget-server';
 import { Readable } from 'stream';
 
 import { createProductImageEmbedding } from '../models/shopifyProductImage/createImageEmbedding';
+import { getOrCreateTimeseriesEntry } from '../models/analyticsTimeSeries/utils';
 
 const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUCKET_NAME, EMBEDDING_ENDPOINT } = process.env;
 
@@ -477,16 +478,24 @@ export default async function route({ request, reply, api, logger, connections }
   // Conversion data
   if (chatHistory.length === 0) {
     try {
-      await api.internal.shopifyShop.update(ShopId, {
-        _atomics: {
-          conversationCount: {
-            increment: 1,
-          },
-        },
-      });
       const plan = await api.plan.findByShop(ShopId);
       if (plan) {
         await api.internal.plan.update(plan.id, {
+          _atomics: {
+            chatSessionsCount: {
+              increment: 1,
+            },
+          },
+        });
+      }
+      const timeSeries = await getOrCreateTimeseriesEntry({
+        api,
+        logger,
+        shopId: ShopId,
+        systemTime: new Date(),
+      });
+      if (timeSeries) {
+        await api.internal.analyticsTimeSeries.update(timeSeries.id, {
           _atomics: {
             chatSessionsCount: {
               increment: 1,

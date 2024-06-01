@@ -5,6 +5,8 @@ import {
   ActionOptions,
   CreateShopifyOrderLineItemActionContext,
 } from 'gadget-server';
+import { getOrCreateTimeseriesEntry } from '../../analyticsTimeSeries/utils';
+import { getOrCreateAnalyticsProductEntry } from '../../analyticsProductEntry/utils';
 
 /**
  * @param { CreateShopifyOrderLineItemActionContext } context
@@ -20,6 +22,75 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
+  const orderLineItem = /**@type { import('@gadget-client/ecomrag').ShopifyOrderLineItem } */ (
+    record
+  );
+  const gadgetApi = /**@type { typeof import('gadget-server').api } */ (api);
+  if (!orderLineItem.product) {
+    return;
+  }
+  const timeFilter = new Date();
+  timeFilter.setUTCMinutes(0, 0, 0);
+  const product = orderLineItem.product;
+
+  // If this product was recommended in the past hour - create a conversion entry
+  // TODO: Have a robust checkout mechanism from the chat UI instead of this
+  const recommendedProduct = await gadgetApi.recommendedProduct.maybeFindFirst({
+    filter: {
+      shop: {
+        equals: orderLineItem.shopId,
+      },
+      product: {
+        equals: product.id,
+      },
+      createdAt: {
+        greaterThanOrEqual: timeFilter,
+      },
+    },
+  });
+  if (recommendedProduct) {
+    const timeSeries = await getOrCreateTimeseriesEntry({
+      api,
+      logger,
+      shopId: orderLineItem.shopId,
+      systemTime: new Date(),
+    });
+    if (!timeSeries) {
+      return;
+    }
+    const productEntry = await getOrCreateAnalyticsProductEntry({
+      api,
+      logger,
+      timeSeriesId: timeSeries.id,
+      productId: product.id,
+    });
+    await gadgetApi.internal.analyticsProductEntry.update(productEntry.id, {
+      _atomics: {
+        count: {
+          increment: 1,
+        },
+      },
+      timeSeries: {
+        _link: timeSeries.id,
+      },
+    });
+    const plan = await gadgetApi.plan.maybeFindFirst({
+      filter: {
+        shop: {
+          equals: orderLineItem.shopId,
+        },
+      },
+    });
+    if (plan) {
+      await gadgetApi.internal.plan.update(plan.id, {
+        _atomics: {
+          conversionCount: {
+            increment: 1,
+          },
+        },
+      });
+    }
+  }
 }
 
 /** @type { ActionOptions } */

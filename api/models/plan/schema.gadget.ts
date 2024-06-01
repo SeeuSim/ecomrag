@@ -14,6 +14,13 @@ export const schema: GadgetModel = {
       validations: { numberRange: { min: 0, max: null } },
       storageKey: "DaUVkVmmbfEo::WFteWokENK-k",
     },
+    conversionCount: {
+      type: "number",
+      default: 0,
+      decimals: 1,
+      validations: { numberRange: { min: 0, max: null } },
+      storageKey: "BCUf5KPe2hTJ",
+    },
     imageUploadCount: {
       type: "number",
       default: 0,

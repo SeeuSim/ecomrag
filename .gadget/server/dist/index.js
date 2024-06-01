@@ -56,7 +56,13 @@ __exportStar(require("./models/ShopifyProduct"), exports);
 __exportStar(require("./models/ShopifyProductImage"), exports);
 __exportStar(require("./models/ShopifyShop"), exports);
 __exportStar(require("./models/ShopifySync"), exports);
+__exportStar(require("./models/ChatbotSettings"), exports);
+__exportStar(require("./models/Plan"), exports);
+__exportStar(require("./models/ShopifyOrder"), exports);
+__exportStar(require("./models/ShopifyOrderLineItem"), exports);
 __exportStar(require("./models/RecommendedProduct"), exports);
+__exportStar(require("./models/AnalyticsTimeSeries"), exports);
+__exportStar(require("./models/AnalyticsProductEntry"), exports);
 /**
  * An instance of the Gadget logger
  */
