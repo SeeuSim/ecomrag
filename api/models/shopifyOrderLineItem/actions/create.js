@@ -18,6 +18,9 @@ export async function run({ params, record, logger, api, connections }) {
   await save(record);
 }
 
+const DELTA_IN_MINUTES = 60;
+const ONE_MINUTE_IN_MILLIS = 60 * 1000;
+
 /**
  * @param { CreateShopifyOrderLineItemActionContext } context
  */
@@ -30,8 +33,9 @@ export async function onSuccess({ params, record, logger, api, connections }) {
   if (!orderLineItem.product) {
     return;
   }
-  const timeFilter = new Date();
-  timeFilter.setUTCMinutes(0, 0, 0);
+  const systemTime = new Date();
+  const timeFilter = new Date(systemTime.getTime() - DELTA_IN_MINUTES * ONE_MINUTE_IN_MILLIS);
+
   const product = orderLineItem.product;
 
   // If this product was recommended in the past hour - create a conversion entry

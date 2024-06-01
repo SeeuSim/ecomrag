@@ -169,7 +169,7 @@ const handleLLMOnComplete = (gadgetApi, products, content, isImageRecommended) =
  * @param { string } fileName
  * @param { string } fileType
  * @param { typeof logger} logger
- * @returns { string | void } The URL if successful, else nothing.
+ * @returns { Promise<string | void> } The URL if successful, else nothing.
  */
 async function uploadImage(imageBase64, fileName, fileType, logger) {
   const key = `${BUCKET_PATH}${getCurrentDateString()}_${fileName}`;
@@ -260,17 +260,6 @@ export default async function route({ request, reply, api, logger, connections }
       await reply.code(500).type('text/plain').send(error);
       return;
     }
-
-    // Access control for each plan
-    const plan = await api.plan.findByShop(shopId);
-
-    // Ensure the shop and plan data is available
-    if (!plan) {
-      logger.error('Shop or plan information is not available');
-      throw new Error('Unable to access shop plan information');
-    }
-
-    logger.info(`Shop plan: ${plan.tier}`);
 
     // If an image is uploaded, only consider the image as RAG retrieval.
     embedding = [
@@ -509,6 +498,5 @@ export default async function route({ request, reply, api, logger, connections }
         'An error occurred syncing the plan data.'
       );
     }
-    // TODO: push timeseries
   }
 }

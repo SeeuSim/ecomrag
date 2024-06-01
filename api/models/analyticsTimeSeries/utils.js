@@ -20,8 +20,8 @@ export async function getOrCreateTimeseriesEntry({ api, logger, shopId, systemTi
   /**@type { import('@gadget-client/ecomrag').AnalyticsTimeSeries | undefined } */
   let timeSeriesEntry;
   try {
-    timeSeriesEntry = await api.analyticsTimeSeries.findFirst({
-      where: {
+    timeSeriesEntry = await api.analyticsTimeSeries.maybeFindFirst({
+      filter: {
         shop: {
           equals: shopId,
         },
