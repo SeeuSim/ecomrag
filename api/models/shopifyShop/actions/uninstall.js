@@ -75,9 +75,15 @@ export async function run({ params, record, logger, api, connections }) {
 
   const deletePlan = async () => {
     try {
-      const plan = await api.plan.findByShop(record.id);
+      const plan = await api.plan.maybeFindFirst({
+        filter: {
+          shop: {
+            equals: record.id,
+          },
+        },
+      });
       if (plan) {
-        await api.chatbotSettings.delete(plan.id);
+        await api.plan.delete(plan.id);
       }
     } catch (error) {
       const { name, message, stack, cause } = /**@type { Error } */ (error);

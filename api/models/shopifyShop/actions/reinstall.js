@@ -27,6 +27,39 @@ export async function run({ params, record, logger, api, connections }) {
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
   try {
+    // Create Plan
+    const existingPlan = await api.plan.maybeFindFirst({
+      filter: {
+        shop: {
+          equals: record.id,
+        },
+      },
+    });
+    if (!existingPlan) {
+      api.plan.create({
+        shop: {
+          _link: record.id,
+        },
+      });
+    }
+    const chatbotSettings = await api.chatbotSettings.findFirst({
+      filter: {
+        shop: {
+          equals: record.id,
+        },
+      },
+    });
+    if (!chatbotSettings) {
+      await api.chatbotSettings.create({
+        shop: {
+          _link: record.id,
+        },
+        role: 'ADVISOR',
+        personality: 'FRIENDLY',
+        talkativeness: '3',
+        introductionMessage: "Hello! I'm your virtual assistant. How can I help you today?",
+      });
+    }
     const [_postExternalResult, runSyncResult] = await Promise.all([
       postShopCreateResult(record, logger),
       api.shopifySync.run({

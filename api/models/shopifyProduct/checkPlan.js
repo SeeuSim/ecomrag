@@ -14,7 +14,13 @@ import { PLAN_LIMITS } from '../plan/utils';
 export const tryIncrProductSyncCount = async ({ record, api, logger }) => {
   let plan;
   try {
-    plan = await api.plan.findByShop(record.shopId);
+    plan = await api.plan.maybeFindFirst({
+      filter: {
+        shop: {
+          equals: record.shopId,
+        },
+      },
+    });
     if (!plan) {
       logger.error({ shopId: record.shopId }, 'Data migration not present - create a Plan first.');
       return false;
