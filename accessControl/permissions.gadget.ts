@@ -23,6 +23,11 @@ export const permissions: GadgetPermissions = {
             update: true,
           },
         },
+        plan: {
+          read: {
+            filter: "accessControl/filters/plan/plan.gelly",
+          },
+        },
         shopifyGdprRequest: {
           read: {
             filter:
