@@ -20,7 +20,7 @@ export async function run({ params, record, logger, api, connections }) {
   applyParams(params, record);
   const shop = await api.shopifyShop.maybeFindFirst({
     filter: {
-      shop: {
+      id: {
         equals: record.shopId,
       },
     },
