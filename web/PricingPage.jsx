@@ -2,7 +2,7 @@
 
 import { BlockStack, Box, Card, InlineGrid, Page, Text, Button } from '@shopify/polaris';
 import { useNavigate as useShopifyNavigate } from '@shopify/app-bridge-react';
-import { useAction, useFindBy, useFindFirst } from '@gadgetinc/react';
+import { useAction, useFindFirst } from '@gadgetinc/react';
 
 import { useNavigate as useReactRouterNavigate } from 'react-router-dom';
 import { useCallback } from 'react';
@@ -22,15 +22,12 @@ const PricingPage = () => {
   ] = useAction(api.shopifyShop.subscribe);
   const [{ data: shop }] = useFindFirst(api.shopifyShop, {
     select: {
-      id: true,
+      plan: {
+        tier: true,
+      },
     },
   });
-  const [{ data: plan }] = useFindBy(api.plan.findByShop, shop.id, {
-    select: {
-      tier: true,
-    },
-  });
-  const shopPlan = plan?.tier;
+  const shopPlan = shop?.plan?.tier;
 
   const subscribe = useCallback(async (plan) => {
     // create the resource in the backend
