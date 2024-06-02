@@ -9,6 +9,8 @@ import {
 import { postProductCreateResult } from '../../../routes/main-backend/utils';
 import { tryIncrProductSyncCount } from '../checkPlan';
 import { postProductDescEmbedding } from '../postSqs';
+import { equal } from 'assert';
+import { PLAN_LIMITS } from '../../plan/utils';
 
 /**
  * @param { CreateShopifyProductActionContext } context
@@ -16,6 +18,28 @@ import { postProductDescEmbedding } from '../postSqs';
 export async function run({ params, record, logger, api, connections }) {
   // TODO: Check for variant @jamesliu
   applyParams(params, record);
+  const shop = await api.shopifyShop.maybeFindFirst({
+    filter: {
+      shop: {
+        equals: record.shopId,
+      },
+    },
+    select: {
+      productCount: true,
+      plan: {
+        tier: true,
+      },
+    },
+  });
+  if (shop) {
+    if (shop.plan?.tier) {
+      const limit = PLAN_LIMITS[shop.plan.tier].productSyncCount;
+      if (shop.productCount >= limit) {
+        return;
+      }
+    }
+  }
+  await tryIncrProductSyncCount({ record, api, logger });
   await preventCrossShopDataAccess(params, record);
   await save(record);
 }
@@ -30,15 +54,6 @@ export async function onSuccess({
   params: _params,
   connections: _connections,
 }) {
-  const isWithinLimit = await tryIncrProductSyncCount({
-    record,
-    api,
-    logger,
-  });
-  if (!isWithinLimit) {
-    return;
-  }
-
   const description = `${record.title}: ${record.body}`;
   await Promise.all([
     postProductDescEmbedding(

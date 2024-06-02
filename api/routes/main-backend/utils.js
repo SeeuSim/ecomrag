@@ -220,7 +220,7 @@ export async function postProductCreateResult(record, logger) {
     /**@type { Error } */
     const error = await res.json();
     logger.error(
-      { name: error.name, message: error.message, stack: error.stack },
+      { name: error.name, message: error.message, stack: error.stack, payload },
       `Error occurred during Gadget's ShopifyProduct Create action.`
     );
   }
@@ -360,8 +360,8 @@ export async function postProductImageCreateResult(record, logger) {
     /**@type { Error } */
     const error = await res.json();
     logger.error(
-      { name: error.name, message: error.message, stack: error.stack },
-      `Error occurred during Gadget's ShopifyProduct Create action.`
+      { name: error.name, message: error.message, stack: error.stack, payload },
+      `Error occurred during Gadget's ShopifyProductImage Create action.`
     );
   }
 }

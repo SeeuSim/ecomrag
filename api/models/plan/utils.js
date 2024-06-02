@@ -1,7 +1,7 @@
 import { Client } from '@gadget-client/ecomrag';
 
 /**
- * @typedef { Awaited<ReturnType<typeof Client.prototype.plan.findOne>> } Plan
+ * @typedef { import('@gadget-client/ecomrag').Plan } Plan
  */
 
 /**

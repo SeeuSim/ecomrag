@@ -26,7 +26,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
       },
     },
   });
-  if (plan && record.descriptionEmbedding) {
+  if (plan) {
     try {
       await api.internal.plan.update(plan.id, {
         _atomics: {

@@ -6,8 +6,8 @@ import {
   save,
 } from 'gadget-server';
 import { postProductImageUpdateResult } from '../../../routes/main-backend/utils';
-import { tryIncrImageSyncCount } from '../checkPlan';
 import { postProductImgEmbedCaption } from '../postSqs';
+import { PLAN_LIMITS } from '../../plan/utils';
 
 /**
  * @param { UpdateShopifyProductImageActionContext } context
@@ -27,24 +27,12 @@ export async function onSuccess({ record, logger, api, params: _p, connections: 
     Caption: !record.getField('imageDescription') || record.changed('source'),
   };
   if (isCaptionEmbed.Embed || isCaptionEmbed.Caption) {
-    if (!record.getField('imageDescriptionEmbedding')) {
-      const isWithinLimit = await tryIncrImageSyncCount({ record, logger, api });
-      if (isWithinLimit) {
-        await postProductImgEmbedCaption(
-          { Id: record.id, Source: record.source },
-          isCaptionEmbed,
-          record.shopId ?? 'DUMMYMSGGRPID',
-          logger
-        );
-      }
-    } else {
-      await postProductImgEmbedCaption(
-        { Id: record.id, Source: record.source },
-        isCaptionEmbed,
-        record.shopId ?? 'DUMMYMSGGRPID',
-        logger
-      );
-    }
+    await postProductImgEmbedCaption(
+      { Id: record.id, Source: record.source },
+      isCaptionEmbed,
+      record.shopId ?? 'DUMMYMSGGRPID',
+      logger
+    );
   } else {
     logger.info(
       { isCaptionEmbed, sourceChanged: record.changed('source') },

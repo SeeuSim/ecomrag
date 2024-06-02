@@ -80,6 +80,7 @@ export type DefaultShopifyShopServerSelection = {
       readonly orders: false;
       readonly orderLineItems: false;
       readonly productCount: true;
+      readonly imageCount: true;
   };
 
   

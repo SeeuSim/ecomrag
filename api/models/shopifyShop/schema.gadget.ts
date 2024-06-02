@@ -16,6 +16,11 @@ export const schema: GadgetModel = {
       type: "url",
       storageKey: "z8OIVL7143m6::glJL4fho7fXp",
     },
+    imageCount: {
+      type: "computed",
+      sourceFile: "api/models/shopifyShop/imageCount.gelly",
+      storageKey: "thZwG4zNRo1-",
+    },
     plan: {
       type: "hasOne",
       child: { model: "plan", belongsToField: "shop" },
