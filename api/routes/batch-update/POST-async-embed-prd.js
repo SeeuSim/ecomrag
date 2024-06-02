@@ -82,13 +82,22 @@ export default async function route({ request, reply, api, logger, connections }
       continue;
     }
     try {
-      await api.internal.shopifyShop.update(id, {
-        _atomics: {
-          productSyncCount: {
-            increment: Number(count),
+      const plan = await api.plan.maybeFindFirst({
+        filter: {
+          shop: {
+            equals: id,
           },
         },
       });
+      if (plan) {
+        await api.internal.plan.update(id, {
+          _atomics: {
+            productSyncCount: {
+              increment: Number(count),
+            },
+          },
+        });
+      }
       logger.info({}, `Updated shopId ${id} with ${count} product embeds`);
     } catch (error) {
       logger.error(

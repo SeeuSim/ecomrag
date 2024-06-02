@@ -1,4 +1,4 @@
-// All the generated types for the "Shopify Sync" model preconditions, actions, params, etc
+// All the generated types for the "shopifySync" model preconditions, actions, params, etc
 import { AmbientContext } from "../AmbientContext";
 import { ActionExecutionScope, NotYetTyped, ValidationErrors, ActionTrigger } from "../types";
 import { GadgetRecord, ShopifySync } from "@gadget-client/ecomrag";

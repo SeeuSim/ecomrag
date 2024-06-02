@@ -26,13 +26,7 @@ export async function onSuccess({ record, logger, api, params: _p, connections: 
     Embed: !record.getField('imageDescriptionEmbedding') || record.changed('source'),
     Caption: !record.getField('imageDescription') || record.changed('source'),
   };
-  const isEmbed = await tryIncrImageSyncCount({
-    record,
-    api,
-    logger,
-    isUpdate: isCaptionEmbed.Caption || isCaptionEmbed.Embed,
-  });
-  if (isEmbed) {
+  if (isCaptionEmbed.Embed || isCaptionEmbed.Caption) {
     await postProductImgEmbedCaption(
       { Id: record.id, Source: record.source },
       isCaptionEmbed,
@@ -42,10 +36,9 @@ export async function onSuccess({ record, logger, api, params: _p, connections: 
   } else {
     logger.info(
       { isCaptionEmbed, sourceChanged: record.changed('source') },
-      `Failed check for productImg | update`
+      `Failed embed/caption check for productImg | update`
     );
   }
-  logger.info(record, 'Triggering productImage update onSuccess');
   await postProductImageUpdateResult(record, logger);
 }
 

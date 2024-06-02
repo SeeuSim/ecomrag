@@ -1,4 +1,4 @@
-// All the generated types for the "chatRecommendedProduct" model preconditions, actions, params, etc
+// All the generated types for the "recommendedProduct" model preconditions, actions, params, etc
 import { AmbientContext } from "../AmbientContext";
 import { ActionExecutionScope, NotYetTyped, ValidationErrors, ActionTrigger } from "../types";
 import { GadgetRecord, RecommendedProduct } from "@gadget-client/ecomrag";

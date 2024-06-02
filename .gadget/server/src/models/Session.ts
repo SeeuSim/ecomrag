@@ -1,4 +1,4 @@
-// All the generated types for the "Session" model preconditions, actions, params, etc
+// All the generated types for the "session" model preconditions, actions, params, etc
 import { AmbientContext } from "../AmbientContext";
 import { ActionExecutionScope, NotYetTyped, ValidationErrors, ActionTrigger } from "../types";
 import { GadgetRecord, Session } from "@gadget-client/ecomrag";

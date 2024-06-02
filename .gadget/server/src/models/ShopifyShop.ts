@@ -1,4 +1,4 @@
-// All the generated types for the "Shopify Shop" model preconditions, actions, params, etc
+// All the generated types for the "shopifyShop" model preconditions, actions, params, etc
 import { AmbientContext } from "../AmbientContext";
 import { ActionExecutionScope, NotYetTyped, ValidationErrors, ActionTrigger } from "../types";
 import { GadgetRecord, ShopifyShop } from "@gadget-client/ecomrag";
@@ -74,12 +74,6 @@ export type DefaultShopifyShopServerSelection = {
       readonly weightUnit: true;
       readonly zipCode: true;
       readonly ChatbotSettings: false;
-      readonly Plan: true;
-      readonly productSyncLimit: true;
-      readonly productSyncCount: true;
-      readonly productImageSyncLimit: true;
-      readonly productImageSyncCount: true;
-      readonly chatSessionsLimit: true;
       readonly confirmationUrl: true;
       readonly subscriptionId: true;
       readonly plan: false;

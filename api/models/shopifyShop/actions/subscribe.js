@@ -3,16 +3,16 @@ import { ActionOptions, SubscribeShopifyShopActionContext } from 'gadget-server'
 // shopifyShop/subscribe.js
 
 const PLANS = {
-  free: {
+  Free: {
     price: 0.0,
   },
-  growth: {
+  Growth: {
     price: 9.0,
   },
-  premium: {
+  Premium: {
     price: 29.0,
   },
-  enterprise: {
+  Enterprise: {
     price: 199.0,
   },
 };
@@ -37,7 +37,9 @@ export async function run({ api: gadgetApi, record, params, connections, logger 
   const api = /** @type { import ('@gadget-client/ecomrag').Client } */ (gadgetApi);
 
   // get the plan object from the list of available plans
-  const name = /**@type { keyof typeof PLANS } */ (params.plan);
+  const name = /**@type { keyof typeof PLANS } */ (
+    params.plan.replace(/^\w/, (c) => c.toUpperCase())
+  );
   const plan = PLANS[name];
 
   logger.info({ price: plan.price, isFree: plan.price <= 0 }, 'Price');

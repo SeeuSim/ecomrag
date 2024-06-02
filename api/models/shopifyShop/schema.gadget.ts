@@ -12,16 +12,6 @@ export const schema: GadgetModel = {
       child: { model: "chatbotSettings", belongsToField: "shop" },
       storageKey: "oHcOaYWxmq1q::QWHXdPeTQBrW",
     },
-    Plan: {
-      type: "string",
-      default: "Free",
-      storageKey: "5OeIavcMx76n::QnosEDzWaieg",
-    },
-    chatSessionsLimit: {
-      type: "number",
-      default: 600,
-      storageKey: "48Gbtk1Vo4y8::vZd6HzueQgrI",
-    },
     confirmationUrl: {
       type: "url",
       storageKey: "z8OIVL7143m6::glJL4fho7fXp",
@@ -30,26 +20,6 @@ export const schema: GadgetModel = {
       type: "hasOne",
       child: { model: "plan", belongsToField: "shop" },
       storageKey: "ggIrrylHbrMB::AVBgr26grAjt",
-    },
-    productImageSyncCount: {
-      type: "number",
-      default: 0,
-      storageKey: "DDFESExz4rbC::HenF-WradI2m",
-    },
-    productImageSyncLimit: {
-      type: "number",
-      default: 300,
-      storageKey: "a_owZfutVrRF::9JCBzEgVSr_i",
-    },
-    productSyncCount: {
-      type: "number",
-      default: 0,
-      storageKey: "4hCMsycQ_H4l::MdIQWsjgQ5n1",
-    },
-    productSyncLimit: {
-      type: "number",
-      default: 100,
-      storageKey: "ssmmKtInAzIH::dKEYU7hQIee6",
     },
     subscriptionId: {
       type: "string",

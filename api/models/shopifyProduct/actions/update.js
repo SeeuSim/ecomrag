@@ -22,19 +22,12 @@ export async function run({ params, record, logger, api, connections }) {
  * @param { UpdateShopifyProductActionContext } context
  */
 export async function onSuccess({ record, logger, api, params: _p, connections: _c }) {
-  const isEmbed = await tryIncrProductSyncCount({
-    record,
-    logger,
-    api,
-    // If field exists alr, it is an update
-    isUpdate:
-      !!record.getField('descriptionEmbedding') ||
-      record.changed('title') ||
-      record.changed('body'),
-  });
+  const isEmbed =
+    !record.getField('descriptionEmbedding') || record.changed('title') || record.changed('body');
   if (isEmbed) {
+    const description = `${record.title}: ${record.body}`;
     await postProductDescEmbedding(
-      { Id: record.id, Description: `${record.title}: ${record.body}` },
+      { Id: record.id, Description: description },
       record.shopId ?? 'DUMMYMSGGRPID',
       logger
     );

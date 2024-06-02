@@ -10,8 +10,8 @@ import { PLAN_LIMITS } from '../plan/utils';
  * @typedef { Awaited<ReturnType<typeof Client.prototype.shopifyProduct.findOne>> } ShopifyProduct
  */
 
-/** @type { ({ record, api, logger, isUpdate }: { record: ShopifyProduct, api: typeof Client.prototype, logger: typeof gadgetLogger, isUpdate?: boolean }) => Promise<boolean>} */
-export const tryIncrProductSyncCount = async ({ record, api, logger, isUpdate }) => {
+/** @type { ({ record, api, logger, isUpdate }: { record: ShopifyProduct, api: typeof Client.prototype, logger: typeof gadgetLogger }) => Promise<boolean>} */
+export const tryIncrProductSyncCount = async ({ record, api, logger }) => {
   let plan;
   try {
     plan = await api.plan.findByShop(record.shopId);
@@ -29,17 +29,15 @@ export const tryIncrProductSyncCount = async ({ record, api, logger, isUpdate })
   const limit = PLAN_LIMITS[tier].productSyncCount;
   const withinLimit = plan.productSyncCount < limit;
 
-  if (withinLimit || isUpdate) {
+  if (withinLimit) {
     try {
-      if (!isUpdate) {
-        await api.internal.plan.update(plan.id, {
-          _atomics: {
-            productSyncCount: {
-              increment: 1,
-            },
+      await api.internal.plan.update(plan.id, {
+        _atomics: {
+          productSyncCount: {
+            increment: 1,
           },
-        });
-      }
+        },
+      });
     } catch (error) {
       const { name, message, stack, cause } = /**@type { Error } */ (error);
       logger.error({ name, message, stack, cause }, 'Error incrementing Sync Count');
@@ -47,6 +45,6 @@ export const tryIncrProductSyncCount = async ({ record, api, logger, isUpdate })
     }
     return true;
   }
-  logger.info('Product limit reached for the current plan. Skipping embedding creation.');
+  logger.info('Product limit reached for the current plan. Skipping product creation.');
   return false;
 };

@@ -1,6 +1,7 @@
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { logger as GadgetLogger } from 'gadget-server';
 import fetch from 'node-fetch';
+import { PLAN_LIMITS } from '../plan/utils';
 
 const { ACCESS_KEY_ID, SECRET_ACCESS_KEY, EMBEDDING_ENDPOINT } = process.env;
 
@@ -45,32 +46,34 @@ export async function downloadS3Image(s3Url, logger) {
  * Create Image Embeddings from Sagemaker Realtime/Serverless Embed endpoint.
  * Purely for live chat use.
  * For Product/Product Image Sync, use the SQS Queues for async processing instead.
+ * @param { { record: import('@gadget-client/ecomrag').ShopifyProductImage, api: typeof import('gadget-server').api, logger: typeof import ('gadget-server').logger } } context
+ * @returns { Promise<number[] | void> }
  */
 export const createProductImageEmbedding = async ({ record, api, logger }) => {
-  const shop = await api.shopifyShop.findOne(record.shopId, { select: { Plan: true } });
-  const productImageSyncLimit = shop.productImageSyncLimit;
-  const plan = shop.Plan;
+  const plan = await api.plan.maybeFindFirst({
+    filter: {
+      shop: {
+        equals: record.shopId,
+      },
+    },
+  });
+
+  const tier = plan?.tier;
   const planFeatures = {
-    free: { includeImages: false },
-    growth: { includeImages: true },
-    premium: { includeImages: true },
-    enterprise: { includeImages: true },
+    Free: { includeImages: false },
+    Growth: { includeImages: true },
+    Premium: { includeImages: true },
+    Enterprise: { includeImages: true },
   };
 
-  if (!planFeatures[plan] || !shop) {
+  if (!planFeatures[tier] || !plan || !tier) {
     logger.error('Shop and plan could not be found.');
-  }
-
-  if (!planFeatures[plan]?.includeImages) {
-    logger.error(
-      'Image syncing is not allowed for the current plan. Skipping image embedding creation.'
-    );
     return;
   }
 
-  if (shop.productImageSyncCount >= productImageSyncLimit) {
+  if (!planFeatures[tier]?.includeImages) {
     logger.error(
-      'Product image sync limit reached for the current plan. Skipping image embedding creation.'
+      'Image syncing is not allowed for the current plan. Skipping image embedding creation.'
     );
     return;
   }

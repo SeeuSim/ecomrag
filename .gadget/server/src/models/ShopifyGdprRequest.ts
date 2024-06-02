@@ -1,4 +1,4 @@
-// All the generated types for the "Shopify GDPR Request" model preconditions, actions, params, etc
+// All the generated types for the "shopifyGdprRequest" model preconditions, actions, params, etc
 import { AmbientContext } from "../AmbientContext";
 import { ActionExecutionScope, NotYetTyped, ValidationErrors, ActionTrigger } from "../types";
 import { GadgetRecord, ShopifyGdprRequest } from "@gadget-client/ecomrag";

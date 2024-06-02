@@ -66,11 +66,7 @@ async function downgradeImages({ api, logger, newPlanTier, shopId }) {
         return;
       }
       await Promise.all(
-        imagePage.slice(0, updatedLength).map((v) =>
-          api.internal.shopifyProductImage.update(v.id, {
-            imageDescriptionEmbedding: null,
-          })
-        )
+        imagePage.slice(0, updatedLength).map((v) => api.internal.shopifyProductImage.delete(v.id))
       );
       await api.internal.plan.update(plan.id, {
         _atomics: {
@@ -127,9 +123,6 @@ async function downgradeProducts({ api, logger, newPlanTier, shopId }) {
 
   let productPage = await api.shopifyProduct.findMany({
     filter: {
-      descriptionEmbedding: {
-        isSet: true,
-      },
       shop: {
         equals: shopId,
       },
@@ -150,11 +143,7 @@ async function downgradeProducts({ api, logger, newPlanTier, shopId }) {
       await Promise.all(
         productPage
           .slice(0, exceededBy < 0 ? productPage.length + exceededBy : productPage.length)
-          .map((v) =>
-            api.internal.shopifyProduct.update(v.id, {
-              descriptionEmbedding: null,
-            })
-          )
+          .map((v) => api.internal.shopifyProduct.delete(v.id))
       );
       await api.internal.plan.update(plan.id, {
         _atomics: {
@@ -202,23 +191,16 @@ export async function run({ params, logger: gadgetLogger, api: gadgetApi, connec
   if (!newPlanName || !shopId) {
     return;
   }
-  try {
-    // For FE Display
-    await api.shopifyShop.update(shopId, {
-      Plan: newPlanName.toLowerCase(),
-    });
-  } catch (error) {
-    logger.error(
-      { name: error.name, message: error.message, stack: error.stack },
-      'An error occurred setting the shop plan'
-    );
-  }
 
   let existingPlanRecord;
-  let shopRecord;
   try {
-    existingPlanRecord = await api.plan.findByShop(shopId);
-    shopRecord = await api.shopifyShop.findOne(shopId);
+    existingPlanRecord = await api.plan.maybeFindFirst({
+      filter: {
+        shop: {
+          equals: shopId,
+        },
+      },
+    });
   } catch (error) {
     logger.error(
       { name: error.name, message: error.message, stack: error.stack, cause: error.cause, shopId },
@@ -226,17 +208,23 @@ export async function run({ params, logger: gadgetLogger, api: gadgetApi, connec
     );
     return;
   }
+
   const newPlanTier = /** @type { import('../models/plan/utils').Plan['tier']} */ (
     newPlanName.replace(/^\w/, (c) => c.toUpperCase())
   );
-  const deferPlanUpdate = async () => {
+
+  try {
+    // For FE Display
     await api.plan.update(existingPlanRecord.id, {
       tier: newPlanTier,
     });
-  };
-
-  if (!existingPlanRecord.tier) {
-    await deferPlanUpdate();
+  } catch (error) {
+    logger.error(
+      { name: error.name, message: error.message, stack: error.stack },
+      'An error occurred setting the shop plan'
+    );
+  }
+  if (!existingPlanRecord?.tier) {
     return;
   }
 
@@ -294,7 +282,6 @@ export async function run({ params, logger: gadgetLogger, api: gadgetApi, connec
       downgradeProducts({ api, logger, newPlanTier, shopId }),
     ]);
   }
-  await deferPlanUpdate();
 }
 
 /**

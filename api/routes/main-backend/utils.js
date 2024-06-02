@@ -1,8 +1,5 @@
-import {
-  api as gadgetApi,
-  logger as gadgetLogger,
-  CreateShopifyProductActionContext,
-} from 'gadget-server';
+import { api as gadgetApi, logger as gadgetLogger } from 'gadget-server';
+import { PLAN_TYPES } from '../../models/plan/utils';
 import { stripHTMLTags } from '../batch-update/utils';
 
 export const BATCH_SIZE = 50;
@@ -21,8 +18,15 @@ const EMBEDDING_DIM = 512;
 
 // SHOP ====================================================================================================================
 
-/**@type { (row: Awaited<ReturnType<typeof gadgetApi.shopifyShop.findOne>>) => object } */
-export const getShopInsertRow = (row) => {
+/**@type { (row: import('@gadget-client/ecomrag').ShopifyShop, api: typeof gadgetApi) => object } */
+export const getShopInsertRow = async (row, api) => {
+  const plan = await api.plan.maybeFindFirst({
+    filter: {
+      shop: {
+        equals: row.id,
+      },
+    },
+  });
   return {
     // Migration Field
     gadgetId: row.id,
@@ -33,7 +37,7 @@ export const getShopInsertRow = (row) => {
     city: row.city && row.city.length > 0 ? row.city : 'San Francisco',
     // Optional Fields
     domain: row.domain ?? undefined,
-    plan: SHOP_ALLOWED_PLANS.includes(row.Plan) ? row.Plan : undefined,
+    plan: PLAN_TYPES.includes(plan?.tier) ? plan.tier : undefined,
   };
 };
 
@@ -62,13 +66,13 @@ export const getShopDeleteRow = (row) => {
   };
 };
 
-/**@type { (record: Awaited<ReturnType<typeof gadgetApi.shopifyShop.findOne>>, logger: typeof gadgetLogger) => Promise<void> } */
-export async function postShopCreateResult(record, logger) {
+/**@type { (record: import('@gadget-client/ecomrag').ShopifyShop, logger: typeof gadgetLogger, api: typeof import('gadget-server').api) => Promise<void> } */
+export async function postShopCreateResult(record, logger, api) {
   const endpoint = `${BASE_URL}/${NEXTJS_BE_CONFIG.shopModel}`;
   const payload = {
     action: 'create',
     payload: {
-      CreatePayload: getShopInsertRow(record),
+      CreatePayload: await getShopInsertRow(record, api),
     },
   };
   const res = await fetch(endpoint, {

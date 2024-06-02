@@ -2,7 +2,7 @@
 
 import { BlockStack, Box, Card, InlineGrid, Page, Text, Button } from '@shopify/polaris';
 import { useNavigate as useShopifyNavigate } from '@shopify/app-bridge-react';
-import { useAction, useFindFirst } from '@gadgetinc/react';
+import { useAction, useFindBy, useFindFirst } from '@gadgetinc/react';
 
 import { useNavigate as useReactRouterNavigate } from 'react-router-dom';
 import { useCallback } from 'react';
@@ -20,8 +20,17 @@ const PricingPage = () => {
     },
     createSubscription,
   ] = useAction(api.shopifyShop.subscribe);
-  const [{ data: shop }] = useFindFirst(api.shopifyShop);
-  const shopPlan = shop?.Plan;
+  const [{ data: shop }] = useFindFirst(api.shopifyShop, {
+    select: {
+      id: true,
+    },
+  });
+  const [{ data: plan }] = useFindBy(api.plan.findByShop, shop.id, {
+    select: {
+      tier: true,
+    },
+  });
+  const shopPlan = plan?.tier;
 
   const subscribe = useCallback(async (plan) => {
     // create the resource in the backend
@@ -32,10 +41,8 @@ const PricingPage = () => {
         key: 'value',
       },
       id: shop?.id,
-      plan: plan,
+      plan,
     });
-    console.log(currShop, 'curr shop1');
-    console.log(currShop?.data?.confirmationUrl, 'curr shop');
 
     // redirect the merchant to accept the charge within Shopify's interface
     shopifyNavigate(currShop?.data?.confirmationUrl);
@@ -134,7 +141,7 @@ const PricingPage = () => {
                     onClick={() => {
                       subscribe('free');
                     }}
-                    disabled={fetching || shopPlan == 'free'}
+                    disabled={fetching || shopPlan === 'Free'}
                   >
                     Subscribe
                   </Button>
@@ -199,7 +206,7 @@ const PricingPage = () => {
                     onClick={() => {
                       subscribe('growth');
                     }}
-                    disabled={fetching || shopPlan == 'growth'}
+                    disabled={fetching || shopPlan === 'Growth'}
                   >
                     Subscribe
                   </Button>
@@ -264,7 +271,7 @@ const PricingPage = () => {
                     onClick={() => {
                       subscribe('premium');
                     }}
-                    disabled={fetching || shopPlan == 'premium'}
+                    disabled={fetching || shopPlan === 'Premium'}
                   >
                     Subscribe
                   </Button>

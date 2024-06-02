@@ -27,7 +27,10 @@ export async function run({ params, record, logger, api, connections }) {
     logger.error('Exceeded plan limit for this product. Skipping image creation.');
     return;
   }
-
+  const isWithinLimit = await tryIncrImageSyncCount({ params, record, logger, api, connections });
+  if (!isWithinLimit) {
+    return;
+  }
   applyParams(params, record);
   await preventCrossShopDataAccess(params, record);
   await save(record);
@@ -38,9 +41,7 @@ export async function run({ params, record, logger, api, connections }) {
  */
 export async function onSuccess({ params, record, logger, api, connections }) {
   const isSrcValid = !!record.source && record.source.length > 0;
-  const isEmbed =
-    isSrcValid && (await tryIncrImageSyncCount({ params, record, logger, api, connections }));
-  if (isEmbed) {
+  if (isSrcValid) {
     await postProductImgEmbedCaption(
       { Id: record.id, Source: record.source },
       { Caption: true, Embed: true },
@@ -48,12 +49,10 @@ export async function onSuccess({ params, record, logger, api, connections }) {
       logger
     );
   } else {
-    if (!isSrcValid) {
-      logger.info(
-        { source: record.source },
-        `Invalid source for product Image. Skipping embedding`
-      );
-    }
+    logger.info(
+      { source: record.source },
+      `Invalid source for shopifyProductImage. Skipping embedding`
+    );
   }
   await postProductImageCreateResult(record, logger);
   return;
