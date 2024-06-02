@@ -5,7 +5,7 @@ import {
   save,
 } from 'gadget-server';
 import { postProductImageCreateResult } from '../../../routes/main-backend/utils';
-import { IMAGE_PER_PRODUCT } from '../../plan/utils';
+import { IMAGE_PER_PRODUCT, PLAN_LIMITS } from '../../plan/utils';
 import { postProductImgEmbedCaption } from '../postSqs';
 import { tryIncrImageSyncCount } from '../checkPlan';
 

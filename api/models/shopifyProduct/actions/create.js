@@ -9,7 +9,6 @@ import {
 import { postProductCreateResult } from '../../../routes/main-backend/utils';
 import { tryIncrProductSyncCount } from '../checkPlan';
 import { postProductDescEmbedding } from '../postSqs';
-import { equal } from 'assert';
 import { PLAN_LIMITS } from '../../plan/utils';
 
 /**
