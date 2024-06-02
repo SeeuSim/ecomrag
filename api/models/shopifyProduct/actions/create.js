@@ -30,7 +30,6 @@ export async function onSuccess({
   params: _params,
   connections: _connections,
 }) {
-  applyParams(params, record);
   const isWithinLimit = await tryIncrProductSyncCount({
     record,
     api,
