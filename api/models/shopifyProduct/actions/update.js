@@ -26,8 +26,11 @@ export async function onSuccess({ record, logger, api, params: _p, connections: 
     record,
     logger,
     api,
+    // If field exists alr, it is an update
     isUpdate:
-      !record.getField('descriptionEmbedding') || record.changed('title') || record.changed('body'),
+      !!record.getField('descriptionEmbedding') ||
+      record.changed('title') ||
+      record.changed('body'),
   });
   if (isEmbed) {
     await postProductDescEmbedding(
