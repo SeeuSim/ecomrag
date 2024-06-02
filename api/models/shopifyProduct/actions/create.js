@@ -35,7 +35,7 @@ export async function run({ params, record, logger, api, connections }) {
     if (shop.plan?.tier) {
       const limit = PLAN_LIMITS[shop.plan.tier].productSyncCount;
       if (shop.productCount >= limit) {
-        return;
+        throw new Error("Exceeded count for products for this shop's plan");
       }
     }
   }

@@ -16,7 +16,12 @@ export async function run({ params, record, logger, api, connections }) {
   applyParams(params, record);
   const [imageCount, plan] = await Promise.all([
     api.shopifyProduct
-      .findOne(record.productId, {
+      .maybeFindFirst({
+        filter: {
+          id: {
+            equals: record.productId,
+          },
+        },
         select: {
           imageCount: true,
         },
@@ -31,8 +36,7 @@ export async function run({ params, record, logger, api, connections }) {
     }),
   ]);
   if (imageCount >= IMAGE_PER_PRODUCT && plan.tier !== 'Enterprise') {
-    logger.error('Exceeded plan limit for this product. Skipping image creation.');
-    return;
+    throw new Error('Exceeded plan limit for this product. Skipping image creation.');
   }
   const shop = await api.shopifyShop.maybeFindFirst({
     filter: {
@@ -51,7 +55,7 @@ export async function run({ params, record, logger, api, connections }) {
     if (shop.plan?.tier) {
       const limit = PLAN_LIMITS[shop.plan.tier].imageUploadCount;
       if (Number.parseInt(shop.imageCount) >= limit) {
-        return;
+        throw new Error('Exceeded plan limit for this shop. Skipping image creation.');
       }
     }
   }
