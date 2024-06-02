@@ -202,12 +202,12 @@ export const getProductDeleteRow = (row) => {
   };
 };
 
-/**@type { (record: Awaited<ReturnType<typeof gadgetApi.shopifyProduct.findOne>>, logger: typeof gadgetLogger) => Promise<void> } */
+/**@type { (record: import('@gadget-client/ecomrag').ShopifyProduct, logger: typeof gadgetLogger) => Promise<void> } */
 export async function postProductCreateResult(record, logger) {
   const endpoint = `${BASE_GADGET_URL}/${NEXTJS_BE_CONFIG.productModel}`;
   const payload = {
     action: 'create',
-    payload: getProductInsertRow(record, record.shop, true),
+    payload: getProductInsertRow(record, record.shopId, true),
   };
   const res = await fetch(endpoint, {
     method: 'POST',
@@ -314,7 +314,6 @@ export const getProductImageInsertRow = (row, productId, isGadgetId = false) => 
 export const getProductImageUpdateRow = (row) => {
   return {
     gadgetId: row.id,
-
     source: row.changed('source') && row.source && row.source.length > 0 ? row.source : undefined,
     description:
       row.changed('imageDescription') && row.imageDescription && row.imageDescription.length > 0
@@ -342,12 +341,12 @@ export const getProductImageDeleteRow = (row) => {
   };
 };
 
-/**@type { (record: Awaited<ReturnType<typeof gadgetApi.shopifyProductImage.findOne>>, logger: typeof gadgetLogger) => Promise<void> } */
+/**@type { (record: import('@gadget-client/ecomrag').ShopifyProductImage, logger: typeof gadgetLogger) => Promise<void> } */
 export async function postProductImageCreateResult(record, logger) {
   const endpoint = `${BASE_GADGET_URL}/${NEXTJS_BE_CONFIG.productImageModel}`;
   const payload = {
     action: 'create',
-    payload: getProductImageInsertRow(record, record.product, true),
+    payload: getProductImageInsertRow(record, record.productId, true),
   };
   const res = await fetch(endpoint, {
     method: 'POST',
