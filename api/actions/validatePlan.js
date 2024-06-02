@@ -56,7 +56,7 @@ async function downgradeImages({ api, logger, newPlanTier, shopId }) {
   let imagesToUpdate = imagePage.length;
   let errors = [];
 
-  const clearImageEmbeddings = async () => {
+  const clearImages = async () => {
     if (!imagePage || imagePage.length === 0) {
       return;
     }
@@ -65,27 +65,18 @@ async function downgradeImages({ api, logger, newPlanTier, shopId }) {
       if (updatedLength <= 0) {
         return;
       }
-      await Promise.all(
-        imagePage.slice(0, updatedLength).map((v) => api.internal.shopifyProductImage.delete(v.id))
-      );
-      await api.internal.plan.update(plan.id, {
-        _atomics: {
-          imageUploadCount: {
-            decrement: updatedLength,
-          },
-        },
-      });
+      await api.shopifyProductImage.bulkDelete(imagePage.slice(0, updatedLength).map((v) => v.id));
     } catch (error) {
       errors.push(error);
     }
   };
 
   while (imagePage.hasNextPage && exceededBy > 0) {
-    await clearImageEmbeddings();
+    await clearImages();
     imagePage = await imagePage.nextPage();
     imagesToUpdate -= imagePage.length;
   }
-  await clearImageEmbeddings();
+  await clearImages();
   if (errors) {
     errors.forEach((err) => {
       logger.error(
@@ -131,7 +122,7 @@ async function downgradeProducts({ api, logger, newPlanTier, shopId }) {
   let productsToUpdate = productPage.length;
   let errors = [];
 
-  const clearProductEmbeddings = async () => {
+  const clearProducts = async () => {
     if (!productPage || productPage.length === 0) {
       return;
     }
@@ -143,26 +134,37 @@ async function downgradeProducts({ api, logger, newPlanTier, shopId }) {
       await Promise.all(
         productPage
           .slice(0, exceededBy < 0 ? productPage.length + exceededBy : productPage.length)
-          .map((v) => api.internal.shopifyProduct.delete(v.id))
+          .map(async (v) => {
+            let images = await api.shopifyProductImage.findMany({
+              filter: {
+                product: {
+                  equals: v.id,
+                },
+              },
+            });
+            const deleteImages = async () => {
+              await api.shopifyProductImage.bulkDelete(images.map((v) => v.id));
+            };
+            while (images.hasNextPage()) {
+              let temp = await images.nextPage();
+              await deleteImages();
+              images = temp;
+            }
+            await deleteImages();
+            await api.shopifyProduct.delete(v.id);
+          })
       );
-      await api.internal.plan.update(plan.id, {
-        _atomics: {
-          productSyncCount: {
-            decrement: updatedLength,
-          },
-        },
-      });
     } catch (error) {
       errors.push(error);
     }
   };
 
   while (productPage.hasNextPage && exceededBy > 0) {
-    await clearProductEmbeddings();
+    await clearProducts();
     productPage = await productPage.nextPage();
     productsToUpdate -= productPage.length;
   }
-  await clearProductEmbeddings();
+  await clearProducts();
   if (errors) {
     errors.forEach((err) => {
       logger.error(
@@ -277,10 +279,8 @@ export async function run({ params, logger: gadgetLogger, api: gadgetApi, connec
     }
   } else {
     logger.info({}, 'Downgrade - removing excessive resources');
-    await Promise.all([
-      downgradeImages({ api, logger, newPlanTier, shopId }),
-      downgradeProducts({ api, logger, newPlanTier, shopId }),
-    ]);
+    await downgradeProducts({ api, logger, newPlanTier, shopId });
+    await downgradeImages({ api, logger, newPlanTier, shopId });
   }
 }
 

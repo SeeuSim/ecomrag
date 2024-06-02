@@ -7,6 +7,7 @@ import {
   ShopifySyncState,
   CompleteShopifySyncActionContext,
 } from 'gadget-server';
+import { PLAN_LIMITS } from '../../plan/utils';
 
 /**
  * @param { CompleteShopifySyncActionContext } context

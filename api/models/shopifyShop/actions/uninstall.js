@@ -144,9 +144,48 @@ export async function run({ params, record, logger, api, connections }) {
       );
     }
   };
+
+  const deleteTimeSeries = async () => {
+    let timeSeries = await api.analyticsTimeSeries.findMany({
+      filter: {
+        shop: {
+          equals: record.id,
+        },
+      },
+    });
+    const deleteTimeSeries = async () => {
+      for (const ts of timeSeries) {
+        let productEntries = await api.analyticsProductEntry.findMany({
+          filter: {
+            timeseries: {
+              equals: ts.id,
+            },
+          },
+        });
+        const deleteProductEntries = async () => {
+          await api.analyticsProductEntry.bulkDelete(productEntries.map((v) => v.id));
+        };
+        while (productEntries.hasNextPage) {
+          let temp = await productEntries.nextPage();
+          await deleteProductEntries();
+          productEntries = temp;
+        }
+        await deleteProductEntries();
+        await api.analyticsTimeSeries.delete(ts.id);
+      }
+    };
+    while (timeSeries.hasNextPage) {
+      let temp = await timeSeries.nextPage();
+      await deleteTimeSeries();
+      timeSeries = temp;
+    }
+    await deleteTimeSeries();
+  };
+
   await Promise.all([
     deleteChatbotSettings(),
     deletePlan(),
+    deleteTimeSeries(),
     deleteProducts(),
     deleteProductImages(),
   ]);
