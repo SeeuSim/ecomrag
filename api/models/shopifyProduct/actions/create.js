@@ -26,7 +26,7 @@ export async function run({ params, record, logger, api, connections }) {
 export async function onSuccess({
   record,
   logger,
-  api: _api,
+  api,
   params: _params,
   connections: _connections,
 }) {
