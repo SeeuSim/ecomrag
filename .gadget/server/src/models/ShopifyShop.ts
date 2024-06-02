@@ -79,6 +79,7 @@ export type DefaultShopifyShopServerSelection = {
       readonly plan: false;
       readonly orders: false;
       readonly orderLineItems: false;
+      readonly productCount: true;
   };
 
   

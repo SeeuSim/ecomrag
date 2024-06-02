@@ -21,6 +21,11 @@ export const schema: GadgetModel = {
       child: { model: "plan", belongsToField: "shop" },
       storageKey: "ggIrrylHbrMB::AVBgr26grAjt",
     },
+    productCount: {
+      type: "computed",
+      sourceFile: "api/models/shopifyShop/productCount.gelly",
+      storageKey: "yRO1euYhABKQ",
+    },
     subscriptionId: {
       type: "string",
       storageKey: "faEwU_uaXbol::52AONq1l9vOS",

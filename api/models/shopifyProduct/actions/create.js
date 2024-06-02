@@ -14,16 +14,8 @@ import { postProductDescEmbedding } from '../postSqs';
  * @param { CreateShopifyProductActionContext } context
  */
 export async function run({ params, record, logger, api, connections }) {
-  applyParams(params, record);
-  const isWithinLimit = await tryIncrProductSyncCount({
-    record,
-    api,
-    logger,
-  });
-  if (!isWithinLimit) {
-    return;
-  }
   // TODO: Check for variant @jamesliu
+  applyParams(params, record);
   await preventCrossShopDataAccess(params, record);
   await save(record);
 }
@@ -38,6 +30,16 @@ export async function onSuccess({
   params: _params,
   connections: _connections,
 }) {
+  applyParams(params, record);
+  const isWithinLimit = await tryIncrProductSyncCount({
+    record,
+    api,
+    logger,
+  });
+  if (!isWithinLimit) {
+    return;
+  }
+
   const description = `${record.title}: ${record.body}`;
   await Promise.all([
     postProductDescEmbedding(

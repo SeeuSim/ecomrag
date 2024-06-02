@@ -20,7 +20,7 @@ export async function run({ params, record, logger, api, connections }) {
 export async function onSuccess({ params, record, logger, api, connections }) {
   // Your logic goes here
   const plan = await api.plan.findByShop(record.shopId);
-  if (plan) {
+  if (plan && record.imageDescriptionEmbedding) {
     try {
       await api.internal.plan.update(plan.id, {
         _atomics: {

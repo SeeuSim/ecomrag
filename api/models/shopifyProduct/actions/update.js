@@ -25,12 +25,19 @@ export async function onSuccess({ record, logger, api, params: _p, connections: 
   const isEmbed =
     !record.getField('descriptionEmbedding') || record.changed('title') || record.changed('body');
   if (isEmbed) {
-    const description = `${record.title}: ${record.body}`;
-    await postProductDescEmbedding(
-      { Id: record.id, Description: description },
-      record.shopId ?? 'DUMMYMSGGRPID',
-      logger
-    );
+    const isWithinLimit = await tryIncrProductSyncCount({
+      record,
+      api,
+      logger,
+    });
+    if (isWithinLimit) {
+      const description = `${record.title}: ${record.body}`;
+      await postProductDescEmbedding(
+        { Id: record.id, Description: description },
+        record.shopId ?? 'DUMMYMSGGRPID',
+        logger
+      );
+    }
   }
   await postProductUpdateResult(record, logger);
   return;

@@ -27,12 +27,24 @@ export async function onSuccess({ record, logger, api, params: _p, connections: 
     Caption: !record.getField('imageDescription') || record.changed('source'),
   };
   if (isCaptionEmbed.Embed || isCaptionEmbed.Caption) {
-    await postProductImgEmbedCaption(
-      { Id: record.id, Source: record.source },
-      isCaptionEmbed,
-      record.shopId ?? 'DUMMYMSGGRPID',
-      logger
-    );
+    if (!record.getField('imageDescriptionEmbedding')) {
+      const isWithinLimit = await tryIncrImageSyncCount({ record, logger, api });
+      if (isWithinLimit) {
+        await postProductImgEmbedCaption(
+          { Id: record.id, Source: record.source },
+          isCaptionEmbed,
+          record.shopId ?? 'DUMMYMSGGRPID',
+          logger
+        );
+      }
+    } else {
+      await postProductImgEmbedCaption(
+        { Id: record.id, Source: record.source },
+        isCaptionEmbed,
+        record.shopId ?? 'DUMMYMSGGRPID',
+        logger
+      );
+    }
   } else {
     logger.info(
       { isCaptionEmbed, sourceChanged: record.changed('source') },

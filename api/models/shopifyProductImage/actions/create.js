@@ -29,10 +29,6 @@ export async function run({ params, record, logger, api, connections }) {
     logger.error('Exceeded plan limit for this product. Skipping image creation.');
     return;
   }
-  const isWithinLimit = await tryIncrImageSyncCount({ record, logger, api });
-  if (!isWithinLimit) {
-    return;
-  }
   await preventCrossShopDataAccess(params, record);
   await save(record);
 }
@@ -43,12 +39,15 @@ export async function run({ params, record, logger, api, connections }) {
 export async function onSuccess({ params, record, logger, api, connections }) {
   const isSrcValid = !!record.source && record.source.length > 0;
   if (isSrcValid) {
-    await postProductImgEmbedCaption(
-      { Id: record.id, Source: record.source },
-      { Caption: true, Embed: true },
-      record.shopId ?? 'DUMMYMSGID',
-      logger
-    );
+    const isWithinLimit = await tryIncrImageSyncCount({ record, logger, api });
+    if (isWithinLimit) {
+      await postProductImgEmbedCaption(
+        { Id: record.id, Source: record.source },
+        { Caption: true, Embed: true },
+        record.shopId ?? 'DUMMYMSGID',
+        logger
+      );
+    }
   } else {
     logger.info(
       { source: record.source },
