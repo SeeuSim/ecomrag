@@ -21,7 +21,7 @@ const Error404 = () => {
   useEffect(() => {
     if (location.pathname === new URL(process.env.GADGET_PUBLIC_SHOPIFY_APP_URL).pathname)
       return navigate('/', { replace: true });
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
   return <div>404 not found</div>;
 };
 

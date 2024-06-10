@@ -31,7 +31,7 @@ const SettingsPage = () => {
   ] = useFindFirst(api.shopifyShop);
 
   console.log('shop', shop?.id);
-  const [{ data }] = useFindMany(api.ChatbotSettings);
+  const [{ data }] = useFindMany(api.chatbotSettings);
   console.log('data', data);
 
   const settings = data ? data[0] : null;
