@@ -54,6 +54,7 @@ export async function onSuccess({ params, record, logger, api, connections }) {
         shop: {
           _link: record.id,
         },
+        name: record.name,
         role: 'ADVISOR',
         personality: 'FRIENDLY',
         talkativeness: '3',

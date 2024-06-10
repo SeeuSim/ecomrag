@@ -100,7 +100,7 @@ const SettingsPage = () => {
 
   const handleTalkativenessChange = useCallback((value) => setSelectedTalkativeness(value), []);
 
-  const [{ loading }, updateChatbotSettings] = useAction(api.ChatbotSettings.update);
+  const [{ loading }, updateChatbotSettings] = useAction(api.chatbotSettings.update);
 
   const [showSuccess, setShowSuccess] = useState(false);
 
