@@ -6,7 +6,7 @@ import {
   save,
 } from 'gadget-server';
 import { postProductUpdateResult } from '../../../routes/main-backend/utils';
-import { tryIncrProductSyncCount } from '../checkPlan';
+// import { tryIncrProductSyncCount } from '../checkPlan';
 import { postProductDescEmbedding } from '../postSqs';
 
 /**

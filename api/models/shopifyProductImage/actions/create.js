@@ -5,7 +5,7 @@ import {
   save,
 } from 'gadget-server';
 import { postProductImageCreateResult } from '../../../routes/main-backend/utils';
-import { IMAGE_PER_PRODUCT, PLAN_LIMITS } from '../../plan/utils';
+// import { IMAGE_PER_PRODUCT, PLAN_LIMITS } from '../../plan/utils';
 import { postProductImgEmbedCaption } from '../postSqs';
 import { tryIncrImageSyncCount } from '../checkPlan';
 
@@ -14,51 +14,51 @@ import { tryIncrImageSyncCount } from '../checkPlan';
  */
 export async function run({ params, record, logger, api, connections }) {
   applyParams(params, record);
-  const [imageCount, plan] = await Promise.all([
-    api.shopifyProduct
-      .maybeFindFirst({
-        filter: {
-          id: {
-            equals: record.productId,
-          },
-        },
-        select: {
-          imageCount: true,
-        },
-      })
-      .then((res) => res.imageCount),
-    api.plan.maybeFindFirst({
-      filter: {
-        shop: {
-          equals: record.shopId,
-        },
-      },
-    }),
-  ]);
-  if (imageCount >= IMAGE_PER_PRODUCT && plan.tier !== 'Enterprise') {
-    throw new Error('Exceeded plan limit for this product. Skipping image creation.');
-  }
-  const shop = await api.shopifyShop.maybeFindFirst({
-    filter: {
-      id: {
-        equals: record.shopId,
-      },
-    },
-    select: {
-      imageCount: true,
-      plan: {
-        tier: true,
-      },
-    },
-  });
-  if (shop) {
-    if (shop.plan?.tier) {
-      const limit = PLAN_LIMITS[shop.plan.tier].imageUploadCount;
-      if (Number.parseInt(shop.imageCount) >= limit) {
-        throw new Error('Exceeded plan limit for this shop. Skipping image creation.');
-      }
-    }
-  }
+  // const [imageCount, plan] = await Promise.all([
+  //   api.shopifyProduct
+  //     .maybeFindFirst({
+  //       filter: {
+  //         id: {
+  //           equals: record.productId,
+  //         },
+  //       },
+  //       select: {
+  //         imageCount: true,
+  //       },
+  //     })
+  //     .then((res) => res.imageCount),
+  //   api.plan.maybeFindFirst({
+  //     filter: {
+  //       shop: {
+  //         equals: record.shopId,
+  //       },
+  //     },
+  //   }),
+  // ]);
+  // if (imageCount >= IMAGE_PER_PRODUCT && plan.tier !== 'Enterprise') {
+  //   throw new Error('Exceeded plan limit for this product. Skipping image creation.');
+  // }
+  // const shop = await api.shopifyShop.maybeFindFirst({
+  //   filter: {
+  //     id: {
+  //       equals: record.shopId,
+  //     },
+  //   },
+  //   select: {
+  //     imageCount: true,
+  //     plan: {
+  //       tier: true,
+  //     },
+  //   },
+  // });
+  // if (shop) {
+  //   if (shop.plan?.tier) {
+  //     const limit = PLAN_LIMITS[shop.plan.tier].imageUploadCount;
+  //     if (Number.parseInt(shop.imageCount) >= limit) {
+  //       throw new Error('Exceeded plan limit for this shop. Skipping image creation.');
+  //     }
+  //   }
+  // }
   await tryIncrImageSyncCount({ record, api, logger });
   await preventCrossShopDataAccess(params, record);
   await save(record);
